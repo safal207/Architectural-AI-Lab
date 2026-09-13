@@ -1,12 +1,5 @@
-import VillaViewer from './VillaViewer';
-import RoomPanel from './RoomPanel';
+import Dashboard from './Dashboard';
 
 export default function App() {
-  return (
-    <main>
-      <h1>Dubai Luxury Villa AI</h1>
-      <VillaViewer />
-      <RoomPanel />
-    </main>
-  );
+  return <Dashboard />;
 }
