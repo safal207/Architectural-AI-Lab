@@ -1,0 +1,28 @@
+{
+  "asset": "villa.glb",
+  "version": "0.1",
+  "kind": "procedural-concept-massing",
+  "generator": "Python + trimesh",
+  "dimensions_m": {
+    "x": 26.0,
+    "y": 22.0,
+    "z": 7.54
+  },
+  "named_nodes": [
+    "living_room",
+    "kitchen",
+    "lobby",
+    "pool_terrace",
+    "pool_water",
+    "master_bedroom",
+    "private_office",
+    "sky_terrace"
+  ],
+  "sha256": "89a02d113307451ba8d9e194e2f8a2fd1eeda816a1a29d87f555649cd5f52676",
+  "limitations": [
+    "Portfolio concept massing, not construction documentation",
+    "Current asset was generated with trimesh, not Blender",
+    "Materials and dimensions are conceptual",
+    "Not a BIM deliverable"
+  ]
+}
