@@ -1,0 +1,27 @@
+{
+  "model": "villa.glb",
+  "viewer": {
+    "type": "digital-twin",
+    "version": "0.1"
+  },
+  "rooms": [
+    {
+      "id": "living-room",
+      "name": "Living Room",
+      "floor": 1,
+      "target_area": 75
+    },
+    {
+      "id": "master-bedroom",
+      "name": "Master Bedroom",
+      "floor": 2,
+      "target_area": 52
+    }
+  ],
+  "features": [
+    "room-selection",
+    "camera-presets",
+    "metadata-panel",
+    "day-night-mode"
+  ]
+}
