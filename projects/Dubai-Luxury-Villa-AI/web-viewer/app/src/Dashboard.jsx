@@ -1,40 +1,67 @@
 import { useState } from 'react';
 import roomsData from '../data/rooms.json';
+import VillaViewer from './VillaViewer';
 import RoomSelector from './RoomSelector';
 import AIPropertyAssistant from './AIPropertyAssistant';
 import MaterialSwitcher from './MaterialSwitcher';
 import InvestorMode from './InvestorMode';
+import { lightingModes } from './DayNightMode';
 
 export default function Dashboard() {
   const rooms = roomsData.rooms ?? [];
   const [selectedRoom, setSelectedRoom] = useState(rooms[0] ?? null);
   const [material, setMaterial] = useState(null);
+  const [lightingMode, setLightingMode] = useState('evening');
+  const activeLighting = lightingModes[lightingMode] ?? lightingModes.day;
 
   return (
-    <main>
-      <header>
-        <p>Architectural-AI-Lab</p>
-        <h1>Dubai Luxury Villa AI</h1>
-        <p>Interactive digital-twin portfolio prototype</p>
+    <main className="app-shell">
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">Architectural-AI-Lab</p>
+          <h1>Dubai Luxury Villa AI</h1>
+          <p>Interactive digital-twin portfolio prototype</p>
+        </div>
+        <nav aria-label="Lighting mode">
+          {Object.entries(lightingModes).map(([key, mode]) => (
+            <button
+              key={key}
+              type="button"
+              className={lightingMode === key ? 'is-active' : ''}
+              onClick={() => setLightingMode(key)}
+            >
+              {mode.name}
+            </button>
+          ))}
+        </nav>
       </header>
 
-      <section>
-        <aside>
+      <section className="app-grid">
+        <aside className="panel rooms-panel">
           <h2>Rooms</h2>
           <RoomSelector onSelect={setSelectedRoom} />
         </aside>
 
-        <article>
-          <h2>3D Viewer</h2>
-          <p>The live GLB canvas will be mounted here after villa.glb is added.</p>
+        <article className="viewer-panel">
+          <VillaViewer
+            selectedRoom={selectedRoom}
+            lightingMode={activeLighting}
+            material={material}
+          />
         </article>
 
-        <aside>
+        <aside className="panel room-details">
           <h2>Room Details</h2>
           {selectedRoom ? (
             <div>
               <h3>{selectedRoom.name}</h3>
-              <p>{selectedRoom.area} m² · Floor {selectedRoom.floor}</p>
+              <dl>
+                <div><dt>Area</dt><dd>{selectedRoom.area} m²</dd></div>
+                <div><dt>Floor</dt><dd>{selectedRoom.floor}</dd></div>
+              </dl>
+              <p>
+                Prototype metadata. A later GLB export will bind this room ID to camera focus and model objects.
+              </p>
             </div>
           ) : (
             <p>Select a room.</p>
@@ -42,14 +69,16 @@ export default function Dashboard() {
         </aside>
       </section>
 
-      <section>
+      <section className="lower-grid">
         <AIPropertyAssistant />
         <MaterialSwitcher onChange={setMaterial} />
         <InvestorMode />
       </section>
 
       <footer>
-        Material concept: {material?.name ?? 'Classic Marble'} · Portfolio prototype
+        <span>Lighting: {activeLighting.name}</span>
+        <span>Material: {material?.name ?? 'Classic Marble'}</span>
+        <span>Concept portfolio — not construction documentation</span>
       </footer>
     </main>
   );
