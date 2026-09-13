@@ -1,24 +1,21 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createScene } from './three/scene';
 import { createCamera } from './three/camera';
 import { createRenderer } from './three/renderer';
 import { createLights } from './three/lights';
 
-function addBox(scene, size, position, color) {
-  const geometry = new THREE.BoxGeometry(...size);
-  const material = new THREE.MeshStandardMaterial({ color, roughness: 0.48 });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(...position);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  scene.add(mesh);
-  return mesh;
-}
+const ROOM_NODE_NAMES = {
+  'living-room': 'living_room',
+  'master-bedroom': 'master_bedroom',
+  'pool-terrace': 'pool_terrace'
+};
 
-function buildMassing(scene, accentColor) {
+function buildFallbackMassing(scene, accentColor) {
   const group = new THREE.Group();
+  group.name = 'fallback_massing';
   scene.add(group);
 
   const baseMaterial = new THREE.MeshStandardMaterial({ color: '#ece8df', roughness: 0.5 });
@@ -39,33 +36,47 @@ function buildMassing(scene, accentColor) {
   upper.position.set(1.3, 4.6, -0.4);
   group.add(upper);
 
-  const wing = new THREE.Mesh(new THREE.BoxGeometry(4.1, 2.7, 4.3), baseMaterial.clone());
-  wing.position.set(5.5, 1.35, 1.0);
-  group.add(wing);
-
   const pool = new THREE.Mesh(
     new THREE.BoxGeometry(8.2, 0.18, 3.3),
-    new THREE.MeshStandardMaterial({ color: '#3bbbc9', metalness: 0.05, roughness: 0.18 })
+    new THREE.MeshStandardMaterial({ color: '#3bbbc9', roughness: 0.18 })
   );
   pool.position.set(-2.2, 0.05, 5.1);
   group.add(pool);
 
-  const glass = new THREE.MeshStandardMaterial({
-    color: '#9fc5d6',
-    transparent: true,
-    opacity: 0.38,
-    metalness: 0.12,
-    roughness: 0.08
-  });
-
-  for (const x of [-4.8, -2.7, -0.6, 1.5]) {
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(1.75, 2.2, 0.08), glass);
-    panel.position.set(x, 1.7, 3.64);
-    group.add(panel);
-  }
-
   group.rotation.y = -0.28;
   return group;
+}
+
+function applyMaterialConcept(root, selectedMaterial) {
+  if (!root || !selectedMaterial?.swatch) return;
+
+  const protectedMaterials = new Set(['GlassTint', 'PoolWater', 'MetalTrim', 'Landscape']);
+
+  root.traverse((object) => {
+    if (!object.isMesh || !object.material) return;
+
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    object.material = materials.map((source) => {
+      if (protectedMaterials.has(source.name)) return source;
+
+      const cloned = source.clone();
+      cloned.color = new THREE.Color(selectedMaterial.swatch);
+      return cloned;
+    });
+
+    if (object.material.length === 1) {
+      object.material = object.material[0];
+    }
+  });
+}
+
+function disposeObject(root) {
+  root?.traverse((object) => {
+    if (!object.isMesh) return;
+    object.geometry?.dispose();
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    materials.forEach((material) => material?.dispose?.());
+  });
 }
 
 export default function VillaViewer({ selectedRoom, lightingMode, material }) {
@@ -75,13 +86,17 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     const container = mountRef.current;
     if (!container) return undefined;
 
+    let disposed = false;
+    let villaRoot = null;
+    let frameId = null;
+
     const scene = createScene(THREE);
     scene.background = new THREE.Color(lightingMode?.name === 'Night' ? '#08111c' : '#dfe8ee');
 
     const camera = createCamera(THREE);
     camera.aspect = container.clientWidth / Math.max(container.clientHeight, 1);
     camera.updateProjectionMatrix();
-    camera.position.set(15, 10, 16);
+    camera.position.set(18, 12, 20);
 
     const renderer = createRenderer(THREE, container);
     renderer.shadowMap.enabled = true;
@@ -94,21 +109,47 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.target.set(0, 2.1, 0.8);
-    controls.minDistance = 7;
-    controls.maxDistance = 35;
+    controls.target.set(0, 2.8, 0);
+    controls.minDistance = 8;
+    controls.maxDistance = 45;
 
-    const villa = buildMassing(scene, material?.swatch ?? '#d8c8ad');
+    const loader = new GLTFLoader();
+    const modelUrl = `${import.meta.env.BASE_URL}villa.glb`;
 
-    const roomFocus = {
-      'living-room': new THREE.Vector3(-1.8, 2.0, 2.8),
-      'master-bedroom': new THREE.Vector3(1.7, 4.8, 1.6),
-      'pool-terrace': new THREE.Vector3(-2.0, 0.4, 5.0)
-    };
+    loader.load(
+      modelUrl,
+      (gltf) => {
+        if (disposed) return;
 
-    if (selectedRoom?.id && roomFocus[selectedRoom.id]) {
-      controls.target.copy(roomFocus[selectedRoom.id]);
-    }
+        villaRoot = gltf.scene;
+        villaRoot.name = 'dubai_luxury_villa_v01';
+        villaRoot.rotation.y = Math.PI;
+
+        villaRoot.traverse((object) => {
+          if (object.isMesh) {
+            object.castShadow = true;
+            object.receiveShadow = true;
+          }
+        });
+
+        applyMaterialConcept(villaRoot, material);
+        scene.add(villaRoot);
+
+        const roomNodeName = ROOM_NODE_NAMES[selectedRoom?.id];
+        const roomNode = roomNodeName ? villaRoot.getObjectByName(roomNodeName) : null;
+        if (roomNode) {
+          const target = new THREE.Vector3();
+          roomNode.getWorldPosition(target);
+          controls.target.copy(target);
+        }
+      },
+      undefined,
+      (error) => {
+        if (disposed) return;
+        console.warn('villa.glb failed to load; using fallback massing', error);
+        villaRoot = buildFallbackMassing(scene, material?.swatch ?? '#d8c8ad');
+      }
+    );
 
     const resize = () => {
       const width = container.clientWidth;
@@ -121,7 +162,6 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     window.addEventListener('resize', resize);
     resize();
 
-    let frameId;
     const animate = () => {
       frameId = requestAnimationFrame(animate);
       controls.update();
@@ -130,10 +170,14 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     animate();
 
     return () => {
-      cancelAnimationFrame(frameId);
+      disposed = true;
+      if (frameId) cancelAnimationFrame(frameId);
       window.removeEventListener('resize', resize);
       controls.dispose();
-      scene.remove(villa);
+      if (villaRoot) {
+        scene.remove(villaRoot);
+        disposeObject(villaRoot);
+      }
       renderer.dispose();
       renderer.domElement.remove();
     };
@@ -143,16 +187,14 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     <section>
       <div className="viewer-heading">
         <div>
-          <p className="eyebrow">Interactive massing v0.1</p>
+          <p className="eyebrow">GLB digital twin prototype v0.1</p>
           <h2>3D Villa Viewer</h2>
         </div>
-        <p>
-          Drag to orbit · scroll to zoom · select a room to change focus
-        </p>
+        <p>Drag to orbit · scroll to zoom · select a room to change focus</p>
       </div>
-      <div ref={mountRef} className="three-canvas" aria-label="Interactive 3D villa massing" />
+      <div ref={mountRef} className="three-canvas" aria-label="Interactive 3D villa prototype" />
       <p className="viewer-note">
-        Current geometry is a concept massing generated in Three.js, not the final Blender/GLB villa.
+        The viewer now loads a real GLB concept asset. It is portfolio massing, not BIM or construction documentation.
       </p>
     </section>
   );
