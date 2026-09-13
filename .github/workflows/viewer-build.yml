@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - 'projects/Dubai-Luxury-Villa-AI/tools/**'
       - '.github/workflows/viewer-build.yml'
   pull_request:
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - 'projects/Dubai-Luxury-Villa-AI/tools/**'
       - '.github/workflows/viewer-build.yml'
 
 jobs:
@@ -27,8 +29,10 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Validate required asset
-        run: test -s public/villa.glb
+      - name: Validate canonical glTF asset
+        run: |
+          test -s public/villa.gltf
+          node -e "const fs=require('fs'); const g=JSON.parse(fs.readFileSync('public/villa.gltf','utf8')); if(g.asset?.version!=='2.0') process.exit(1); console.log('villa.gltf JSON OK')"
 
       - name: Build viewer
         run: npm run build
