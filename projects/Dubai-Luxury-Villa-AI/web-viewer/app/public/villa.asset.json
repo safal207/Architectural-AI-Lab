@@ -1,12 +1,13 @@
 {
-  "asset": "villa.glb",
+  "asset": "villa.gltf",
   "version": "0.1",
   "kind": "procedural-concept-massing",
-  "generator": "Python + trimesh",
+  "format": "glTF 2.0 with embedded buffer",
+  "generator": "Architectural-AI-Lab deterministic stdlib generator",
   "dimensions_m": {
     "x": 26.0,
-    "y": 22.0,
-    "z": 7.54
+    "y": 7.54,
+    "z": 22.0
   },
   "named_nodes": [
     "living_room",
@@ -18,10 +19,10 @@
     "private_office",
     "sky_terrace"
   ],
-  "sha256": "89a02d113307451ba8d9e194e2f8a2fd1eeda816a1a29d87f555649cd5f52676",
+  "sha256": "a503b748bbe7f32d18a5992bec63d731852b2f82e72fc47bbcd4db62993c97d4",
   "limitations": [
     "Portfolio concept massing, not construction documentation",
-    "Current asset was generated with trimesh, not Blender",
+    "Current canonical asset is generated directly as glTF and is not a Blender export",
     "Materials and dimensions are conceptual",
     "Not a BIM deliverable"
   ]
