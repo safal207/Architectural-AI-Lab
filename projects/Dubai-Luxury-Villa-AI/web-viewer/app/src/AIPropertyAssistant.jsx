@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import rooms from "../data/rooms.json";
+import roomData from "../data/rooms.json";
+
+const rooms = roomData.rooms ?? [];
 
 function normalise(value) {
   return value.trim().toLowerCase();
@@ -7,10 +9,7 @@ function normalise(value) {
 
 function answerQuestion(question) {
   const q = normalise(question);
-
-  const room = rooms.find((item) =>
-    q.includes(normalise(item.name))
-  );
+  const room = rooms.find((item) => q.includes(normalise(item.name)));
 
   if (room) {
     return `${room.name}: ${room.area} m², floor ${room.floor}.`;
@@ -18,12 +17,14 @@ function answerQuestion(question) {
 
   if (q.includes("largest") || q.includes("biggest")) {
     const largest = [...rooms].sort((a, b) => b.area - a.area)[0];
-    return `The largest listed space is ${largest.name} at ${largest.area} m².`;
+    return largest
+      ? `The largest listed space is ${largest.name} at ${largest.area} m².`
+      : "No room metadata is available yet.";
   }
 
   if (q.includes("total") || q.includes("area")) {
     const total = rooms.reduce((sum, item) => sum + item.area, 0);
-    return `The currently modelled room set totals ${total} m². This is a portfolio prototype, not construction documentation.`;
+    return `The currently listed room set totals ${total} m². This is prototype metadata, not construction documentation.`;
   }
 
   return "Ask about a room name, its area, floor, or the largest listed space.";
@@ -55,13 +56,11 @@ export default function AIPropertyAssistant() {
   }
 
   return (
-    <section className="property-assistant" aria-label="Property assistant">
+    <section aria-label="Property assistant">
       <h2>AI Property Assistant</h2>
-      <p className="property-assistant__note">
-        Prototype answers are grounded only in local room metadata.
-      </p>
+      <p>Prototype answers are grounded only in local room metadata.</p>
 
-      <div className="property-assistant__examples">
+      <div>
         {examples.map((example) => (
           <button key={example} type="button" onClick={() => submit(example)}>
             {example}
@@ -69,9 +68,9 @@ export default function AIPropertyAssistant() {
         ))}
       </div>
 
-      <div className="property-assistant__history" aria-live="polite">
+      <div aria-live="polite">
         {history.map((item, index) => (
-          <p key={`${item.role}-${index}`} data-role={item.role}>
+          <p key={`${item.role}-${index}`}>
             <strong>{item.role === "user" ? "You" : "Assistant"}:</strong>{" "}
             {item.text}
           </p>
