@@ -1,0 +1,16 @@
+{
+  "project_name": "Dubai Luxury Villa AI",
+  "units": "sqm",
+  "total_area_target": 500,
+  "rooms": [
+    {"name": "Living Room", "target_area": 75, "floor": 1},
+    {"name": "Kitchen", "target_area": 26, "floor": 1},
+    {"name": "Master Bedroom", "target_area": 52, "floor": 2},
+    {"name": "Private Office", "target_area": 20, "floor": 2},
+    {"name": "Pool Terrace", "target_area": 46, "floor": 1}
+  ],
+  "notes": [
+    "Portfolio concept project",
+    "Not construction documentation"
+  ]
+}
