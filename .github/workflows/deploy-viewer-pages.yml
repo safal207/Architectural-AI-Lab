@@ -1,11 +1,6 @@
 name: Deploy Villa Viewer
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
-      - '.github/workflows/deploy-viewer-pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -37,8 +32,6 @@ jobs:
       - name: Build
         run: npm run build
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/dist
