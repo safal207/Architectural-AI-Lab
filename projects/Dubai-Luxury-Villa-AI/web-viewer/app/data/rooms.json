@@ -1,0 +1,23 @@
+{
+  "villa": "Dubai Luxury Villa AI",
+  "rooms": [
+    {
+      "id": "living-room",
+      "name": "Living Room",
+      "area": 75,
+      "floor": 1
+    },
+    {
+      "id": "master-bedroom",
+      "name": "Master Bedroom",
+      "area": 52,
+      "floor": 2
+    },
+    {
+      "id": "pool-terrace",
+      "name": "Pool Terrace",
+      "area": 46,
+      "floor": 1
+    }
+  ]
+}
