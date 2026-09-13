@@ -1,4 +1,6 @@
-import rooms from "../data/rooms.json";
+import roomData from "../data/rooms.json";
+
+const rooms = roomData.rooms ?? [];
 
 function totalArea() {
   return rooms.reduce((sum, room) => sum + room.area, 0);
@@ -10,9 +12,9 @@ export default function InvestorMode() {
   const largest = [...rooms].sort((a, b) => b.area - a.area)[0];
 
   return (
-    <section className="investor-mode" aria-label="Investor presentation summary">
-      <div className="investor-mode__heading">
-        <p className="eyebrow">Investor Mode</p>
+    <section aria-label="Investor presentation summary">
+      <div>
+        <p>Investor Mode</p>
         <h2>Dubai Luxury Villa AI</h2>
         <p>
           Portfolio digital-twin concept for luxury real-estate presentation.
@@ -20,7 +22,7 @@ export default function InvestorMode() {
         </p>
       </div>
 
-      <div className="investor-mode__metrics">
+      <div>
         <article>
           <strong>{total} m²</strong>
           <span>Listed prototype area</span>
@@ -34,12 +36,14 @@ export default function InvestorMode() {
           <span>Floors represented</span>
         </article>
         <article>
-          <strong>{largest.name}</strong>
-          <span>Largest listed space · {largest.area} m²</span>
+          <strong>{largest?.name ?? "—"}</strong>
+          <span>
+            Largest listed space{largest ? ` · ${largest.area} m²` : ""}
+          </span>
         </article>
       </div>
 
-      <div className="investor-mode__value">
+      <div>
         <h3>Presentation goals</h3>
         <ul>
           <li>Make spatial relationships understandable before construction.</li>
@@ -49,7 +53,7 @@ export default function InvestorMode() {
         </ul>
       </div>
 
-      <p className="investor-mode__disclaimer">
+      <p>
         Concept portfolio only. Not a valuation, sales forecast, BIM deliverable, or construction document.
       </p>
     </section>
