@@ -1,0 +1,36 @@
+name: Viewer Build
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - '.github/workflows/viewer-build.yml'
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - '.github/workflows/viewer-build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/package-lock.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Validate required asset
+        run: test -s public/villa.glb
+
+      - name: Build viewer
+        run: npm run build
