@@ -1,0 +1,36 @@
+{
+  "version": "v0.3-m3",
+  "stage": "MATERIAL",
+  "form_baseline": "v0.3-r1.2 FORM GATE PASS",
+  "parent_material_study": "v0.3-m2 PARTIAL PASS",
+  "quality_status": "MATERIAL_GATE_REVIEW_PENDING_VISUAL_INSPECTION",
+  "review_exposure": -0.12,
+  "changes": [
+    "large-scale warm travertine tonal structure",
+    "quiet ivory plaster separation",
+    "controlled smoke-blue architectural glass",
+    "muted mineral aqua pool body",
+    "darker matte deck hierarchy",
+    "lifted restrained walnut midtones"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-m3-material.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1296760,
+    "sha256": "2953cde8f5ca81ee2e90b4c5c89dce9a7456866212350bd675ba2db06ac80a10"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-m3.glb",
+    "version": 2,
+    "bytes": 7368992,
+    "sha256": "936dd4c9fd991e9c4da992da27a8c1e095daf008ece29da753b8d1e41ffa38be",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-m3.blend",
+    "bytes": 6995700,
+    "sha256": "76f8116e32dabce54d3906200b0a96d8878dd0cf46f5bc50a9ed39dbb3c3db2e"
+  },
+  "claim_boundary": "Architectural visualization prototype; not BIM or construction documentation."
+}
