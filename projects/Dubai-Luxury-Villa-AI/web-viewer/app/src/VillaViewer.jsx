@@ -13,14 +13,14 @@ const ROOM_NODE_NAMES = {
   'pool-terrace': 'pool_terrace'
 };
 
-const SWITCHABLE_HERO_MATERIALS = new Set([
-  'WarmStonePBR_R5',
-  'CreamStonePBR_R8',
-  'MineralFacadePBR_R5',
-  'TimberCladdingPBR_R5',
-  'WarmTravertine',
-  'WarmPlaster',
-  'DeckStone'
+// Only architectural finish families are tintable in the presentation layer.
+// Glass, water, metal, landscape and Life-stage materials are protected by
+// default because they are not included in this explicit allow-list.
+const SWITCHABLE_ARCHITECTURAL_MATERIALS = new Set([
+  'M4_OrganicWarmLimestone',
+  'M3_IvoryPlaster',
+  'M2_WalnutTimber',
+  'M3_DeckStone'
 ]);
 
 function buildFallbackMassing(scene, accentColor) {
@@ -65,7 +65,7 @@ function applyMaterialConcept(root, selectedMaterial) {
 
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     const nextMaterials = materials.map((source) => {
-      if (!SWITCHABLE_HERO_MATERIALS.has(source.name)) return source;
+      if (!SWITCHABLE_ARCHITECTURAL_MATERIALS.has(source.name)) return source;
 
       const cloned = source.clone();
       cloned.color = new THREE.Color(selectedMaterial.swatch);
@@ -128,7 +128,7 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
         if (disposed) return;
 
         villaRoot = gltf.scene;
-        villaRoot.name = 'dubai_luxury_villa_v02_hero_r9';
+        villaRoot.name = 'dubai_luxury_villa_v03_life2';
         villaRoot.rotation.y = Math.PI;
 
         villaRoot.traverse((object) => {
@@ -193,14 +193,14 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     <section>
       <div className="viewer-heading">
         <div>
-          <p className="eyebrow">Native Blender GLB · v0.2 hero r9</p>
+          <p className="eyebrow">Native Blender GLB · v0.3 Life2 gated</p>
           <h2>3D Villa Viewer</h2>
         </div>
         <p>Drag to orbit · scroll to zoom · select a room to change focus</p>
       </div>
-      <div ref={mountRef} className="three-canvas" aria-label="Interactive Blender-exported Dubai luxury villa hero prototype" />
+      <div ref={mountRef} className="three-canvas" aria-label="Interactive gated v0.3 Dubai luxury villa prototype" />
       <p className="viewer-note">
-        CI verifies the hero GLB against its SHA-256 receipt before deployment. Fallback massing is used only if the validated asset fails to load.
+        CI verifies the promoted v0.3 Life2 GLB, provenance manifest, room anchors and exact binary delivery. Interactive web lighting and material variants are presentation controls, not a pixel-identical Blender L2 render.
       </p>
     </section>
   );
