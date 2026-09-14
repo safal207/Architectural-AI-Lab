@@ -5,11 +5,15 @@ on:
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
       - 'projects/Dubai-Luxury-Villa-AI/tools/**'
+      - 'projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-render-receipt.json'
       - '.github/workflows/viewer-build.yml'
   pull_request:
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
       - 'projects/Dubai-Luxury-Villa-AI/tools/**'
+      - 'projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-render-receipt.json'
       - '.github/workflows/viewer-build.yml'
 
 jobs:
@@ -29,7 +33,29 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Validate native Blender GLB asset
+      - name: Stage validated v0.2 hero GLB
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import shutil
+
+          source = Path('../../exports/villa-v0.2-hero.glb')
+          receipt_path = Path('../../validation/v0.2-hero-render-receipt.json')
+          target = Path('public/villa.glb')
+          receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+          raw = source.read_bytes()
+          digest = hashlib.sha256(raw).hexdigest()
+          expected = receipt['glb']
+
+          assert len(raw) == expected['bytes'], (len(raw), expected['bytes'])
+          assert digest == expected['sha256'], (digest, expected['sha256'])
+          shutil.copyfile(source, target)
+          print(f"staged {receipt['version']}: {len(raw)} bytes sha256={digest}")
+          PY
+
+      - name: Validate staged Blender GLB asset
         run: |
           test -s public/villa.glb
           python - <<'PY'
@@ -57,7 +83,8 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:4173/villa.glb > /tmp/viewer-villa.glb
           test -s /tmp/viewer-index.html
           test -s /tmp/viewer-villa.glb
-          echo "Viewer HTML and native Blender GLB served successfully"
+          cmp public/villa.glb /tmp/viewer-villa.glb
+          echo "Viewer HTML and validated v0.2 Blender GLB served successfully"
 
       - name: Upload verified viewer build
         uses: actions/upload-artifact@v4
