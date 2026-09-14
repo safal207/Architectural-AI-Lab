@@ -1,0 +1,37 @@
+{
+  "version": "v0.3-life1",
+  "stage": "LIFE",
+  "form_baseline": "v0.3-r1.2 FORM GATE PASS / FROZEN",
+  "material_baseline": "v0.3-m4 MATERIAL GATE PASS / FROZEN",
+  "light_baseline": "v0.3-l2 LIGHT GATE PASS / FROZEN",
+  "quality_status": "LIFE_GATE_REVIEW_PENDING_VISUAL_INSPECTION",
+  "curation_intent": "restrained Dubai desert-luxury landscape and interior scale cues",
+  "changes": [
+    "selected existing olive trees only",
+    "selected architectural grass clusters only",
+    "living sofa/table/rug cues",
+    "dining cues where visible",
+    "muted vegetation and textile palette",
+    "no crowd and no decorative luxury props"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-life1.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1417113,
+    "sha256": "bf721ef512447ac926e7ace1031dfbf0139e301547c71a74a3276f7a16f1a456"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-life1.glb",
+    "version": 2,
+    "bytes": 7369520,
+    "sha256": "06d3df9ebdc03e324b1a4d34471b9f0d35f53eea47a90b605ec4fc236cd444a7",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-life1.blend",
+    "bytes": 7044420,
+    "sha256": "f2becc1646c78f2ef92effc039fc9c3bafb94af163608fda59421caa0fdb9af6"
+  },
+  "claim_boundary": "AI-assisted architectural visualization prototype; not BIM, engineering, construction documentation, code-compliance evidence, valuation or sales forecast."
+}
