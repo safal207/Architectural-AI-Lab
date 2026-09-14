@@ -16,11 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Blender
+      - name: Install Blender and glTF Python dependency
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender
+          sudo apt-get install -y blender python3-numpy
           blender --version | head -n 1
+          blender --background --python-expr "import numpy; print('Blender NumPy', numpy.__version__)"
 
       - name: Generate villa GLB in Blender headless
         run: |
