@@ -1,0 +1,38 @@
+{
+  "version": "v0.3-l2",
+  "stage": "LIGHT",
+  "parent_light_study": "v0.3-l1 PARTIAL PASS",
+  "form_baseline": "v0.3-r1.2 FORM GATE PASS",
+  "material_baseline": "v0.3-m4 MATERIAL GATE PASS / FROZEN",
+  "quality_status": "LIGHT_GATE_REVIEW_PENDING_VISUAL_INSPECTION",
+  "lighting_intent": "Balanced Dubai luxury golden hour with recovered shadow detail and calmer sky",
+  "life_stage_geometry": "hidden/frozen; no lifestyle additions in L2",
+  "changes": [
+    "raised and desaturated golden sun",
+    "stronger cool sky recovery",
+    "restrained private-volume recovery light",
+    "slightly stronger neutral camera-side bounce",
+    "less saturated warm interior cues",
+    "calmer Nishita horizon with reduced dust"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-l2-light.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1414250,
+    "sha256": "13621dfcf05e0767d7400187bc336690b04218133d0b2a7a49843e34d965e01d"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-l2.glb",
+    "version": 2,
+    "bytes": 7369120,
+    "sha256": "5a54b001f4eded87e08d073dfb11ccdc5324f375807a816c41b4a9f59ec910a8",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-l2.blend",
+    "bytes": 7001812,
+    "sha256": "9c870333e5f4c7937f55436b69f40fe5969fa8724e2cec23c218a9882e743fab"
+  },
+  "claim_boundary": "AI-assisted architectural visualization prototype; not BIM, engineering, construction documentation, code-compliance evidence, valuation or sales forecast."
+}
