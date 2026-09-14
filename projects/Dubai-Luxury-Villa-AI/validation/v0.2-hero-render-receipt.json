@@ -1,25 +1,26 @@
 {
-  "version": "v0.2-hero-r4",
-  "generator": "Blender headless via GitHub Actions / Eevee archviz pass",
+  "version": "v0.2-hero-r5",
+  "generator": "Blender headless via GitHub Actions / Eevee + CC0 HDRI/PBR",
   "render": {
     "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.2-hero.png",
     "width": 1600,
     "height": 900,
-    "bytes": 1641229,
-    "sha256": "f9a8d0bc96e02f180cb20c58bbc4978153aa4d830ddd97b6d7efc5f1c24aecbc"
+    "bytes": 1611681,
+    "sha256": "4cd7e2e3e345fc2a1d850f3e22c28e83245e127ac03105cdd4065ce4b4971780"
   },
   "glb": {
     "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb",
-    "bytes": 1236876,
+    "bytes": 4011504,
     "glb_version": 2,
-    "sha256": "1503a329e20c4a399f58cd61a1b4c38df33e72a0b08e4bccb26c2d61bffb9ae9",
+    "sha256": "34912edb81124eb675da5b2434da5af4f4af66f1d6d2822e71724b3ab9c17d59",
     "container_length_matches": true
   },
   "blend_source": {
     "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.blend",
-    "bytes": 2402392,
-    "sha256": "ff9340cfba03e97c2a055ac30fe003c9dfd16ef93b87da7cb73fe7969f587f7e"
+    "bytes": 25697156,
+    "sha256": "ce304c1458dd3a3ebd57d6620742e3977ac78dca1f640acf5af62da0fcadfa24"
   },
   "quality_status": "RENDERED_NOT_YET_VISUALLY_APPROVED",
-  "critic_iteration": 4
+  "critic_iteration": 5,
+  "third_party_assets": "Poly Haven CC0 runtime assets documented in assets/third-party/README.md"
 }
