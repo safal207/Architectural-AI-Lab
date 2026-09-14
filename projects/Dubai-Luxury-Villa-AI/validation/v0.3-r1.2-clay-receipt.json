@@ -1,0 +1,34 @@
+{
+  "version": "v0.3-r1.2",
+  "stage": "FORM",
+  "quality_status": "CLAY_AB_REVIEW_NOT_YET_VISUALLY_APPROVED",
+  "camera_contract": "identical to v0.3-r1 and r1.1: location=(24.8,28.6,1.72), lens=40mm, shift_y=0.075",
+  "baseline": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-r1.1-clay.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1457747,
+    "sha256": "69349430fa9ea3bee2b6dc28bfcd4741955f90dd3b61fb5550b9239b71a795a2"
+  },
+  "candidate": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-r1.2-clay.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1457305,
+    "sha256": "703b3d9d76ddeb1b72f4986765d50e3504860f48dc1f66e31346b008a49bf258"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-r1.2-massing.glb",
+    "version": 2,
+    "bytes": 7369040,
+    "sha256": "132c9ca61f0386a015303517b631a4f991ddd08206ff870223a3e8ccc33dc719",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-r1.2.blend",
+    "bytes": 25336760,
+    "sha256": "1385fd40b147bba02d237e0b49edadc3f02ec36a8e953df1a6000c73a8725a16"
+  },
+  "target": "Correct the actual screen-left blank lower core identified by the r1.1 A/B review, without changing camera or style.",
+  "claim_boundary": "Architectural visualization prototype; not BIM or construction documentation."
+}
