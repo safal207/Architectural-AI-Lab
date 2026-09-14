@@ -1,0 +1,34 @@
+{
+  "version": "v0.3-m1",
+  "stage": "MATERIAL",
+  "form_baseline": "v0.3-r1.2 FORM GATE PASS",
+  "quality_status": "MATERIAL_REVIEW_NOT_YET_VISUALLY_APPROVED",
+  "palette": [
+    "warm limestone",
+    "quiet mineral plaster",
+    "walnut timber",
+    "graphite metal",
+    "architectural glass",
+    "low-roughness pool water"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-m1-material.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1221180,
+    "sha256": "079ec09d1ab3536eb9d6061a7e4d9b7b3a6aa4f42ddc492c44c211aaf84ebedc"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-m1.glb",
+    "version": 2,
+    "bytes": 7369564,
+    "sha256": "99a2edef6654a12191abdc93d018380e918ee237fcf446d164267043f79785cf",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-m1.blend",
+    "bytes": 6993552,
+    "sha256": "22af737f3aa3c7c1a8ccd8cfe680e90760c3fed410fd9baf1ea32c5a9a67bae8"
+  },
+  "claim_boundary": "Architectural visualization prototype; not BIM or construction documentation."
+}
