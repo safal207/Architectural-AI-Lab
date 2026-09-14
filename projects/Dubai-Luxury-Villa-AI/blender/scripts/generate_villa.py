@@ -24,12 +24,19 @@ def make_material(name, base_color, roughness=0.5, metallic=0.0, alpha=1.0):
     mat = bpy.data.materials.new(name=name)
     mat.use_nodes = True
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    bsdf.inputs["Base Color"].default_value = (*base_color, 1.0)
-    bsdf.inputs["Roughness"].default_value = roughness
-    bsdf.inputs["Metallic"].default_value = metallic
+    if bsdf:
+        bsdf.inputs["Base Color"].default_value = (*base_color, 1.0)
+        bsdf.inputs["Roughness"].default_value = roughness
+        bsdf.inputs["Metallic"].default_value = metallic
+        if alpha < 1.0 and "Alpha" in bsdf.inputs:
+            bsdf.inputs["Alpha"].default_value = alpha
+
     if alpha < 1.0:
-        bsdf.inputs["Alpha"].default_value = alpha
-        mat.surface_render_method = "DITHERED"
+        if hasattr(mat, "surface_render_method"):
+            mat.surface_render_method = "DITHERED"
+        elif hasattr(mat, "blend_method"):
+            mat.blend_method = "BLEND"
+
     MATERIALS[name] = mat
     return mat
 
@@ -122,7 +129,16 @@ def setup_scene():
     scene = bpy.context.scene
     scene.unit_settings.system = "METRIC"
     scene.unit_settings.scale_length = 1.0
-    scene.render.engine = "BLENDER_EEVEE_NEXT"
+
+    engine_ids = {item.identifier for item in scene.bl_rna.properties["render"].fixed_type.properties["engine"].enum_items} if False else set()
+    try:
+        scene.render.engine = "BLENDER_EEVEE_NEXT"
+    except Exception:
+        try:
+            scene.render.engine = "BLENDER_EEVEE"
+        except Exception:
+            pass
+
     scene.render.resolution_x = 1920
     scene.render.resolution_y = 1080
     scene.world.color = (0.035, 0.045, 0.060)
@@ -159,16 +175,33 @@ def export_glb():
         export_extras=True,
     )
     print(f"Exported: {out}")
+    return out
+
+
+def validate_scene_contract():
+    required = ["living_room", "master_bedroom", "pool_terrace"]
+    missing = [name for name in required if bpy.data.objects.get(name) is None]
+    if missing:
+        raise RuntimeError(f"Missing room anchors: {missing}")
+
+    for name in required:
+        obj = bpy.data.objects[name]
+        if "area_sqm" not in obj or "floor" not in obj:
+            raise RuntimeError(f"Room anchor lacks metadata: {name}")
 
 
 def main():
+    print(f"Blender version: {bpy.app.version_string}")
     clear_scene()
     setup_materials()
     setup_scene()
     build_villa()
     setup_camera_and_lights()
-    export_glb()
-    print(f"{PROJECT_NAME}: v0.1 generated")
+    validate_scene_contract()
+    out = export_glb()
+    if not out.exists() or out.stat().st_size < 20:
+        raise RuntimeError("GLB export is missing or unexpectedly small")
+    print(f"{PROJECT_NAME}: v0.1 generated ({out.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":
