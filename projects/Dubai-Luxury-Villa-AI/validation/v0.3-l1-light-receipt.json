@@ -1,0 +1,37 @@
+{
+  "version": "v0.3-l1",
+  "stage": "LIGHT",
+  "form_baseline": "v0.3-r1.2 FORM GATE PASS",
+  "material_baseline": "v0.3-m4 MATERIAL GATE PASS / FROZEN",
+  "quality_status": "LIGHT_GATE_REVIEW_PENDING_VISUAL_INSPECTION",
+  "lighting_intent": "Dubai luxury golden-hour hierarchy with warm interior life cues",
+  "life_stage_geometry": "hidden/frozen; no lifestyle additions in L1",
+  "changes": [
+    "low warm directional sun for facade relief",
+    "cool broad sky fill for controlled shadow detail",
+    "restrained camera-side warm bounce",
+    "warm living and master-bedroom interior light pools",
+    "Nishita desert-compatible dusk sky",
+    "AgX medium-high contrast when available"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-l1-light.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1469072,
+    "sha256": "246b93772b53ddb916f432edc85a4aabeb05a1730bc9c58c3a3ca70213d62287"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-l1.glb",
+    "version": 2,
+    "bytes": 7369120,
+    "sha256": "5a54b001f4eded87e08d073dfb11ccdc5324f375807a816c41b4a9f59ec910a8",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-l1.blend",
+    "bytes": 6999772,
+    "sha256": "e02aef3f1d7e07bab8107fa65f565d8fa28beb3bf3aa07799270bb647df8a719"
+  },
+  "claim_boundary": "AI-assisted architectural visualization prototype; not BIM, engineering, construction documentation, code-compliance evidence, valuation or sales forecast."
+}
