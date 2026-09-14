@@ -218,5 +218,10 @@ jobs:
             exit 0
           fi
           git commit -m 'Promote gated Dubai villa v0.3 Life2 to viewer'
+          # Blender/npm can leave unrelated generated tracked or untracked files dirty.
+          # The promoted target files are already safely captured in HEAD, so clean the
+          # remaining workspace before rebasing the promotion commit onto current main.
+          git reset --hard HEAD
+          git clean -fd
           git pull --rebase origin main
           git push origin HEAD:main
