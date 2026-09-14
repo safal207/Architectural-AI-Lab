@@ -20,7 +20,7 @@ export default function Dashboard() {
         <div>
           <p className="eyebrow">Architectural-AI-Lab</p>
           <h1>Dubai Luxury Villa AI</h1>
-          <p>Interactive digital-twin portfolio prototype</p>
+          <p>Interactive AI-assisted architectural visualization prototype</p>
         </div>
         <nav aria-label="Lighting mode">
           {Object.entries(lightingModes).map(([key, mode]) => (
@@ -60,7 +60,7 @@ export default function Dashboard() {
                 <div><dt>Floor</dt><dd>{selectedRoom.floor}</dd></div>
               </dl>
               <p>
-                Prototype metadata. A later GLB export will bind this room ID to camera focus and model objects.
+                Portfolio metadata. The current v0.2 hero GLB contains named room anchors used by the viewer to change focus.
               </p>
             </div>
           ) : (
@@ -77,7 +77,7 @@ export default function Dashboard() {
 
       <footer>
         <span>Lighting: {activeLighting.name}</span>
-        <span>Material: {material?.name ?? 'Classic Marble'}</span>
+        <span>Material: {material?.name ?? 'Original hero materials'}</span>
         <span>Concept portfolio — not construction documentation</span>
       </footer>
     </main>
