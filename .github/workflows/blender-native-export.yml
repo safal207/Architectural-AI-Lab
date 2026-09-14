@@ -1,0 +1,75 @@
+name: Blender Native Export
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa.py'
+      - '.github/workflows/blender-native-export.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+          blender --version | head -n 1
+
+      - name: Generate villa GLB in Blender headless
+        run: |
+          blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa.py
+
+      - name: Validate GLB container
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import struct
+
+          path = Path('projects/Dubai-Luxury-Villa-AI/exports/villa-v0.1.glb')
+          if not path.is_file():
+              raise SystemExit('GLB export missing')
+
+          raw = path.read_bytes()
+          if len(raw) < 20:
+              raise SystemExit('GLB export unexpectedly small')
+
+          magic, version, length = struct.unpack_from('<4sII', raw, 0)
+          if magic != b'glTF':
+              raise SystemExit(f'Invalid GLB magic: {magic!r}')
+          if version != 2:
+              raise SystemExit(f'Unsupported GLB version: {version}')
+          if length != len(raw):
+              raise SystemExit(f'GLB length mismatch: header={length}, actual={len(raw)}')
+
+          report = {
+              'file': str(path),
+              'bytes': len(raw),
+              'sha256': hashlib.sha256(raw).hexdigest(),
+              'glb_version': version,
+              'container_length_matches': True,
+              'generator': 'Blender headless via GitHub Actions'
+          }
+          out = Path('projects/Dubai-Luxury-Villa-AI/validation/native-blender-export.json')
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Upload native Blender export
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-blender-v0.1
+          path: |
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.1.glb
+            projects/Dubai-Luxury-Villa-AI/validation/native-blender-export.json
+          if-no-files-found: error
+          retention-days: 14
