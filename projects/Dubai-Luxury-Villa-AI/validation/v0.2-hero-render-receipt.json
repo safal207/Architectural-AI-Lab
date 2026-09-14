@@ -1,0 +1,24 @@
+{
+  "version": "v0.2-hero",
+  "generator": "Blender headless via GitHub Actions",
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.2-hero.png",
+    "width": 1280,
+    "height": 720,
+    "bytes": 1081364,
+    "sha256": "91bb129acbafc42402d5076538aeb906b6f4515bcf5ddfd91da0883a952de605"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb",
+    "bytes": 948124,
+    "glb_version": 2,
+    "sha256": "98b08fa8fa60bb58ebfc6836647a4181a059ce8e9ec69be1f68257a9645ac001",
+    "container_length_matches": true
+  },
+  "blend_source": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.blend",
+    "bytes": 1953536,
+    "sha256": "e5c8393f46a33ab89264a3452fb2d091be692e5140db9841371ee8cdea5ccf92"
+  },
+  "quality_status": "RENDERED_NOT_YET_VISUALLY_APPROVED"
+}
