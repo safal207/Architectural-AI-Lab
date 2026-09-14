@@ -1,0 +1,92 @@
+name: Blender v0.2 Hero r6
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r6.py'
+      - '.github/workflows/blender-v02-r6.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-numpy libegl1 libgl1-mesa-dri libglx-mesa0 xvfb
+
+      - name: Fetch CC0 Poly Haven assets
+        run: |
+          set -euxo pipefail
+          A='projects/Dubai-Luxury-Villa-AI/assets/third-party/polyhaven'
+          mkdir -p "$A"
+          d(){ curl -L --fail --retry 3 -o "$A/$1" "$2"; }
+          d toposcope_sunset_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/toposcope_sunset_2k.exr
+          d synthetic_wood_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_diff_1k.jpg
+          d synthetic_wood_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_nor_gl_1k.jpg
+          d synthetic_wood_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_rough_1k.jpg
+          d beige_wall_001_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg
+          d beige_wall_001_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_nor_gl_1k.jpg
+          d beige_wall_001_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_rough_1k.jpg
+
+      - name: Render r6
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          xvfb-run -a -s '-screen 0 1600x900x24' blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r6.py
+
+      - name: Validate outputs and write receipt
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json, struct
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          png = root/'renders/villa-v0.2-hero.png'
+          glb = root/'exports/villa-v0.2-hero.glb'
+          blend = root/'exports/villa-v0.2-hero.blend'
+          for p in (png, glb, blend):
+              assert p.is_file() and p.stat().st_size > 0, f'missing {p}'
+          raw = png.read_bytes()
+          assert raw[:8] == b'\x89PNG\r\n\x1a\n'
+          width, height = struct.unpack('>II', raw[16:24])
+          assert width >= 1280 and height >= 720
+          g = glb.read_bytes()
+          magic, version, length = struct.unpack_from('<4sII', g, 0)
+          assert magic == b'glTF' and version == 2 and length == len(g)
+          report = {
+              'version':'v0.2-hero-r6',
+              'critic_iteration':6,
+              'quality_status':'RENDERED_NOT_YET_VISUALLY_APPROVED',
+              'render':{'width':width,'height':height,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()},
+              'glb':{'version':version,'bytes':len(g),'sha256':hashlib.sha256(g).hexdigest()},
+              'blend':{'bytes':blend.stat().st_size,'sha256':hashlib.sha256(blend.read_bytes()).hexdigest()},
+          }
+          (root/'validation/v0.2-hero-render-receipt.json').write_text(json.dumps(report,indent=2)+'\n')
+          print(json.dumps(report,indent=2))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-v0.2-hero-r6-review
+          path: |
+            projects/Dubai-Luxury-Villa-AI/renders/villa-v0.2-hero.png
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.blend
+            projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-render-receipt.json
+          retention-days: 14
+
+      - name: Publish review files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add projects/Dubai-Luxury-Villa-AI/renders/villa-v0.2-hero.png projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-render-receipt.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Publish Dubai villa v0.2 r6 hero review'
+          git pull --rebase origin main
+          git push origin HEAD:main
