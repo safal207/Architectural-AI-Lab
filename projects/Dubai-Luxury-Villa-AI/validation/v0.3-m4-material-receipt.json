@@ -1,0 +1,34 @@
+{
+  "version": "v0.3-m4",
+  "stage": "MATERIAL",
+  "form_baseline": "v0.3-r1.2 FORM GATE PASS",
+  "parent_material_study": "v0.3-m3 PARTIAL PASS",
+  "quality_status": "MATERIAL_GATE_REVIEW_PENDING_VISUAL_INSPECTION",
+  "review_exposure": -0.12,
+  "changes": [
+    "removed visible procedural stone banding",
+    "organic low-amplitude warm mineral variation",
+    "preserved M3 plaster/glass/timber/graphite hierarchy",
+    "slightly deeper muted aqua pool body"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-m4-material.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1277808,
+    "sha256": "3a15b3bfad817cb388fd50c1e8b55850f199152a0f52f6768a8bbc5a6aaf0863"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-m4.glb",
+    "version": 2,
+    "bytes": 7369120,
+    "sha256": "5a54b001f4eded87e08d073dfb11ccdc5324f375807a816c41b4a9f59ec910a8",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-m4.blend",
+    "bytes": 6995692,
+    "sha256": "c5108e39ffe836e0d1b9de586b6f2958e0e4ec75a30ad46e79e14f9f55f8ee3a"
+  },
+  "claim_boundary": "Architectural visualization prototype; not BIM or construction documentation."
+}
