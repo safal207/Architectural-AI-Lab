@@ -1,0 +1,39 @@
+{
+  "version": "v0.3-life2",
+  "stage": "LIFE",
+  "parent_life_study": "v0.3-life1 PARTIAL PASS",
+  "form_baseline": "v0.3-r1.2 FORM GATE PASS / FROZEN",
+  "material_baseline": "v0.3-m4 MATERIAL GATE PASS / FROZEN",
+  "light_baseline": "v0.3-l2 LIGHT GATE PASS / FROZEN",
+  "quality_status": "LIFE_GATE_REVIEW_PENDING_VISUAL_INSPECTION",
+  "curation_intent": "current authored agave/ribbon desert landscape plus restrained interior scale cues",
+  "changes": [
+    "revealed current left/right agave assets",
+    "revealed current far agave depth cluster",
+    "revealed current left/right ribbon grasses only",
+    "kept far ribbon field hidden for hierarchy",
+    "muted grey-green and dry-grass palette",
+    "reduced repetitive dining-chair count in hero render",
+    "quietened visible furniture fabric"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-life2.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1433236,
+    "sha256": "7ebbbb740ff826e55b04bcdf73e4fcff77d097d926e65d9a8bdb6533336d4918"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-life2.glb",
+    "version": 2,
+    "bytes": 7311972,
+    "sha256": "715ced4b3c7182618191adcdc9b71cef9320d6b65bc0ba6a691d5c1e0f0e1e51",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-life2.blend",
+    "bytes": 7150940,
+    "sha256": "bf9651f287f9d5a3adf76a543b2d6128ce11bf9971ff5ca015f5afbc3364fec8"
+  },
+  "claim_boundary": "AI-assisted architectural visualization prototype; not BIM, engineering, construction documentation, code-compliance evidence, valuation or sales forecast."
+}
