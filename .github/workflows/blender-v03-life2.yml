@@ -1,0 +1,153 @@
+name: Blender v0.3 Life2 Gate
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v03_life2.py'
+      - '.github/workflows/blender-v03-life2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dubai-villa-v03-life2
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Blender and software rendering stack
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-numpy libegl1 libgl1-mesa-dri libglx-mesa0 xvfb
+          blender --version | head -n 1
+
+      - name: Fetch CC0 Poly Haven maps used by frozen material baseline
+        run: |
+          set -euxo pipefail
+          A='projects/Dubai-Luxury-Villa-AI/assets/third-party/polyhaven'
+          mkdir -p "$A"
+          d(){ curl -L --fail --retry 3 --retry-delay 2 -o "$A/$1" "$2"; }
+          d toposcope_sunset_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/toposcope_sunset_2k.exr
+          d qwantani_dusk_2_puresky_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/qwantani_dusk_2_puresky_2k.exr
+          d synthetic_wood_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_diff_1k.jpg
+          d synthetic_wood_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_nor_gl_1k.jpg
+          d synthetic_wood_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_rough_1k.jpg
+          d beige_wall_001_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg
+          d beige_wall_001_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_nor_gl_1k.jpg
+          d beige_wall_001_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_rough_1k.jpg
+          d marble_01_diff_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_diff_2k.jpg
+          d marble_01_nor_gl_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_nor_gl_2k.jpg
+          d marble_01_rough_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_rough_2k.jpg
+
+      - name: Generate v0.3 Life2 desert landscape study
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          xvfb-run -a -s '-screen 0 1600x900x24' \
+            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v03_life2.py
+
+      - name: Validate Life2 outputs and write receipt
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import struct
+
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          png = root / 'renders/villa-v0.3-life2.png'
+          glb = root / 'exports/villa-v0.3-life2.glb'
+          blend = root / 'exports/villa-v0.3-life2.blend'
+
+          for path in (png, glb, blend):
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f'missing output: {path}')
+
+          raw_png = png.read_bytes()
+          if raw_png[:8] != b'\x89PNG\r\n\x1a\n':
+              raise SystemExit('invalid PNG signature')
+          width, height = struct.unpack('>II', raw_png[16:24])
+          if (width, height) != (1600, 900):
+              raise SystemExit(f'unexpected render size: {width}x{height}')
+
+          raw_glb = glb.read_bytes()
+          magic, version, length = struct.unpack_from('<4sII', raw_glb, 0)
+          if magic != b'glTF' or version != 2 or length != len(raw_glb):
+              raise SystemExit('invalid GLB container')
+
+          report = {
+              'version': 'v0.3-life2',
+              'stage': 'LIFE',
+              'parent_life_study': 'v0.3-life1 PARTIAL PASS',
+              'form_baseline': 'v0.3-r1.2 FORM GATE PASS / FROZEN',
+              'material_baseline': 'v0.3-m4 MATERIAL GATE PASS / FROZEN',
+              'light_baseline': 'v0.3-l2 LIGHT GATE PASS / FROZEN',
+              'quality_status': 'LIFE_GATE_REVIEW_PENDING_VISUAL_INSPECTION',
+              'curation_intent': 'current authored agave/ribbon desert landscape plus restrained interior scale cues',
+              'changes': [
+                  'revealed current left/right agave assets',
+                  'revealed current far agave depth cluster',
+                  'revealed current left/right ribbon grasses only',
+                  'kept far ribbon field hidden for hierarchy',
+                  'muted grey-green and dry-grass palette',
+                  'reduced repetitive dining-chair count in hero render',
+                  'quietened visible furniture fabric'
+              ],
+              'render': {
+                  'file': str(png),
+                  'width': width,
+                  'height': height,
+                  'bytes': len(raw_png),
+                  'sha256': hashlib.sha256(raw_png).hexdigest(),
+              },
+              'glb': {
+                  'file': str(glb),
+                  'version': version,
+                  'bytes': len(raw_glb),
+                  'sha256': hashlib.sha256(raw_glb).hexdigest(),
+                  'container_length_matches': True,
+              },
+              'blend': {
+                  'file': str(blend),
+                  'bytes': blend.stat().st_size,
+                  'sha256': hashlib.sha256(blend.read_bytes()).hexdigest(),
+              },
+              'claim_boundary': 'AI-assisted architectural visualization prototype; not BIM, engineering, construction documentation, code-compliance evidence, valuation or sales forecast.'
+          }
+
+          receipt = root / 'validation/v0.3-life2-receipt.json'
+          receipt.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Upload v0.3 Life2 gate packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-v0.3-life2-gate
+          path: |
+            projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-life2.png
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-life2.glb
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-life2.blend
+            projects/Dubai-Luxury-Villa-AI/validation/v0.3-life2-receipt.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish Life2 review evidence
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-life2.png \
+            projects/Dubai-Luxury-Villa-AI/validation/v0.3-life2-receipt.json
+          if git diff --cached --quiet; then
+            echo 'Life2 review evidence unchanged'
+            exit 0
+          fi
+          git commit -m 'Publish Dubai villa v0.3 Life2 review'
+          git pull --rebase origin main
+          git push origin HEAD:main
