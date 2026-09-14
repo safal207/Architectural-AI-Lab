@@ -13,6 +13,16 @@ const ROOM_NODE_NAMES = {
   'pool-terrace': 'pool_terrace'
 };
 
+const SWITCHABLE_HERO_MATERIALS = new Set([
+  'WarmStonePBR_R5',
+  'CreamStonePBR_R8',
+  'MineralFacadePBR_R5',
+  'TimberCladdingPBR_R5',
+  'WarmTravertine',
+  'WarmPlaster',
+  'DeckStone'
+]);
+
 function buildFallbackMassing(scene, accentColor) {
   const group = new THREE.Group();
   group.name = 'fallback_massing';
@@ -50,23 +60,19 @@ function buildFallbackMassing(scene, accentColor) {
 function applyMaterialConcept(root, selectedMaterial) {
   if (!root || !selectedMaterial?.swatch) return;
 
-  const protectedMaterials = new Set(['GlassTint', 'PoolWater', 'MetalTrim', 'Landscape']);
-
   root.traverse((object) => {
     if (!object.isMesh || !object.material) return;
 
     const materials = Array.isArray(object.material) ? object.material : [object.material];
-    object.material = materials.map((source) => {
-      if (protectedMaterials.has(source.name)) return source;
+    const nextMaterials = materials.map((source) => {
+      if (!SWITCHABLE_HERO_MATERIALS.has(source.name)) return source;
 
       const cloned = source.clone();
       cloned.color = new THREE.Color(selectedMaterial.swatch);
       return cloned;
     });
 
-    if (object.material.length === 1) {
-      object.material = object.material[0];
-    }
+    object.material = nextMaterials.length === 1 ? nextMaterials[0] : nextMaterials;
   });
 }
 
@@ -111,7 +117,7 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     controls.enableDamping = true;
     controls.target.set(0, 2.8, 0);
     controls.minDistance = 8;
-    controls.maxDistance = 45;
+    controls.maxDistance = 60;
 
     const loader = new GLTFLoader();
     const modelUrl = `${import.meta.env.BASE_URL}villa.glb`;
@@ -122,7 +128,7 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
         if (disposed) return;
 
         villaRoot = gltf.scene;
-        villaRoot.name = 'dubai_luxury_villa_v01';
+        villaRoot.name = 'dubai_luxury_villa_v02_hero_r9';
         villaRoot.rotation.y = Math.PI;
 
         villaRoot.traverse((object) => {
@@ -187,14 +193,14 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     <section>
       <div className="viewer-heading">
         <div>
-          <p className="eyebrow">Native Blender GLB prototype v0.1</p>
+          <p className="eyebrow">Native Blender GLB · v0.2 hero r9</p>
           <h2>3D Villa Viewer</h2>
         </div>
         <p>Drag to orbit · scroll to zoom · select a room to change focus</p>
       </div>
-      <div ref={mountRef} className="three-canvas" aria-label="Interactive Blender-exported villa prototype" />
+      <div ref={mountRef} className="three-canvas" aria-label="Interactive Blender-exported Dubai luxury villa hero prototype" />
       <p className="viewer-note">
-        The viewer loads the validated Blender headless GLB when available; fallback massing is used only if the asset fails to load.
+        CI verifies the hero GLB against its SHA-256 receipt before deployment. Fallback massing is used only if the validated asset fails to load.
       </p>
     </section>
   );
