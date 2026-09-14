@@ -1,0 +1,26 @@
+{
+  "version": "v0.3-r1",
+  "stage": "FORM",
+  "quality_status": "CLAY_REVIEW_NOT_YET_VISUALLY_APPROVED",
+  "production_order": "Form -> Material -> Light -> Life -> Presentation",
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-r1-clay.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1457222,
+    "sha256": "40c8190b9403afb6ab9a74c060b2d119da94e4012898f2b6fd0fefcc84a18f3e"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-r1-massing.glb",
+    "version": 2,
+    "bytes": 7353380,
+    "sha256": "e16d972e9a71a2f904c50e2a370521df4610467490844582362c91ca1db55e46",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-r1.blend",
+    "bytes": 25330700,
+    "sha256": "9b91ea2499f2e12d6e0d76d10f61cc8d599f0fd1b49a399eab9596fcfab7ee25"
+  },
+  "claim_boundary": "Architectural visualization prototype; not BIM or construction documentation."
+}
