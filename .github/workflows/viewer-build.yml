@@ -58,3 +58,11 @@ jobs:
           test -s /tmp/viewer-index.html
           test -s /tmp/viewer-villa.glb
           echo "Viewer HTML and native Blender GLB served successfully"
+
+      - name: Upload verified viewer build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-viewer-dist
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/dist
+          if-no-files-found: error
+          retention-days: 14
