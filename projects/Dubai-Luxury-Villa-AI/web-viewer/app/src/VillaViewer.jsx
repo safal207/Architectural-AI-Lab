@@ -114,7 +114,7 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     controls.maxDistance = 45;
 
     const loader = new GLTFLoader();
-    const modelUrl = `${import.meta.env.BASE_URL}villa.gltf`;
+    const modelUrl = `${import.meta.env.BASE_URL}villa.glb`;
 
     loader.load(
       modelUrl,
@@ -146,7 +146,7 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
       undefined,
       (error) => {
         if (disposed) return;
-        console.warn('villa.gltf failed to load; using fallback massing', error);
+        console.warn('villa.glb failed to load; using fallback massing', error);
         villaRoot = buildFallbackMassing(scene, material?.swatch ?? '#d8c8ad');
       }
     );
@@ -187,14 +187,14 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     <section>
       <div className="viewer-heading">
         <div>
-          <p className="eyebrow">glTF digital twin prototype v0.1</p>
+          <p className="eyebrow">Native Blender GLB prototype v0.1</p>
           <h2>3D Villa Viewer</h2>
         </div>
         <p>Drag to orbit · scroll to zoom · select a room to change focus</p>
       </div>
-      <div ref={mountRef} className="three-canvas" aria-label="Interactive 3D villa prototype" />
+      <div ref={mountRef} className="three-canvas" aria-label="Interactive Blender-exported villa prototype" />
       <p className="viewer-note">
-        The viewer loads a validated embedded glTF concept asset. It is portfolio massing, not BIM or construction documentation.
+        The viewer loads the validated Blender headless GLB when available; fallback massing is used only if the asset fails to load.
       </p>
     </section>
   );
