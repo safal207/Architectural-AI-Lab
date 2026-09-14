@@ -1,25 +1,24 @@
 {
-  "asset": "villa.glb",
-  "source_asset": "../../exports/villa-v0.2-hero.glb",
-  "version": "v0.2-hero-r9",
-  "kind": "ai-assisted-luxury-architectural-visualization-prototype",
-  "format": "GLB / glTF 2.0",
-  "generator": "Blender headless via GitHub Actions",
-  "delivery": "CI verifies the source asset against its SHA-256 receipt and stages it as public/villa.glb before build/deploy",
-  "bytes": 7449620,
-  "sha256": "60cec535d67f967808bf8e2a088f129a0627fe9864e38aece9c61647cfaa3c72",
-  "quality_status": "RENDERED_NOT_YET_VISUALLY_APPROVED",
-  "critic_iteration": 9,
-  "named_nodes": [
+  "asset": "Dubai Luxury Villa AI",
+  "viewer_asset": "villa.glb",
+  "version": "v0.3-life2",
+  "status": "FORM_MATERIAL_LIGHT_LIFE_GATED",
+  "source_pipeline": {
+    "form": "v0.3-r1.2 PASS / FROZEN",
+    "material": "v0.3-m4 PASS / FROZEN",
+    "light": "v0.3-l2 PASS / FROZEN",
+    "life": "v0.3-life2 PASS / FROZEN"
+  },
+  "glb": {
+    "bytes": 7311972,
+    "sha256": "715ced4b3c7182618191adcdc9b71cef9320d6b65bc0ba6a691d5c1e0f0e1e51",
+    "version": 2
+  },
+  "room_anchors": [
     "living_room",
     "master_bedroom",
-    "pool_terrace",
-    "pool_water"
+    "pool_terrace"
   ],
-  "limitations": [
-    "Portfolio visualization prototype, not construction documentation",
-    "Geometry and materials remain conceptual",
-    "Not a BIM deliverable",
-    "Hero render has passed technical generation and integrity checks but still requires explicit visual approval"
-  ]
+  "generator": "Native Blender 4.0.2 pipeline via GitHub Actions",
+  "claim_boundary": "AI-assisted architectural visualization prototype; not BIM, engineering, construction documentation, code-compliance evidence, valuation or sales forecast."
 }

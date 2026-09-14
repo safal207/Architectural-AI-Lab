@@ -1,0 +1,16 @@
+{
+  "version": "v0.3-life2-viewer-promotion",
+  "source": "v0.3-life2 PASS / FROZEN",
+  "viewer_asset": "projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.glb",
+  "bytes": 7311972,
+  "sha256": "715ced4b3c7182618191adcdc9b71cef9320d6b65bc0ba6a691d5c1e0f0e1e51",
+  "room_anchors_verified": [
+    "living_room",
+    "master_bedroom",
+    "pool_terrace"
+  ],
+  "vite_build": "PASS",
+  "binary_delivery_smoke_test": "PASS",
+  "promotion": "APPROVED_FOR_PORTFOLIO_VIEWER",
+  "claim_boundary": "AI-assisted architectural visualization prototype; not BIM, engineering, construction documentation, code-compliance evidence, valuation or sales forecast."
+}
