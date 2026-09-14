@@ -7,11 +7,12 @@ on:
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_compat.py'
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r2.py'
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r3.py'
-      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r3_nodenoise.py'
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r4.py'
       - 'projects/Dubai-Luxury-Villa-AI/design/visual-spec-v0.2.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/hero-quality-gate-v0.2.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-critique-01.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-critique-02.md'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-critique-03.md'
       - '.github/workflows/blender-v02-hero.yml'
   workflow_dispatch:
 
@@ -46,8 +47,8 @@ jobs:
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
-          xvfb-run -a -s '-screen 0 1280x720x24' \
-            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r3_nodenoise.py
+          xvfb-run -a -s '-screen 0 1600x900x24' \
+            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r4.py
 
       - name: Validate hero outputs
         run: |
@@ -79,8 +80,8 @@ jobs:
               raise SystemExit('invalid GLB container')
 
           report = {
-              'version': 'v0.2-hero-r3',
-              'generator': 'Blender headless via GitHub Actions / Cycles CPU / no OIDN',
+              'version': 'v0.2-hero-r4',
+              'generator': 'Blender headless via GitHub Actions / Eevee archviz pass',
               'render': {
                   'file': str(png),
                   'width': width,
@@ -101,7 +102,7 @@ jobs:
                   'sha256': hashlib.sha256(blend.read_bytes()).hexdigest(),
               },
               'quality_status': 'RENDERED_NOT_YET_VISUALLY_APPROVED',
-              'critic_iteration': 3,
+              'critic_iteration': 4,
           }
           receipt = root / 'validation/v0.2-hero-render-receipt.json'
           receipt.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
