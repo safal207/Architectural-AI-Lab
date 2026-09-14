@@ -1,9 +1,9 @@
-name: Blender v0.2 Hero r7
+name: Blender v0.2 Hero r8
 
 on:
   push:
     paths:
-      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r7.py'
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r8.py'
       - '.github/workflows/blender-v02-r6.yml'
   workflow_dispatch:
 
@@ -28,18 +28,22 @@ jobs:
           mkdir -p "$A"
           d(){ curl -L --fail --retry 3 -o "$A/$1" "$2"; }
           d toposcope_sunset_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/toposcope_sunset_2k.exr
+          d qwantani_dusk_2_puresky_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/qwantani_dusk_2_puresky_2k.exr
           d synthetic_wood_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_diff_1k.jpg
           d synthetic_wood_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_nor_gl_1k.jpg
           d synthetic_wood_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_rough_1k.jpg
           d beige_wall_001_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg
           d beige_wall_001_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_nor_gl_1k.jpg
           d beige_wall_001_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_rough_1k.jpg
+          d marble_01_diff_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_diff_2k.jpg
+          d marble_01_nor_gl_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_nor_gl_2k.jpg
+          d marble_01_rough_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_rough_2k.jpg
 
-      - name: Render r7
+      - name: Render r8
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
-          xvfb-run -a -s '-screen 0 1600x900x24' blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r7.py
+          xvfb-run -a -s '-screen 0 1600x900x24' blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r8.py
 
       - name: Validate outputs and write receipt
         run: |
@@ -60,8 +64,8 @@ jobs:
           magic, version, length = struct.unpack_from('<4sII', g, 0)
           assert magic == b'glTF' and version == 2 and length == len(g)
           report = {
-              'version':'v0.2-hero-r7',
-              'critic_iteration':7,
+              'version':'v0.2-hero-r8',
+              'critic_iteration':8,
               'quality_status':'RENDERED_NOT_YET_VISUALLY_APPROVED',
               'render':{'width':width,'height':height,'bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()},
               'glb':{'version':version,'bytes':len(g),'sha256':hashlib.sha256(g).hexdigest()},
@@ -73,7 +77,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dubai-villa-v0.2-hero-r7-review
+          name: dubai-villa-v0.2-hero-r8-review
           path: |
             projects/Dubai-Luxury-Villa-AI/renders/villa-v0.2-hero.png
             projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb
@@ -87,6 +91,6 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add projects/Dubai-Luxury-Villa-AI/renders/villa-v0.2-hero.png projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-render-receipt.json
           git diff --cached --quiet && exit 0
-          git commit -m 'Publish Dubai villa v0.2 r7 hero review'
+          git commit -m 'Publish Dubai villa v0.2 r8 hero review'
           git pull --rebase origin main
           git push origin HEAD:main
