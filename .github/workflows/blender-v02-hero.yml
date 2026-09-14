@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa_v02_hero.py'
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_compat.py'
       - 'projects/Dubai-Luxury-Villa-AI/design/visual-spec-v0.2.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/hero-quality-gate-v0.2.md'
       - '.github/workflows/blender-v02-hero.yml'
@@ -31,7 +32,7 @@ jobs:
 
       - name: Generate v0.2 hero scene
         run: |
-          blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa_v02_hero.py
+          blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_compat.py
 
       - name: Validate hero outputs
         run: |
