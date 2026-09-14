@@ -7,6 +7,7 @@ on:
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_compat.py'
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r2.py'
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r3.py'
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r3_nodenoise.py'
       - 'projects/Dubai-Luxury-Villa-AI/design/visual-spec-v0.2.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/hero-quality-gate-v0.2.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-critique-01.md'
@@ -46,7 +47,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           xvfb-run -a -s '-screen 0 1280x720x24' \
-            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r3.py
+            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r3_nodenoise.py
 
       - name: Validate hero outputs
         run: |
@@ -79,7 +80,7 @@ jobs:
 
           report = {
               'version': 'v0.2-hero-r3',
-              'generator': 'Blender headless via GitHub Actions / Cycles CPU',
+              'generator': 'Blender headless via GitHub Actions / Cycles CPU / no OIDN',
               'render': {
                   'file': str(png),
                   'width': width,
