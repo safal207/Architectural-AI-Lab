@@ -25,10 +25,19 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Validate canonical glTF
+      - name: Validate native Blender GLB
         run: |
-          test -s public/villa.gltf
-          node -e "const fs=require('fs'); const g=JSON.parse(fs.readFileSync('public/villa.gltf','utf8')); if(g.asset?.version!=='2.0') process.exit(1); console.log('villa.gltf JSON OK')"
+          test -s public/villa.glb
+          python - <<'PY'
+          from pathlib import Path
+          import struct
+          raw = Path('public/villa.glb').read_bytes()
+          magic, version, length = struct.unpack_from('<4sII', raw, 0)
+          assert magic == b'glTF', magic
+          assert version == 2, version
+          assert length == len(raw), (length, len(raw))
+          print(f'villa.glb OK: {len(raw)} bytes, GLB v{version}')
+          PY
       - name: Build
         run: npm run build
       - uses: actions/configure-pages@v5
