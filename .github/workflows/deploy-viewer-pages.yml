@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - 'projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-render-receipt.json'
       - '.github/workflows/deploy-viewer-pages.yml'
   workflow_dispatch:
 
@@ -30,7 +32,37 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Validate native Blender GLB
+
+      - name: Stage validated v0.2 hero GLB
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import shutil
+
+          source = Path('../../exports/villa-v0.2-hero.glb')
+          receipt_path = Path('../../validation/v0.2-hero-render-receipt.json')
+          target = Path('public/villa.glb')
+
+          if not source.is_file() or not receipt_path.is_file():
+              raise SystemExit('validated v0.2 hero source or receipt missing')
+
+          receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+          raw = source.read_bytes()
+          digest = hashlib.sha256(raw).hexdigest()
+          expected = receipt['glb']
+
+          if len(raw) != expected['bytes']:
+              raise SystemExit(f"hero GLB byte mismatch: {len(raw)} != {expected['bytes']}")
+          if digest != expected['sha256']:
+              raise SystemExit(f"hero GLB SHA-256 mismatch: {digest} != {expected['sha256']}")
+
+          shutil.copyfile(source, target)
+          print(f"staged {receipt['version']}: {len(raw)} bytes sha256={digest}")
+          PY
+
+      - name: Validate staged Blender GLB
         run: |
           test -s public/villa.glb
           python - <<'PY'
@@ -43,6 +75,7 @@ jobs:
           assert length == len(raw), (length, len(raw))
           print(f'villa.glb OK: {len(raw)} bytes, GLB v{version}')
           PY
+
       - name: Build
         run: npm run build
       - uses: actions/configure-pages@v5
