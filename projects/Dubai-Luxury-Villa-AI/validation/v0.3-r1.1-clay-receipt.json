@@ -1,0 +1,40 @@
+{
+  "version": "v0.3-r1.1",
+  "stage": "FORM",
+  "quality_status": "CLAY_AB_REVIEW_NOT_YET_VISUALLY_APPROVED",
+  "camera_contract": "identical to v0.3-r1: location=(24.8,28.6,1.72), lens=40mm, shift_y=0.075",
+  "baseline": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-r1-clay.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1457222,
+    "sha256": "40c8190b9403afb6ab9a74c060b2d119da94e4012898f2b6fd0fefcc84a18f3e"
+  },
+  "candidate": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-r1.1-clay.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1457747,
+    "sha256": "69349430fa9ea3bee2b6dc28bfcd4741955f90dd3b61fb5550b9239b71a795a2"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-r1.1-massing.glb",
+    "version": 2,
+    "bytes": 7369068,
+    "sha256": "0831bf251446904b86f343a219414ecb73f2d560efa593be02d1e6eeec7ed5e7",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-r1.1.blend",
+    "bytes": 25336760,
+    "sha256": "23760e50769ddd4ff317cf4211458fbac3280a01bdcf0f725e3cc261bf2df38e"
+  },
+  "targets": [
+    "trim and thin roof hierarchy",
+    "reduce blank left ground core",
+    "recess upper glazing behind thinner frame",
+    "thin foreground plinth layers",
+    "simplify pool/terrace edge stacking"
+  ],
+  "claim_boundary": "Architectural visualization prototype; not BIM or construction documentation."
+}
