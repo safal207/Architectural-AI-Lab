@@ -1,0 +1,37 @@
+name: Blender Script Check
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/**'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/blender-export-contract.md'
+      - '.github/workflows/blender-script-check.yml'
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/**'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/blender-export-contract.md'
+      - '.github/workflows/blender-script-check.yml'
+
+jobs:
+  validate-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Syntax-check Blender generator
+        run: python -m py_compile projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa.py
+
+      - name: Check viewer room anchors are declared
+        run: |
+          grep -q 'add_room_anchor("living_room"' projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa.py
+          grep -q 'add_room_anchor("master_bedroom"' projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa.py
+          grep -q 'add_room_anchor("pool_terrace"' projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa.py
+
+      - name: Record validation boundary
+        run: |
+          echo 'Static validation only.'
+          echo 'Native Blender execution and GLB visual verification remain separate acceptance steps.'
