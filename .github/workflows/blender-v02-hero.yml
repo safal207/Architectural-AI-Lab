@@ -1,0 +1,120 @@
+name: Blender v0.2 Hero
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa_v02_hero.py'
+      - 'projects/Dubai-Luxury-Villa-AI/design/visual-spec-v0.2.md'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/hero-quality-gate-v0.2.md'
+      - '.github/workflows/blender-v02-hero.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dubai-villa-v02-hero
+  cancel-in-progress: true
+
+jobs:
+  hero:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Blender and glTF dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-numpy
+          blender --version | head -n 1
+          blender --background --python-expr "import numpy; print('Blender NumPy', numpy.__version__)"
+
+      - name: Generate v0.2 hero scene
+        run: |
+          blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa_v02_hero.py
+
+      - name: Validate hero outputs
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import struct
+
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          png = root / 'renders/villa-v0.2-hero.png'
+          glb = root / 'exports/villa-v0.2-hero.glb'
+          blend = root / 'exports/villa-v0.2-hero.blend'
+
+          for path in (png, glb, blend):
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f'missing output: {path}')
+
+          raw_png = png.read_bytes()
+          if raw_png[:8] != b'\x89PNG\r\n\x1a\n':
+              raise SystemExit('invalid PNG signature')
+          width, height = struct.unpack('>II', raw_png[16:24])
+          if width < 1280 or height < 720:
+              raise SystemExit(f'hero render too small: {width}x{height}')
+
+          raw_glb = glb.read_bytes()
+          magic, version, length = struct.unpack_from('<4sII', raw_glb, 0)
+          if magic != b'glTF' or version != 2 or length != len(raw_glb):
+              raise SystemExit('invalid GLB container')
+
+          report = {
+              'version': 'v0.2-hero',
+              'generator': 'Blender headless via GitHub Actions',
+              'render': {
+                  'file': str(png),
+                  'width': width,
+                  'height': height,
+                  'bytes': len(raw_png),
+                  'sha256': hashlib.sha256(raw_png).hexdigest(),
+              },
+              'glb': {
+                  'file': str(glb),
+                  'bytes': len(raw_glb),
+                  'glb_version': version,
+                  'sha256': hashlib.sha256(raw_glb).hexdigest(),
+                  'container_length_matches': True,
+              },
+              'blend_source': {
+                  'file': str(blend),
+                  'bytes': blend.stat().st_size,
+                  'sha256': hashlib.sha256(blend.read_bytes()).hexdigest(),
+              },
+              'quality_status': 'RENDERED_NOT_YET_VISUALLY_APPROVED',
+          }
+          receipt = root / 'validation/v0.2-hero-render-receipt.json'
+          receipt.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Upload hero review packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-v0.2-hero-review
+          path: |
+            projects/Dubai-Luxury-Villa-AI/renders/villa-v0.2-hero.png
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.blend
+            projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-render-receipt.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Commit review render and validated GLB
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            projects/Dubai-Luxury-Villa-AI/renders/villa-v0.2-hero.png \
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.2-hero.glb \
+            projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-render-receipt.json
+          if git diff --cached --quiet; then
+            echo "Hero outputs unchanged"
+          else
+            git commit -m "Publish Dubai villa v0.2 hero review render"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
