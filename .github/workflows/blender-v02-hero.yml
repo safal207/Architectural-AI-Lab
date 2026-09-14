@@ -5,8 +5,10 @@ on:
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/generate_villa_v02_hero.py'
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_compat.py'
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r2.py'
       - 'projects/Dubai-Luxury-Villa-AI/design/visual-spec-v0.2.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/hero-quality-gate-v0.2.md'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-critique-01.md'
       - '.github/workflows/blender-v02-hero.yml'
   workflow_dispatch:
 
@@ -42,7 +44,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           xvfb-run -a -s '-screen 0 1280x720x24' \
-            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_compat.py
+            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r2.py
 
       - name: Validate hero outputs
         run: |
@@ -74,7 +76,7 @@ jobs:
               raise SystemExit('invalid GLB container')
 
           report = {
-              'version': 'v0.2-hero',
+              'version': 'v0.2-hero-r2',
               'generator': 'Blender headless via GitHub Actions',
               'render': {
                   'file': str(png),
@@ -96,6 +98,7 @@ jobs:
                   'sha256': hashlib.sha256(blend.read_bytes()).hexdigest(),
               },
               'quality_status': 'RENDERED_NOT_YET_VISUALLY_APPROVED',
+              'critic_iteration': 2,
           }
           receipt = root / 'validation/v0.2-hero-render-receipt.json'
           receipt.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
