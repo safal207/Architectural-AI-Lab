@@ -92,5 +92,7 @@ jobs:
             echo "Generated asset is unchanged"
           else
             git commit -m "Publish validated Blender villa GLB"
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           fi
