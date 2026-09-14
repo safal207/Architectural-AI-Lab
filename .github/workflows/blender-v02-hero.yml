@@ -8,11 +8,14 @@ on:
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r2.py'
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r3.py'
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r4.py'
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r5.py'
+      - 'projects/Dubai-Luxury-Villa-AI/assets/third-party/README.md'
       - 'projects/Dubai-Luxury-Villa-AI/design/visual-spec-v0.2.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/hero-quality-gate-v0.2.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-critique-01.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-critique-02.md'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-critique-03.md'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.2-hero-critique-04.md'
       - '.github/workflows/blender-v02-hero.yml'
   workflow_dispatch:
 
@@ -43,12 +46,44 @@ jobs:
           blender --version | head -n 1
           blender --background --python-expr "import numpy; print('Blender NumPy', numpy.__version__)"
 
+      - name: Download CC0 hero environment and PBR maps
+        run: |
+          set -euxo pipefail
+          ASSET_DIR='projects/Dubai-Luxury-Villa-AI/assets/third-party/polyhaven'
+          mkdir -p "$ASSET_DIR"
+
+          curl -L --fail --retry 3 --retry-delay 2 \
+            -o "$ASSET_DIR/toposcope_sunset_2k.exr" \
+            'https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/toposcope_sunset_2k.exr'
+
+          curl -L --fail --retry 3 --retry-delay 2 \
+            -o "$ASSET_DIR/synthetic_wood_diff_1k.jpg" \
+            'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_diff_1k.jpg'
+          curl -L --fail --retry 3 --retry-delay 2 \
+            -o "$ASSET_DIR/synthetic_wood_nor_gl_1k.jpg" \
+            'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_nor_gl_1k.jpg'
+          curl -L --fail --retry 3 --retry-delay 2 \
+            -o "$ASSET_DIR/synthetic_wood_rough_1k.jpg" \
+            'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_rough_1k.jpg'
+
+          curl -L --fail --retry 3 --retry-delay 2 \
+            -o "$ASSET_DIR/beige_wall_001_diff_1k.jpg" \
+            'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg'
+          curl -L --fail --retry 3 --retry-delay 2 \
+            -o "$ASSET_DIR/beige_wall_001_nor_gl_1k.jpg" \
+            'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_nor_gl_1k.jpg'
+          curl -L --fail --retry 3 --retry-delay 2 \
+            -o "$ASSET_DIR/beige_wall_001_rough_1k.jpg" \
+            'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_rough_1k.jpg'
+
+          ls -lh "$ASSET_DIR"
+
       - name: Generate v0.2 hero scene
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           xvfb-run -a -s '-screen 0 1600x900x24' \
-            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r4.py
+            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v02_hero_r5.py
 
       - name: Validate hero outputs
         run: |
@@ -80,8 +115,8 @@ jobs:
               raise SystemExit('invalid GLB container')
 
           report = {
-              'version': 'v0.2-hero-r4',
-              'generator': 'Blender headless via GitHub Actions / Eevee archviz pass',
+              'version': 'v0.2-hero-r5',
+              'generator': 'Blender headless via GitHub Actions / Eevee + CC0 HDRI/PBR',
               'render': {
                   'file': str(png),
                   'width': width,
@@ -102,7 +137,8 @@ jobs:
                   'sha256': hashlib.sha256(blend.read_bytes()).hexdigest(),
               },
               'quality_status': 'RENDERED_NOT_YET_VISUALLY_APPROVED',
-              'critic_iteration': 4,
+              'critic_iteration': 5,
+              'third_party_assets': 'Poly Haven CC0 runtime assets documented in assets/third-party/README.md',
           }
           receipt = root / 'validation/v0.2-hero-render-receipt.json'
           receipt.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
