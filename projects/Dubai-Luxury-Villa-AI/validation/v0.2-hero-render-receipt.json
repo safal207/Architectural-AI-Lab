@@ -1,20 +1,20 @@
 {
-  "version": "v0.2-hero-r8",
-  "critic_iteration": 8,
+  "version": "v0.2-hero-r9",
+  "critic_iteration": 9,
   "quality_status": "RENDERED_NOT_YET_VISUALLY_APPROVED",
   "render": {
     "width": 1600,
     "height": 900,
-    "bytes": 1582371,
-    "sha256": "0684d06f41059d6efa53fc1e5add493ba23977bd021d5fde764c699cb499a145"
+    "bytes": 1569467,
+    "sha256": "14615e0231c6e9702910058d06a77d0a201ade94c179e52b29754e80df4c4888"
   },
   "glb": {
     "version": 2,
-    "bytes": 7355248,
-    "sha256": "83edb8d5429d7e41071d7ca313e395eec375dd38ac453d98e6466baff3856a85"
+    "bytes": 7449620,
+    "sha256": "60cec535d67f967808bf8e2a088f129a0627fe9864e38aece9c61647cfaa3c72"
   },
   "blend": {
-    "bytes": 25347464,
-    "sha256": "55abb958eadb963979c38004dcb153a0d550ff47f329783c345cbe8a46d7f23b"
+    "bytes": 25473840,
+    "sha256": "7ce819adf51b05e94d8751d554ce3b52b9db4b2e24518e3d7df926521f94e64e"
   }
 }
