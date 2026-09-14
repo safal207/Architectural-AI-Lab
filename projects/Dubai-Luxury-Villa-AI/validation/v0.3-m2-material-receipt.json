@@ -1,0 +1,35 @@
+{
+  "version": "v0.3-m2",
+  "stage": "MATERIAL",
+  "form_baseline": "v0.3-r1.2 FORM GATE PASS",
+  "parent_material_study": "v0.3-m1 PARTIAL PASS",
+  "quality_status": "MATERIAL_REVIEW_NOT_YET_VISUALLY_APPROVED",
+  "changes": [
+    "warmer controlled limestone colour with real micro-normal",
+    "separate ivory mineral plaster",
+    "lifted walnut midtones",
+    "lighter architectural glass",
+    "deeper desaturated aqua pool water",
+    "warmer darker deck hierarchy"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.3-m2-material.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1227179,
+    "sha256": "e36126795b05a4321e1fbdbf1f608bfbc1cfe2f04e1ce775fec3c94b7d09bfb8"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-m2.glb",
+    "version": 2,
+    "bytes": 7369192,
+    "sha256": "59281c0b9ca30837a4d34fb76ba7775402ac625e8e3af667321c86dcb0bbe1f9",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.3-m2.blend",
+    "bytes": 6985780,
+    "sha256": "cc4d8071c506d26102d894823a8df59725b7f018c7ef28bbc787df7e75464738"
+  },
+  "claim_boundary": "Architectural visualization prototype; not BIM or construction documentation."
+}
