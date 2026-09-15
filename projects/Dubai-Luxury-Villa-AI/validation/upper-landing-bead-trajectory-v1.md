@@ -162,15 +162,30 @@ Validation confirmed:
 
 The Interior3 Blender render is the first bead where the giant white-plane failure disappears. The frame now contains multiple readable depth layers: glazing/vertical structure on the left, timber ceiling, floor, master-suite threshold and bedroom furniture ahead/right.
 
-This does **not** yet mean the browser tour is released. It means the causal hypothesis is confirmed strongly enough to promote the candidate into the feature-branch viewer for browser-level QA.
+**Decision:** ROOT CAUSE CONFIRMED.
 
-**Decision:** ROOT CAUSE CONFIRMED → promote only to feature branch → run browser bead gate → then judge PASS / ITERATE.
+## Bead 4 — Feature-viewer candidate promotion
+
+The gated Interior3 GLB was promoted **only** to `feat/first-person-house-tour` through `Promote v0.4 Interior3 to Feature Viewer` run `35028441163`.
+
+Promotion checks:
+
+- source gate receipt/hash matched;
+- GLB 2.0 structure revalidated;
+- required Interior3 nodes present;
+- `upper_stone_spine` absent;
+- closed legacy master door absent;
+- viewer production build PASS;
+- exact-binary HTTP smoke test PASS;
+- `main` intentionally untouched.
+
+The feature viewer manifest now identifies `v0.4-interior3-feature-candidate` and explicitly marks it `FEATURE_BRANCH_VISUAL_QA_ONLY`.
+
+**Current decision:** browser-level bead gates must now judge the candidate; no public/main promotion is implied by this step.
 
 ## Next transition
 
-`Interior2 old GLB` → `Interior3 candidate GLB` on `feat/first-person-house-tour` only.
-
-After promotion, run:
+Run against the newly promoted feature GLB:
 
 1. Upper Landing focused bead capture;
 2. First Person Tour QA;
