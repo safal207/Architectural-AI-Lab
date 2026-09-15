@@ -13,9 +13,10 @@ VERSION_RULES = {
         'status': 'FORM_MATERIAL_LIGHT_LIFE_GATED',
         'promotion': PROJECT_ROOT / 'validation' / 'v0.3-viewer-promotion.json',
         'required_tour_anchors': set(),
+        'required_look_targets': set(),
         'required_interior_nodes': set(),
     },
-    'v0.4-interior1': {
+    'v0.4-interior2': {
         'status': 'FORM_MATERIAL_LIGHT_LIFE_INTERIOR_TOUR_GATED',
         'promotion': PROJECT_ROOT / 'validation' / 'v0.4-viewer-promotion.json',
         'required_tour_anchors': {
@@ -28,9 +29,20 @@ VERSION_RULES = {
             'tour_master',
             'tour_pool',
         },
+        'required_look_targets': {
+            'tour_look_entry',
+            'tour_look_living',
+            'tour_look_dining',
+            'tour_look_stair_ground',
+            'tour_look_stair_upper',
+            'tour_look_master',
+            'tour_look_pool',
+        },
         'required_interior_nodes': {
             'stair_step_v04_00',
             'stair_landing_v04',
+            'stair_top_rail_v04_r2',
+            'stair_glass_guard_v04_r2',
             'kitchen_island_v04',
             'living_media_wall_v04',
             'master_bed_base_v04',
@@ -124,24 +136,34 @@ def main():
     if required_tour and set(manifest.get('tour_anchors', [])) != required_tour:
         fail(f"manifest tour anchors mismatch: {manifest.get('tour_anchors')}")
 
+    required_look = rules['required_look_targets']
+    missing_look = sorted(required_look - node_names)
+    if missing_look:
+        fail(f'missing virtual-tour look targets: {missing_look}')
+    if required_look and set(manifest.get('tour_look_targets', [])) != required_look:
+        fail(f"manifest tour look targets mismatch: {manifest.get('tour_look_targets')}")
+
     required_interior = rules['required_interior_nodes']
     missing_interior = sorted(required_interior - node_names)
     if missing_interior:
         fail(f'missing interior-tour nodes: {missing_interior}')
 
-    if version == 'v0.4-interior1':
+    if version == 'v0.4-interior2':
         if promotion.get('vite_build') != 'PASS':
             fail('v0.4 promotion did not record Vite build PASS')
         if promotion.get('binary_delivery_smoke_test') != 'PASS':
             fail('v0.4 promotion did not record binary delivery PASS')
         if set(promotion.get('tour_anchors_verified', [])) != required_tour:
             fail('v0.4 promotion receipt tour anchors mismatch')
+        if set(promotion.get('tour_look_targets_verified', [])) != required_look:
+            fail('v0.4 promotion receipt look targets mismatch')
 
     print(f'Viewer asset OK: {version} · {len(raw)} bytes · sha256={digest}')
     print('Room anchors OK:', ', '.join(sorted(ROOM_ANCHORS)))
     print('Frozen material family OK')
     if required_tour:
         print('Virtual-tour anchors OK:', ', '.join(sorted(required_tour)))
+        print('Virtual-tour look targets OK:', ', '.join(sorted(required_look)))
         print('Interior nodes OK:', ', '.join(sorted(required_interior)))
 
 
