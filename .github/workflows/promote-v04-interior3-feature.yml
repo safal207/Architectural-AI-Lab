@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 env:
-  SOURCE_ARTIFACT_ID: '10420800438'
+  SOURCE_ARTIFACT_ID: '10421665060'
   TARGET_BRANCH: 'feat/first-person-house-tour'
 
 concurrency:
@@ -90,7 +90,20 @@ jobs:
           if 'master_door_v04' in nodes:
               raise SystemExit('closed master door reappeared in gated packet')
 
-          print(f'Interior3 packet verified: {len(raw)} bytes sha256={digest}')
+          # Engine boundary: the browser owns Day / Evening / Night lighting.
+          # Blender punctual lights must not be serialized into the web GLB or
+          # their high exported intensities will stack on top of the Three.js rig.
+          used = set(doc.get('extensionsUsed') or [])
+          top_extensions = doc.get('extensions') or {}
+          node_light_refs = [
+              node.get('name')
+              for node in doc.get('nodes', [])
+              if 'KHR_lights_punctual' in (node.get('extensions') or {})
+          ]
+          if 'KHR_lights_punctual' in used or 'KHR_lights_punctual' in top_extensions or node_light_refs:
+              raise SystemExit(f'punctual lights leaked into web GLB: {node_light_refs}')
+
+          print(f'Interior3 no-lights packet verified: {len(raw)} bytes sha256={digest}')
           PY
 
       - name: Promote only into feature branch viewer
@@ -99,6 +112,7 @@ jobs:
           from pathlib import Path
           import hashlib
           import json
+          import os
           import shutil
 
           packet = Path('/tmp/interior3')
@@ -108,6 +122,7 @@ jobs:
           receipt = json.loads((packet / 'validation/v0.4-interior3-receipt.json').read_text(encoding='utf-8'))
           raw = source.read_bytes()
           digest = hashlib.sha256(raw).hexdigest()
+          artifact_id = int(os.environ['SOURCE_ARTIFACT_ID'])
 
           target.parent.mkdir(parents=True, exist_ok=True)
           shutil.copyfile(source, target)
@@ -124,7 +139,8 @@ jobs:
                   'light': 'v0.3-l2 PASS / FROZEN',
                   'life': 'v0.3-life2 PASS / FROZEN',
                   'interior': 'v0.4-interior2 baseline',
-                  'upper_landing_repair': 'v0.4-interior3 gated candidate'
+                  'upper_landing_repair': 'v0.4-interior3 gated candidate',
+                  'web_light_boundary': 'Three.js owns runtime lighting; Blender punctual lights stripped from GLB'
               },
               'glb': {'bytes': len(raw), 'sha256': digest, 'version': receipt['glb']['version']},
               'room_anchors': ['living_room', 'master_bedroom', 'pool_terrace'],
@@ -133,7 +149,8 @@ jobs:
                   'clear upper landing circulation candidate',
                   'open master-suite threshold',
                   'family-specific finish moods',
-                  'human-scale 64 degree first-person FOV'
+                  'human-scale 64 degree first-person FOV',
+                  'browser-owned Day Evening Night lighting without duplicated Blender punctual lights'
               ],
               'generator': 'Native Blender 4.0.2 pipeline via GitHub Actions',
               'promotion_scope': 'feat/first-person-house-tour only; main is intentionally untouched',
@@ -143,11 +160,12 @@ jobs:
 
           promotion = {
               'version': 'v0.4-interior3-feature-promotion',
-              'source_artifact_id': 10420800438,
+              'source_artifact_id': artifact_id,
               'viewer_asset': str(target),
               'bytes': len(raw),
               'sha256': digest,
               'scope': 'FEATURE_BRANCH_ONLY',
+              'lighting_boundary': 'BLENDER_PUNCTUAL_LIGHTS_STRIPPED_BROWSER_OWNS_RUNTIME_LIGHTING',
               'next_gate': 'Upper Landing Bead Gate + First Person Tour QA + visual review',
               'main_untouched': True
           }
@@ -196,5 +214,5 @@ jobs:
             echo 'Interior3 feature candidate already current'
             exit 0
           fi
-          git commit -m 'Promote Interior3 candidate to feature viewer'
+          git commit -m 'Promote no-lights Interior3 candidate to feature viewer'
           git push origin HEAD:${TARGET_BRANCH}
