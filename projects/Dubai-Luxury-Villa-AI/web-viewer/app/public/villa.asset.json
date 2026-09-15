@@ -30,6 +30,7 @@
     "human-scale 64 degree first-person FOV",
     "browser-owned Day Evening Night lighting without duplicated Blender punctual lights"
   ],
+  "qa_recheck": "no-lights cross-engine boundary candidate",
   "generator": "Native Blender 4.0.2 pipeline via GitHub Actions",
   "promotion_scope": "feat/first-person-house-tour only; main is intentionally untouched",
   "claim_boundary": "AI-assisted architectural visualization and virtual-tour prototype; not BIM, measured construction geometry, code-compliance evidence or as-built documentation."
