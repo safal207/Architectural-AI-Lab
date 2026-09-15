@@ -5,7 +5,9 @@ on:
     branches: [main]
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - 'projects/Dubai-Luxury-Villa-AI/tools/validate_viewer_asset.py'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.3-viewer-promotion.json'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-viewer-promotion.json'
       - '.github/workflows/deploy-viewer-pages.yml'
   workflow_dispatch:
 
@@ -34,52 +36,8 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Validate promoted v0.3 Life2 viewer asset
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import hashlib
-          import json
-          import struct
-
-          glb = Path('public/villa.glb')
-          manifest_path = Path('public/villa.asset.json')
-          promotion_path = Path('../../validation/v0.3-viewer-promotion.json')
-
-          for path in (glb, manifest_path, promotion_path):
-              if not path.is_file() or path.stat().st_size == 0:
-                  raise SystemExit(f'missing promoted viewer evidence: {path}')
-
-          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
-          promotion = json.loads(promotion_path.read_text(encoding='utf-8'))
-          raw = glb.read_bytes()
-          digest = hashlib.sha256(raw).hexdigest()
-
-          assert manifest['version'] == 'v0.3-life2', manifest['version']
-          assert manifest['status'] == 'FORM_MATERIAL_LIGHT_LIFE_GATED', manifest['status']
-          assert manifest['glb']['bytes'] == len(raw), (manifest['glb']['bytes'], len(raw))
-          assert manifest['glb']['sha256'] == digest, (manifest['glb']['sha256'], digest)
-          assert promotion['bytes'] == len(raw), (promotion['bytes'], len(raw))
-          assert promotion['sha256'] == digest, (promotion['sha256'], digest)
-          assert promotion['vite_build'] == 'PASS'
-          assert promotion['binary_delivery_smoke_test'] == 'PASS'
-          assert promotion['promotion'] == 'APPROVED_FOR_PORTFOLIO_VIEWER'
-
-          magic, version, length = struct.unpack_from('<4sII', raw, 0)
-          assert magic == b'glTF', magic
-          assert version == 2, version
-          assert length == len(raw), (length, len(raw))
-
-          json_length, json_type = struct.unpack_from('<II', raw, 12)
-          assert json_type == 0x4E4F534A, hex(json_type)
-          document = json.loads(raw[20:20 + json_length].decode('utf-8').rstrip('\x00 '))
-          node_names = {node.get('name') for node in document.get('nodes', [])}
-          required = {'living_room', 'master_bedroom', 'pool_terrace'}
-          missing = sorted(required - node_names)
-          assert not missing, f'missing room anchors: {missing}'
-
-          print(f'v0.3 Life2 viewer asset verified for Pages: {len(raw)} bytes sha256={digest}')
-          PY
+      - name: Validate current gated viewer asset
+        run: python ../../tools/validate_viewer_asset.py
 
       - name: Build
         run: npm run build
