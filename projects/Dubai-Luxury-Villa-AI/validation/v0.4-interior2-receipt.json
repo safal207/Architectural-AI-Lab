@@ -46,20 +46,20 @@
     "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-interior2.png",
     "width": 1600,
     "height": 900,
-    "bytes": 1621702,
-    "sha256": "ce9c81f97c5db644eeadaac75dd8c45c602e528419748da8eb4428f119d55b1f"
+    "bytes": 1621664,
+    "sha256": "d6b002dc707cd5bca5d63e03faf9d64de6dd785d8a598c08ff15aafc86e84a38"
   },
   "glb": {
     "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior2.glb",
     "version": 2,
-    "bytes": 7848428,
-    "sha256": "91c0130267b4d98a2c376850c71bc8c4e89e282b7c08e8dae1de6769077b79d4",
+    "bytes": 7845032,
+    "sha256": "fde86661b3b7ba4ce3352a56b83ad87156428feafd32d2d406dd12529eb97aed",
     "container_length_matches": true
   },
   "blend": {
     "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior2.blend",
-    "bytes": 7635592,
-    "sha256": "4e34119b0d9dcb1348cd6673b6ff492c2d2ab6a5c4b7dfb410f4a41e01492655"
+    "bytes": 7663060,
+    "sha256": "0071714bd0cc654bb707d5d8fa4c7ccd2aa67269c95cfaddb8b12544a1fe81f6"
   },
   "claim_boundary": "AI-assisted architectural visualization and virtual-tour prototype. Navigation plan and free-walk path are presentation tools, not BIM, measured construction geometry, accessibility/code-compliance evidence or as-built documentation."
 }
