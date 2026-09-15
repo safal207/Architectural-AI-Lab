@@ -7,6 +7,7 @@ import { createScene } from './three/scene';
 import { createCamera } from './three/camera';
 import { createRenderer } from './three/renderer';
 import { createLights } from './three/lights';
+import { createInteriorLights } from './three/interiorLights';
 import { TOUR_STOPS } from './tourData';
 import { WALKTHROUGH_PLAYER } from './navigationData';
 import {
@@ -104,6 +105,7 @@ export default function VillaViewer({
   const [modelState, setModelState] = useState('loading');
   const [firstPersonReady, setFirstPersonReady] = useState(false);
   const [walkGraphReady, setWalkGraphReady] = useState(false);
+  const [interiorLightCount, setInteriorLightCount] = useState(0);
   const [walkStatus, setWalkStatus] = useState({ label: 'Tour anchor', floor: null, edgeType: null });
 
   useEffect(() => {
@@ -112,6 +114,7 @@ export default function VillaViewer({
 
     let disposed = false;
     let villaRoot = null;
+    let interiorLightGroup = null;
     let frameId = null;
     let orbitControls = null;
     let pointerLockControls = null;
@@ -128,6 +131,7 @@ export default function VillaViewer({
     setModelState('loading');
     setFirstPersonReady(false);
     setWalkGraphReady(false);
+    setInteriorLightCount(0);
 
     const scene = createScene(THREE);
     scene.background = new THREE.Color(lightingMode?.background ?? '#bfd0d7');
@@ -181,6 +185,14 @@ export default function VillaViewer({
         applyMaterialConcept(villaRoot, material);
         scene.add(villaRoot);
         villaRoot.updateMatrixWorld(true);
+
+        interiorLightGroup = createInteriorLights(
+          THREE,
+          scene,
+          villaRoot,
+          lightingMode?.interior ?? 1
+        );
+        setInteriorLightCount(interiorLightGroup.userData.fixtureCount ?? 0);
 
         walkGraph = buildWalkGraph(villaRoot);
         const graphReady = walkGraph.edges.length >= 4;
@@ -352,6 +364,9 @@ export default function VillaViewer({
       pointerLockControls?.unlock();
       pointerLockControls?.dispose();
       mobileMotionRef.current = { forward: 0, right: 0 };
+      if (interiorLightGroup) {
+        scene.remove(interiorLightGroup);
+      }
       if (villaRoot) {
         scene.remove(villaRoot);
         disposeObject(villaRoot);
@@ -390,6 +405,7 @@ export default function VillaViewer({
           data-view-mode={isFirstPerson ? 'first-person' : 'orbit'}
           data-tour-stop={activeTourStopId}
           data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
+          data-interior-light-count={interiorLightCount}
           data-lighting-mode={lightingMode?.name ?? 'Day'}
           data-material-mode={material?.id ?? 'default'}
           aria-label="Interactive Dubai luxury villa virtual tour prototype"
