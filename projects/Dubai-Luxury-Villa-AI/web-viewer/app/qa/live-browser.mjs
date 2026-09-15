@@ -31,7 +31,7 @@ async function verifyPublishedAsset(page) {
 
   check(glb.length === manifest.glb.bytes, `GLB byte mismatch: ${glb.length} != ${manifest.glb.bytes}`);
   check(digest === manifest.glb.sha256, `GLB SHA-256 mismatch: ${digest} != ${manifest.glb.sha256}`);
-  check(['v0.3-life2', 'v0.4-interior1'].includes(manifest.version), `Unexpected viewer asset version: ${manifest.version}`);
+  check(['v0.3-life2', 'v0.4-interior2'].includes(manifest.version), `Unexpected viewer asset version: ${manifest.version}`);
 
   return { version: manifest.version, bytes: glb.length, sha256: digest };
 }
