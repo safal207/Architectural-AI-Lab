@@ -123,6 +123,7 @@ export default function VillaViewer({
     const keys = new Set();
     const touchLook = { active: false, pointerId: null, x: 0, y: 0 };
     const isTouchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+    const isFirstPerson = tourMode && activeTourStopId !== 'overview';
 
     setModelState('loading');
     setFirstPersonReady(false);
@@ -132,6 +133,7 @@ export default function VillaViewer({
     scene.background = new THREE.Color(lightingMode?.background ?? '#bfd0d7');
 
     const camera = createCamera(THREE);
+    camera.fov = isFirstPerson ? 64 : 45;
     camera.aspect = container.clientWidth / Math.max(container.clientHeight, 1);
     camera.updateProjectionMatrix();
     camera.position.set(18, 12, 20);
@@ -148,7 +150,6 @@ export default function VillaViewer({
     sun.intensity = lightingMode?.sun ?? 1.65;
     fill.intensity = lightingMode?.fill ?? 0.18;
 
-    const isFirstPerson = tourMode && activeTourStopId !== 'overview';
     if (isFirstPerson && !isTouchDevice) {
       pointerLockControls = new PointerLockControls(camera, renderer.domElement);
     } else if (!isFirstPerson) {
