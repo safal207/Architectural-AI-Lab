@@ -22,6 +22,25 @@
     "master_bedroom",
     "pool_terrace"
   ],
+  "tour_anchors": [
+    "tour_dining",
+    "tour_entry",
+    "tour_graph_root",
+    "tour_living",
+    "tour_master",
+    "tour_pool",
+    "tour_stair_ground",
+    "tour_stair_upper"
+  ],
+  "tour_look_targets": [
+    "tour_look_dining",
+    "tour_look_entry",
+    "tour_look_living",
+    "tour_look_master",
+    "tour_look_pool",
+    "tour_look_stair_ground",
+    "tour_look_stair_upper"
+  ],
   "features": [
     "first-person bounded route",
     "clear upper landing circulation candidate",
