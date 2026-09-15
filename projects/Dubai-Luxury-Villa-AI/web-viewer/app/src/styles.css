@@ -70,6 +70,7 @@ h1 { font-size: clamp(2rem, 4vw, 4rem); margin-bottom: 8px; }
 
 .viewer-heading > p,
 .viewer-note { color: #93a5b0; font-size: .9rem; }
+.viewer-note { margin-top: 10px; line-height: 1.35; }
 
 .three-canvas {
   width: 100%;
@@ -131,6 +132,51 @@ button[aria-pressed="true"] {
 
 .material-switcher__options small { display: block; color: #9fb0ba; margin-top: 4px; }
 
+.investor-mode__label {
+  color: #d4b483;
+  font-size: .82rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.investor-mode__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 18px;
+}
+
+.investor-mode__stat {
+  min-width: 0;
+  border: 1px solid #263946;
+  border-radius: 12px;
+  background: #0b171f;
+  padding: 11px 12px;
+}
+
+.investor-mode__stat strong,
+.investor-mode__stat span {
+  display: block;
+}
+
+.investor-mode__stat strong {
+  font-size: 1.08rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.investor-mode__stat span {
+  margin-top: 5px;
+  color: #9fb0ba;
+  font-size: .82rem;
+  line-height: 1.25;
+}
+
+.investor-mode__goals h3 { margin-bottom: 8px; }
+.investor-mode__goals ul { margin-top: 0; padding-left: 20px; }
+.investor-mode__boundary { color: #b7c3ca; margin-bottom: 0; }
+
 input {
   width: 100%;
   padding: 11px 12px;
@@ -157,4 +203,13 @@ footer {
   .three-canvas { height: 380px; }
   .app-header,
   .viewer-heading { flex-direction: column; }
+}
+
+@media (max-width: 520px) {
+  .app-shell { padding: 16px; }
+  .panel,
+  .lower-grid > section,
+  .viewer-panel { padding: 14px; border-radius: 16px; }
+  .three-canvas { height: 420px; }
+  .investor-mode__stats { grid-template-columns: 1fr 1fr; }
 }
