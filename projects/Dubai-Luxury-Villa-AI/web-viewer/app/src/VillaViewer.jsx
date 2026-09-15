@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -87,6 +87,7 @@ function disposeObject(root) {
 
 export default function VillaViewer({ selectedRoom, lightingMode, material }) {
   const mountRef = useRef(null);
+  const [modelState, setModelState] = useState('loading');
 
   useEffect(() => {
     const container = mountRef.current;
@@ -95,6 +96,7 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     let disposed = false;
     let villaRoot = null;
     let frameId = null;
+    setModelState('loading');
 
     const scene = createScene(THREE);
     scene.background = new THREE.Color(lightingMode?.name === 'Night' ? '#08111c' : '#dfe8ee');
@@ -148,12 +150,15 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
           roomNode.getWorldPosition(target);
           controls.target.copy(target);
         }
+
+        setModelState('loaded');
       },
       undefined,
       (error) => {
         if (disposed) return;
         console.warn('villa.glb failed to load; using fallback massing', error);
         villaRoot = buildFallbackMassing(scene, material?.swatch ?? '#d8c8ad');
+        setModelState('fallback');
       }
     );
 
@@ -198,7 +203,12 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
         </div>
         <p>Drag to orbit · scroll to zoom · select a room to change focus</p>
       </div>
-      <div ref={mountRef} className="three-canvas" aria-label="Interactive gated v0.3 Dubai luxury villa prototype" />
+      <div
+        ref={mountRef}
+        className="three-canvas"
+        data-model-state={modelState}
+        aria-label="Interactive gated v0.3 Dubai luxury villa prototype"
+      />
       <p className="viewer-note">
         CI verifies the promoted v0.3 Life2 GLB, provenance manifest, room anchors and exact binary delivery. Interactive web lighting and material variants are presentation controls, not a pixel-identical Blender L2 render.
       </p>
