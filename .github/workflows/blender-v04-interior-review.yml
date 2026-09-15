@@ -1,0 +1,78 @@
+name: Blender v0.4 Interior Visual Review
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_interior_review.py'
+      - '.github/workflows/blender-v04-interior-review.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: dubai-villa-v04-interior-review
+  cancel-in-progress: true
+
+jobs:
+  render-review:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Blender and software rendering stack
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-numpy libegl1 libgl1-mesa-dri libglx-mesa0 xvfb
+          blender --version | head -n 1
+
+      - name: Fetch CC0 Poly Haven maps used by frozen material baseline
+        run: |
+          set -euxo pipefail
+          A='projects/Dubai-Luxury-Villa-AI/assets/third-party/polyhaven'
+          mkdir -p "$A"
+          d(){ curl -L --fail --retry 3 --retry-delay 2 -o "$A/$1" "$2"; }
+          d toposcope_sunset_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/toposcope_sunset_2k.exr
+          d qwantani_dusk_2_puresky_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/qwantani_dusk_2_puresky_2k.exr
+          d synthetic_wood_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_diff_1k.jpg
+          d synthetic_wood_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_nor_gl_1k.jpg
+          d synthetic_wood_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_rough_1k.jpg
+          d beige_wall_001_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg
+          d beige_wall_001_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_nor_gl_1k.jpg
+          d beige_wall_001_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_rough_1k.jpg
+          d marble_01_diff_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_diff_2k.jpg
+          d marble_01_nor_gl_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_nor_gl_2k.jpg
+          d marble_01_rough_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_rough_2k.jpg
+
+      - name: Render first-person interior review views
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          xvfb-run -a -s '-screen 0 1280x720x24' \
+            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_interior_review.py
+
+      - name: Validate review renders
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import struct
+
+          root = Path('projects/Dubai-Luxury-Villa-AI/renders/v0.4-interior-review')
+          expected = ['living-to-dining.png', 'stair-hall.png', 'master-suite.png']
+          for name in expected:
+              path = root / name
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f'missing review render: {path}')
+              raw = path.read_bytes()
+              if raw[:8] != b'\x89PNG\r\n\x1a\n':
+                  raise SystemExit(f'invalid PNG: {path}')
+              width, height = struct.unpack('>II', raw[16:24])
+              if width < 900 or height < 500:
+                  raise SystemExit(f'review render too small: {name} {width}x{height}')
+              print(name, width, height, path.stat().st_size)
+          PY
+
+      - name: Upload interior visual review
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-v0.4-interior-visual-review
+          path: projects/Dubai-Luxury-Villa-AI/renders/v0.4-interior-review/*.png
+          if-no-files-found: error
+          retention-days: 14
