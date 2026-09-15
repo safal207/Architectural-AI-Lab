@@ -4,20 +4,38 @@ const MATERIALS = [
   {
     id: "warm-limestone",
     name: "Warm Limestone",
-    description: "Soft ivory mineral mood that keeps the villa warm instead of paper-white.",
-    swatch: "#d3c7b5"
+    description: "Ivory plaster, warm limestone and walnut remain distinct instead of collapsing into one pale tint.",
+    swatch: "#c7b79f",
+    familyColors: {
+      stone: "#b9a083",
+      plaster: "#d7d0c3",
+      timber: "#5d3a27",
+      deck: "#8d7b68"
+    }
   },
   {
     id: "sandstone",
     name: "Sandstone Warmth",
-    description: "Muted sand and travertine mood for a calm residential presentation.",
-    swatch: "#b99b78"
+    description: "Muted travertine and sand tones with darker timber for a calm residential presentation.",
+    swatch: "#b79570",
+    familyColors: {
+      stone: "#b58f68",
+      plaster: "#c8b89f",
+      timber: "#68412b",
+      deck: "#88705c"
+    }
   },
   {
     id: "graphite-mineral",
     name: "Graphite Mineral",
-    description: "Deep warm graphite without the blue-black cast of a generic dark theme.",
-    swatch: "#625c55"
+    description: "Warm mineral contrast with restrained graphite stone while plaster and timber keep their own identity.",
+    swatch: "#655f58",
+    familyColors: {
+      stone: "#56514b",
+      plaster: "#aaa49a",
+      timber: "#4b3025",
+      deck: "#625d56"
+    }
   }
 ];
 
@@ -58,7 +76,7 @@ export default function MaterialSwitcher({ onChange }) {
         ))}
       </div>
       <p className="material-switcher__note">
-        Presentation mood control only. The next material-family pass will separate wall, stone, timber, metal and fabric instead of tinting every architectural finish as one surface.
+        Presentation mood control. Each preset now preserves separate stone, plaster, timber and deck families instead of tinting every architectural finish as one surface.
       </p>
     </section>
   );
