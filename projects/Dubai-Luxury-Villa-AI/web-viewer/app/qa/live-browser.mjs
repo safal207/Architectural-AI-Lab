@@ -63,7 +63,7 @@ try {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
   observe(desktop);
   await desktop.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
-  await desktop.getByRole('heading', { name: 'Dubai Luxury Villa AI' }).waitFor();
+  await desktop.getByRole('heading', { level: 1, name: 'Dubai Luxury Villa AI', exact: true }).waitFor();
   await waitForModel(desktop);
   report.desktop.asset = await verifyPublishedAsset(desktop);
 
@@ -99,7 +99,7 @@ try {
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
   observe(mobile);
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
-  await mobile.getByRole('heading', { name: 'Dubai Luxury Villa AI' }).waitFor();
+  await mobile.getByRole('heading', { level: 1, name: 'Dubai Luxury Villa AI', exact: true }).waitFor();
   await waitForModel(mobile);
   await mobile.getByRole('button', { name: /Pool Terrace/ }).click();
   await mobile.locator('.room-details h3').filter({ hasText: 'Pool Terrace' }).waitFor();
