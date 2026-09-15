@@ -3,6 +3,7 @@ name: Blender v0.4 Interior Visual Review
 on:
   push:
     paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_interior2.py'
       - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_interior_review.py'
       - '.github/workflows/blender-v04-interior-review.yml'
   workflow_dispatch:
