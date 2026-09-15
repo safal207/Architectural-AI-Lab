@@ -1,0 +1,200 @@
+name: Promote v0.4 Interior3 to Feature Viewer
+
+on:
+  push:
+    branches:
+      - feat/first-person-house-tour
+    paths:
+      - '.github/workflows/promote-v04-interior3-feature.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  SOURCE_ARTIFACT_ID: '10420800438'
+  TARGET_BRANCH: 'feat/first-person-house-tour'
+
+concurrency:
+  group: dubai-villa-v04-interior3-feature-promotion
+  cancel-in-progress: true
+
+jobs:
+  promote-feature:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/first-person-house-tour
+          fetch-depth: 0
+
+      - name: Download gated Interior3 artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/interior3
+          gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "/repos/${GITHUB_REPOSITORY}/actions/artifacts/${SOURCE_ARTIFACT_ID}/zip" \
+            > /tmp/interior3.zip
+          unzip -q /tmp/interior3.zip -d /tmp/interior3
+          find /tmp/interior3 -maxdepth 3 -type f -printf '%P %s bytes\n' | sort
+
+      - name: Validate gated packet before promotion
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import struct
+
+          packet = Path('/tmp/interior3')
+          glb = packet / 'exports/villa-v0.4-interior3.glb'
+          receipt_path = packet / 'validation/v0.4-interior3-receipt.json'
+          render = packet / 'renders/villa-v0.4-interior3-upper-landing.png'
+
+          for path in (glb, receipt_path, render):
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f'missing gated artifact file: {path}')
+
+          receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+          raw = glb.read_bytes()
+          digest = hashlib.sha256(raw).hexdigest()
+          if receipt.get('status') != 'RENDERED_NOT_YET_PROMOTED':
+              raise SystemExit(f'unexpected source status: {receipt.get("status")}')
+          if receipt.get('glb', {}).get('sha256') != digest:
+              raise SystemExit('GLB digest does not match Interior3 gate receipt')
+
+          magic, version, length = struct.unpack_from('<4sII', raw, 0)
+          if magic != b'glTF' or version != 2 or length != len(raw):
+              raise SystemExit('invalid GLB 2.0 container')
+          json_length, json_type = struct.unpack_from('<II', raw, 12)
+          if json_type != 0x4E4F534A:
+              raise SystemExit('first GLB chunk is not JSON')
+          doc = json.loads(raw[20:20 + json_length].decode('utf-8').rstrip('\x00 '))
+          nodes = {node.get('name') for node in doc.get('nodes', []) if node.get('name')}
+
+          required = {
+              'tour_stair_upper', 'tour_look_stair_upper',
+              'upper_landing_side_wall_v04_r4',
+              'master_door_open_v04_r4',
+              'master_door_handle_open_v04_r4',
+              'stair_landing_v04', 'upper_corridor_bridge_v04_r3'
+          }
+          missing = sorted(required - nodes)
+          if missing:
+              raise SystemExit(f'missing Interior3 nodes: {missing}')
+          if 'upper_stone_spine' in nodes:
+              raise SystemExit('legacy upper_stone_spine reappeared in gated packet')
+          if 'master_door_v04' in nodes:
+              raise SystemExit('closed master door reappeared in gated packet')
+
+          print(f'Interior3 packet verified: {len(raw)} bytes sha256={digest}')
+          PY
+
+      - name: Promote only into feature branch viewer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import shutil
+
+          packet = Path('/tmp/interior3')
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          source = packet / 'exports/villa-v0.4-interior3.glb'
+          target = root / 'web-viewer/app/public/villa.glb'
+          receipt = json.loads((packet / 'validation/v0.4-interior3-receipt.json').read_text(encoding='utf-8'))
+          raw = source.read_bytes()
+          digest = hashlib.sha256(raw).hexdigest()
+
+          target.parent.mkdir(parents=True, exist_ok=True)
+          shutil.copyfile(source, target)
+          shutil.copyfile(packet / 'validation/v0.4-interior3-receipt.json', root / 'validation/v0.4-interior3-receipt.json')
+
+          manifest = {
+              'asset': 'Dubai Luxury Villa AI',
+              'viewer_asset': 'villa.glb',
+              'version': 'v0.4-interior3-feature-candidate',
+              'status': 'FEATURE_BRANCH_VISUAL_QA_ONLY',
+              'source_pipeline': {
+                  'form': 'v0.3-r1.2 PASS / FROZEN',
+                  'material': 'v0.3-m4 PASS / FROZEN',
+                  'light': 'v0.3-l2 PASS / FROZEN',
+                  'life': 'v0.3-life2 PASS / FROZEN',
+                  'interior': 'v0.4-interior2 baseline',
+                  'upper_landing_repair': 'v0.4-interior3 gated candidate'
+              },
+              'glb': {'bytes': len(raw), 'sha256': digest, 'version': receipt['glb']['version']},
+              'room_anchors': ['living_room', 'master_bedroom', 'pool_terrace'],
+              'features': [
+                  'first-person bounded route',
+                  'clear upper landing circulation candidate',
+                  'open master-suite threshold',
+                  'family-specific finish moods',
+                  'human-scale 64 degree first-person FOV'
+              ],
+              'generator': 'Native Blender 4.0.2 pipeline via GitHub Actions',
+              'promotion_scope': 'feat/first-person-house-tour only; main is intentionally untouched',
+              'claim_boundary': 'AI-assisted architectural visualization and virtual-tour prototype; not BIM, measured construction geometry, code-compliance evidence or as-built documentation.'
+          }
+          (target.parent / 'villa.asset.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+
+          promotion = {
+              'version': 'v0.4-interior3-feature-promotion',
+              'source_artifact_id': 10420800438,
+              'viewer_asset': str(target),
+              'bytes': len(raw),
+              'sha256': digest,
+              'scope': 'FEATURE_BRANCH_ONLY',
+              'next_gate': 'Upper Landing Bead Gate + First Person Tour QA + visual review',
+              'main_untouched': True
+          }
+          (root / 'validation/v0.4-interior3-feature-promotion.json').write_text(
+              json.dumps(promotion, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(promotion, indent=2))
+          PY
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build viewer against Interior3 candidate
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Smoke test exact feature binary delivery
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-interior3-feature.log 2>&1 &
+          PID=$!
+          trap 'kill $PID || true' EXIT
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent --show-error http://127.0.0.1:4173/villa.asset.json > /tmp/villa.asset.json
+          curl --fail --silent --show-error http://127.0.0.1:4173/villa.glb > /tmp/villa.glb
+          cmp public/villa.asset.json /tmp/villa.asset.json
+          cmp public/villa.glb /tmp/villa.glb
+          echo 'Interior3 feature viewer exact-binary smoke PASS'
+
+      - name: Commit candidate to feature branch only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.glb \
+            projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.asset.json \
+            projects/Dubai-Luxury-Villa-AI/validation/v0.4-interior3-receipt.json \
+            projects/Dubai-Luxury-Villa-AI/validation/v0.4-interior3-feature-promotion.json
+          if git diff --cached --quiet; then
+            echo 'Interior3 feature candidate already current'
+            exit 0
+          fi
+          git commit -m 'Promote Interior3 candidate to feature viewer'
+          git push origin HEAD:${TARGET_BRANCH}
