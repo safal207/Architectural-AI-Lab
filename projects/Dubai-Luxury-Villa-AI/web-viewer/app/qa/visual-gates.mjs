@@ -35,16 +35,29 @@ async function selectRouteStop(page, title, stopId) {
   await waitForStop(page, stopId);
 }
 
+async function captureClip(page, locator, name) {
+  await locator.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(120);
+  const box = await locator.boundingBox();
+  check(box && box.width > 1 && box.height > 1, `Capture target ${name} has no usable bounding box`);
+  await page.screenshot({
+    path: `${outputDir}/${name}.png`,
+    clip: {
+      x: Math.max(0, box.x),
+      y: Math.max(0, box.y),
+      width: box.width,
+      height: box.height
+    },
+    timeout: 60_000
+  });
+}
+
 async function captureViewer(page, name) {
-  const viewer = page.locator('.viewer-panel');
-  await viewer.scrollIntoViewIfNeeded();
-  await viewer.screenshot({ path: `${outputDir}/${name}.png` });
+  await captureClip(page, page.locator('.viewer-panel'), name);
 }
 
 async function capturePlan(page, name) {
-  const plan = page.locator('.house-plan-card');
-  await plan.scrollIntoViewIfNeeded();
-  await plan.screenshot({ path: `${outputDir}/${name}.png` });
+  await captureClip(page, page.locator('.house-plan-card'), name);
 }
 
 const browser = await chromium.launch({ headless: true });
