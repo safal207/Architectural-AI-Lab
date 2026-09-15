@@ -1,0 +1,172 @@
+name: Blender v0.4 Interior2 Gate
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_interior2.py'
+      - '.github/workflows/blender-v04-interior2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dubai-villa-v04-interior2
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Blender and software rendering stack
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-numpy libegl1 libgl1-mesa-dri libglx-mesa0 xvfb
+          blender --version | head -n 1
+
+      - name: Fetch CC0 Poly Haven maps used by frozen material baseline
+        run: |
+          set -euxo pipefail
+          A='projects/Dubai-Luxury-Villa-AI/assets/third-party/polyhaven'
+          mkdir -p "$A"
+          d(){ curl -L --fail --retry 3 --retry-delay 2 -o "$A/$1" "$2"; }
+          d toposcope_sunset_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/toposcope_sunset_2k.exr
+          d qwantani_dusk_2_puresky_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/qwantani_dusk_2_puresky_2k.exr
+          d synthetic_wood_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_diff_1k.jpg
+          d synthetic_wood_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_nor_gl_1k.jpg
+          d synthetic_wood_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_rough_1k.jpg
+          d beige_wall_001_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg
+          d beige_wall_001_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_nor_gl_1k.jpg
+          d beige_wall_001_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_rough_1k.jpg
+          d marble_01_diff_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_diff_2k.jpg
+          d marble_01_nor_gl_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_nor_gl_2k.jpg
+          d marble_01_rough_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_rough_2k.jpg
+
+      - name: Generate v0.4 Interior2 tour asset
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          xvfb-run -a -s '-screen 0 1600x900x24' \
+            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_interior2.py
+
+      - name: Validate interior outputs, camera graph and look targets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import struct
+
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          png = root / 'renders/villa-v0.4-interior2.png'
+          glb = root / 'exports/villa-v0.4-interior2.glb'
+          blend = root / 'exports/villa-v0.4-interior2.blend'
+
+          for path in (png, glb, blend):
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f'missing output: {path}')
+
+          raw_png = png.read_bytes()
+          if raw_png[:8] != b'\x89PNG\r\n\x1a\n':
+              raise SystemExit('invalid PNG signature')
+          width, height = struct.unpack('>II', raw_png[16:24])
+          if (width, height) != (1600, 900):
+              raise SystemExit(f'unexpected render size: {width}x{height}')
+
+          raw_glb = glb.read_bytes()
+          magic, version, length = struct.unpack_from('<4sII', raw_glb, 0)
+          if magic != b'glTF' or version != 2 or length != len(raw_glb):
+              raise SystemExit('invalid GLB container')
+
+          json_chunk_length, json_chunk_type = struct.unpack_from('<II', raw_glb, 12)
+          if json_chunk_type != 0x4E4F534A:
+              raise SystemExit('first GLB chunk is not JSON')
+          doc = json.loads(raw_glb[20:20 + json_chunk_length].decode('utf-8').rstrip('\x00 '))
+          node_names = {node.get('name') for node in doc.get('nodes', []) if node.get('name')}
+
+          tour_anchors = {
+              'tour_entry', 'tour_living', 'tour_dining', 'tour_stair_ground',
+              'tour_stair_upper', 'tour_master', 'tour_pool', 'tour_graph_root'
+          }
+          look_targets = {
+              'tour_look_entry', 'tour_look_living', 'tour_look_dining',
+              'tour_look_stair_ground', 'tour_look_stair_upper',
+              'tour_look_master', 'tour_look_pool'
+          }
+          required_interior = {
+              'stair_step_v04_00', 'stair_landing_v04',
+              'stair_top_rail_v04_r2', 'stair_glass_guard_v04_r2',
+              'kitchen_island_v04', 'living_media_wall_v04',
+              'master_bed_base_v04', 'master_door_v04', 'private_door_v04'
+          }
+          missing = sorted((tour_anchors | look_targets | required_interior) - node_names)
+          if missing:
+              raise SystemExit(f'missing required Interior2 nodes: {missing}')
+
+          report = {
+              'version': 'v0.4-interior2',
+              'stage': 'INTERIOR_TOUR',
+              'parent_baseline': 'v0.3-life2 PASS / FROZEN',
+              'supersedes': 'v0.4-interior1 visual review',
+              'quality_status': 'INTERIOR_TOUR_REVIEW_PENDING_VISUAL_INSPECTION',
+              'features': [
+                  'furniture and kitchen presentation layer',
+                  'doors and practical lighting cues',
+                  'refined staircase and glass guard presentation geometry',
+                  'named first-person camera anchors',
+                  'named look targets for curated viewing direction',
+                  'ground and upper-floor guided tour path'
+              ],
+              'tour_anchors': sorted(tour_anchors),
+              'look_targets': sorted(look_targets),
+              'required_interior_nodes': sorted(required_interior),
+              'render': {
+                  'file': str(png), 'width': width, 'height': height,
+                  'bytes': len(raw_png), 'sha256': hashlib.sha256(raw_png).hexdigest()
+              },
+              'glb': {
+                  'file': str(glb), 'version': version, 'bytes': len(raw_glb),
+                  'sha256': hashlib.sha256(raw_glb).hexdigest(),
+                  'container_length_matches': True
+              },
+              'blend': {
+                  'file': str(blend), 'bytes': blend.stat().st_size,
+                  'sha256': hashlib.sha256(blend.read_bytes()).hexdigest()
+              },
+              'claim_boundary': 'AI-assisted architectural visualization and virtual-tour prototype. Navigation plan and free-walk path are presentation tools, not BIM, measured construction geometry, accessibility/code-compliance evidence or as-built documentation.'
+          }
+          out = root / 'validation/v0.4-interior2-receipt.json'
+          out.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Upload v0.4 Interior2 gate packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-v0.4-interior2-gate
+          path: |
+            projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-interior2.png
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior2.glb
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior2.blend
+            projects/Dubai-Luxury-Villa-AI/validation/v0.4-interior2-receipt.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish Interior2 review evidence
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-interior2.png \
+            projects/Dubai-Luxury-Villa-AI/validation/v0.4-interior2-receipt.json
+          if git diff --cached --quiet; then
+            echo 'Interior2 review evidence unchanged'
+            exit 0
+          fi
+          git commit -m 'Publish Dubai villa v0.4 Interior2 review'
+          git reset --hard HEAD
+          git clean -fd
+          git pull --rebase origin main
+          git push origin HEAD:main
