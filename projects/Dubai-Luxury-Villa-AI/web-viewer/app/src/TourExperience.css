@@ -654,11 +654,12 @@
 }
 
 @media (max-width: 520px) {
-  .tour-experience { padding: 14px; border-radius: 18px; }
+  .tour-experience { padding: 10px; border-radius: 18px; }
   .walkthrough-feature-grid { display: none; }
-  .house-plan-card--hero { padding: 12px; }
-  .house-plan-stage { min-height: 405px; padding: 6px; }
-  .house-plan { min-height: 390px; }
+  .house-plan-card--hero { padding: 8px 6px; }
+  .house-plan-card__header--hero { padding-inline: 4px; }
+  .house-plan-stage { min-height: 410px; padding: 3px; border-radius: 12px; }
+  .house-plan { min-height: 398px; }
   .house-plan--dollhouse { transform: perspective(900px) rotateX(46deg) rotateZ(-2deg) scale(.9); }
   .house-plan__sheet-label { font-size: .52rem; }
   .house-plan__zone { padding: 6px; }
@@ -666,7 +667,8 @@
   .house-plan__zone span { display: none; }
   .house-plan__fixture { font-size: .48rem; }
   .house-plan__portal { transform: scale(.72); transform-origin: top left; }
-  .house-plan-legend { gap: 9px; font-size: .62rem; }
-  .client-graph-card--timeline { padding: 12px; }
+  .house-plan-legend { gap: 9px; font-size: .62rem; padding-inline: 4px; }
+  .house-plan-card__note { padding-inline: 4px; }
+  .client-graph-card--timeline { padding: 12px 8px; }
   .client-graph-card__actions--timeline { grid-template-columns: 1fr 1fr; }
 }
