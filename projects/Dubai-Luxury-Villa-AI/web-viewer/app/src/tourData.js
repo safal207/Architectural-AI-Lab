@@ -139,6 +139,19 @@ export const FLOOR_PLAN_PORTALS = {
   ]
 };
 
+export const FLOOR_PLAN_WINDOWS = {
+  1: [
+    { id: 'living-window-west', x: 5, y: 17, length: 19, orientation: 'vertical' },
+    { id: 'living-window-north', x: 19, y: 8, length: 24, orientation: 'horizontal' },
+    { id: 'dining-window-north', x: 63, y: 10, length: 22, orientation: 'horizontal' },
+    { id: 'pool-glazing', x: 76, y: 69, length: 18, orientation: 'vertical' }
+  ],
+  2: [
+    { id: 'master-window-north', x: 55, y: 12, length: 27, orientation: 'horizontal' },
+    { id: 'master-window-east', x: 94, y: 28, length: 34, orientation: 'vertical' }
+  ]
+};
+
 export const FLOOR_PLAN_LIGHTS = {
   1: [
     { id: 'living-light', x: 28, y: 17 },
