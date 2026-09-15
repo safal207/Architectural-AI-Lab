@@ -1,14 +1,14 @@
 export const lightingModes = {
   day: {
     name: 'Day',
-    intensity: 1.0
+    intensity: 0.82
   },
   evening: {
     name: 'Evening',
-    intensity: 0.55
+    intensity: 0.48
   },
   night: {
     name: 'Night',
-    intensity: 0.25
+    intensity: 0.18
   }
 };
