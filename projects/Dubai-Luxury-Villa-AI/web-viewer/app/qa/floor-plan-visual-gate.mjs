@@ -9,6 +9,11 @@ function check(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+async function fastClick(locator) {
+  await locator.waitFor({ state: 'visible' });
+  await locator.evaluate((element) => element.click());
+}
+
 async function waitForModel(page) {
   await page.locator('.three-canvas canvas').waitFor({ state: 'visible', timeout: 120_000 });
   await page.waitForFunction(
@@ -21,8 +26,9 @@ async function waitForModel(page) {
 async function openFloorTwo(page) {
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
-  await tour.locator('.floor-switch').getByRole('button', { name: 'Floor 2', exact: true }).click();
-  await tour.getByRole('heading', { name: /Floor 2/i }).first().waitFor();
+  const floorTwo = tour.locator('.floor-switch').getByRole('button', { name: 'Floor 2', exact: true });
+  await fastClick(floorTwo);
+  await page.waitForFunction(() => document.querySelector('.floor-switch button[aria-pressed="true"]')?.textContent?.trim() === 'Floor 2');
   await tour.locator('.house-plan__zone').filter({ hasText: 'Master Bedroom' }).waitFor();
   return tour;
 }
@@ -59,18 +65,18 @@ try {
   check(await tour.locator('.house-plan__portal').count() >= 1, 'Floor 2 plan is missing door marker');
   check(await tour.locator('.house-plan__light').count() >= 2, 'Floor 2 plan is missing light points');
 
-  await tour.locator('.client-graph li').filter({ hasText: 'Upper landing' }).getByRole('button').click();
+  await fastClick(tour.locator('.client-graph li').filter({ hasText: 'Upper landing' }).getByRole('button'));
   await tour.locator('.house-plan__position').waitFor({ state: 'visible' });
   await desktop.screenshot({ path: `${outputDir}/floor-2-plan.png`, fullPage: true });
   report.desktop.plan = 'PASS';
   report.desktop.positionMarker = 'PASS';
 
-  await tour.locator('.plan-mode-switch').getByRole('button', { name: 'DOLLHOUSE', exact: true }).click();
+  await fastClick(tour.locator('.plan-mode-switch').getByRole('button', { name: 'DOLLHOUSE', exact: true }));
   check(await tour.locator('.house-plan').getAttribute('class').then((value) => value.includes('house-plan--dollhouse')), 'Dollhouse mode class was not applied');
   await desktop.screenshot({ path: `${outputDir}/floor-2-dollhouse.png`, fullPage: true });
   report.desktop.dollhouse = 'PASS';
 
-  await tour.locator('.plan-mode-switch').getByRole('button', { name: 'WALK', exact: true }).click();
+  await fastClick(tour.locator('.plan-mode-switch').getByRole('button', { name: 'WALK', exact: true }));
   await desktop.waitForFunction(() => {
     const canvas = document.querySelector('.three-canvas');
     return canvas?.dataset.viewMode === 'first-person' && canvas?.dataset.tourStop === 'stair-upper';
@@ -84,7 +90,7 @@ try {
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
   await waitForModel(mobile);
   const mobileTour = await openFloorTwo(mobile);
-  await mobileTour.locator('.client-graph li').filter({ hasText: 'Upper landing' }).getByRole('button').click();
+  await fastClick(mobileTour.locator('.client-graph li').filter({ hasText: 'Upper landing' }).getByRole('button'));
   await mobileTour.locator('.house-plan__position').waitFor({ state: 'visible' });
 
   const overflow = await mobile.evaluate(() => ({
