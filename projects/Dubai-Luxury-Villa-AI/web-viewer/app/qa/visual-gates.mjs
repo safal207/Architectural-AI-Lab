@@ -9,6 +9,11 @@ function check(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+async function fastClick(locator) {
+  await locator.waitFor({ state: 'visible', timeout: 120_000 });
+  await locator.evaluate((element) => element.click());
+}
+
 async function waitForModel(page) {
   await page.locator('.three-canvas canvas').waitFor({ state: 'visible', timeout: 120_000 });
   await page.waitForFunction(
@@ -31,13 +36,23 @@ async function waitForStop(page, stopId) {
 async function selectRouteStop(page, title, stopId) {
   const tour = page.locator('.tour-experience');
   const stop = tour.locator('.client-graph li').filter({ hasText: title }).getByRole('button');
-  await stop.click();
+  await fastClick(stop);
   await waitForStop(page, stopId);
 }
 
 async function captureClip(page, locator, name) {
-  await locator.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(120);
+  await locator.waitFor({ state: 'visible', timeout: 120_000 });
+
+  // Do not use Playwright's scrollIntoViewIfNeeded here. The viewer contains
+  // continuously-rendered WebGL and small UI transitions, so Playwright can
+  // spend its whole action timeout waiting for the element to become "stable".
+  // Native DOM scrolling gives us deterministic visual-gate capture without
+  // changing the rendered scene or the target bounding box.
+  await locator.evaluate((element) => {
+    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+  });
+  await page.waitForTimeout(180);
+
   const box = await locator.boundingBox();
   check(box && box.width > 1 && box.height > 1, `Capture target ${name} has no usable bounding box`);
   await page.screenshot({
@@ -84,7 +99,7 @@ try {
 
   const tour = page.locator('.tour-experience');
   const enter = tour.getByRole('button', { name: 'Enter the house', exact: true });
-  await enter.click({ force: true });
+  await fastClick(enter);
   await waitForStop(page, 'entry');
   await captureViewer(page, '02-entry');
   report.captures.push('02-entry');
@@ -105,12 +120,12 @@ try {
   }
 
   const floor1 = tour.locator('.floor-switch').getByRole('button', { name: 'Floor 1', exact: true });
-  await floor1.click();
+  await fastClick(floor1);
   await capturePlan(page, '09-floor-1-plan');
   report.captures.push('09-floor-1-plan');
 
   const floor2 = tour.locator('.floor-switch').getByRole('button', { name: 'Floor 2', exact: true });
-  await floor2.click();
+  await fastClick(floor2);
   await capturePlan(page, '10-floor-2-plan');
   report.captures.push('10-floor-2-plan');
 
