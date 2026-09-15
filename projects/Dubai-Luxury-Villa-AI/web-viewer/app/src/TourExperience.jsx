@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { FLOOR_PLAN_ZONES, TOUR_STOPS } from './tourData';
+import { WALKTHROUGH_FEATURES } from './navigationData';
 import './TourExperience.css';
+import './Walkthrough.css';
 
 export default function TourExperience({
   activeStopId,
@@ -26,7 +28,7 @@ export default function TourExperience({
       <div className="tour-experience__intro">
         <div>
           <p className="eyebrow">Client viewing graph</p>
-          <h2>See the house as a sequence, not a static render.</h2>
+          <h2>Enter the villa, understand the plan, then walk it at eye level.</h2>
           <p>
             Exterior → entry → living → kitchen and dining → staircase → upper landing → master suite → pool terrace.
           </p>
@@ -37,8 +39,17 @@ export default function TourExperience({
           aria-pressed={tourMode}
           onClick={() => onToggleTourMode(!tourMode)}
         >
-          {tourMode ? 'First-person tour: ON' : 'Start first-person tour'}
+          {tourMode ? 'First-person tour: ON' : 'Enter the house'}
         </button>
+      </div>
+
+      <div className="walkthrough-feature-grid" aria-label="Walkthrough capabilities">
+        {WALKTHROUGH_FEATURES.map((feature) => (
+          <div key={feature.id} className="walkthrough-feature">
+            <strong>{feature.label}</strong>
+            <span>{feature.status}</span>
+          </div>
+        ))}
       </div>
 
       <div className="tour-experience__grid">
@@ -78,7 +89,7 @@ export default function TourExperience({
                 onClick={() => selectStop(zone.tourStopId)}
               >
                 <strong>{zone.label}</strong>
-                <span>{zone.roomId ? 'Room focus' : 'Tour point'}</span>
+                <span>{zone.id === 'stair' || zone.id === 'landing' ? 'Stair transition' : zone.roomId ? 'Room focus' : 'Tour point'}</span>
               </button>
             ))}
             <div className="house-plan__north" aria-hidden="true">N ↑</div>
@@ -90,7 +101,7 @@ export default function TourExperience({
         </article>
 
         <article className="client-graph-card">
-          <p className="eyebrow">Guided route</p>
+          <p className="eyebrow">Guided client route</p>
           <h3>{activeStop.order}. {activeStop.title}</h3>
           <p className="client-graph-card__description">{activeStop.description}</p>
 
