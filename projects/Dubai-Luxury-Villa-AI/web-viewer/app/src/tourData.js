@@ -66,10 +66,11 @@ export const TOUR_STOPS = [
     floor: 2,
     nodeName: 'tour_stair_upper',
     targetNodeName: 'tour_look_stair_upper',
+    cameraOffsetLocal: [-1.4, 0, -0.7],
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'stairs',
-    description: 'Arrive at the authored upper-floor eye point and follow the intended corridor sightline toward the master-suite threshold.'
+    description: 'Arrive on Floor 2 from a pulled-back diagonal viewpoint so the landing, threshold and circulation depth can be judged before entering the master suite.'
   },
   {
     id: 'master',
