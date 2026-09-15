@@ -21,9 +21,9 @@ TOUR_CAMERA_LOCATIONS = {
     'tour_entry': (-3.55, -2.20, 1.65),
     'tour_living': (-2.20, 0.65, 1.65),
     'tour_dining': (4.65, 1.65, 1.65),
-    'tour_stair_ground': (-2.60, -2.45, 1.65),
-    'tour_stair_upper': (-2.45, 1.65, 4.95),
-    'tour_master': (4.45, 1.20, 5.00),
+    'tour_stair_ground': (-4.75, -2.95, 1.65),
+    'tour_stair_upper': (-4.60, 1.90, 4.95),
+    'tour_master': (4.80, 2.45, 5.00),
     'tour_pool': (-0.55, 7.05, 1.65),
 }
 
@@ -31,9 +31,9 @@ TOUR_LOOK_TARGETS = {
     'tour_look_entry': (-0.65, 0.20, 1.50),
     'tour_look_living': (3.15, 0.35, 1.25),
     'tour_look_dining': (2.65, -1.62, 1.15),
-    'tour_look_stair_ground': (-4.15, 0.35, 2.55),
+    'tour_look_stair_ground': (-4.15, 0.30, 2.35),
     'tour_look_stair_upper': (1.60, 0.80, 4.75),
-    'tour_look_master': (1.75, 0.35, 4.35),
+    'tour_look_master': (1.60, 0.15, 4.30),
     'tour_look_pool': (-0.15, 3.90, 1.45),
 }
 
