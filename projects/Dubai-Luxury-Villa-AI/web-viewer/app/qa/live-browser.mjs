@@ -67,16 +67,19 @@ try {
   await waitForModel(desktop);
   report.desktop.asset = await verifyPublishedAsset(desktop);
 
-  await desktop.getByRole('button', { name: /Master Bedroom/ }).click();
+  const desktopRooms = desktop.locator('.rooms-panel');
+  await desktopRooms.getByRole('button', { name: 'Master Bedroom — 52 sqm', exact: true }).click();
   await desktop.locator('.room-details h3').filter({ hasText: 'Master Bedroom' }).waitFor();
   await waitForModel(desktop);
 
-  await desktop.getByRole('button', { name: /^Night$/ }).click();
-  await desktop.getByText('Lighting: Night').waitFor();
+  const lightingNav = desktop.locator('nav[aria-label="Lighting mode"]');
+  await lightingNav.getByRole('button', { name: 'Night', exact: true }).click();
+  await desktop.getByText('Lighting: Night', { exact: true }).waitFor();
   await waitForModel(desktop);
 
-  await desktop.getByRole('button', { name: /Warm Wood/ }).click();
-  await desktop.getByText('Material: Warm Wood').waitFor();
+  const materialPanel = desktop.locator('.material-switcher');
+  await materialPanel.getByRole('button', { name: /Warm Wood/ }).click();
+  await desktop.getByText('Material: Warm Wood', { exact: true }).waitFor();
   await waitForModel(desktop);
 
   const canvas = desktop.locator('.three-canvas canvas');
@@ -101,7 +104,9 @@ try {
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
   await mobile.getByRole('heading', { level: 1, name: 'Dubai Luxury Villa AI', exact: true }).waitFor();
   await waitForModel(mobile);
-  await mobile.getByRole('button', { name: /Pool Terrace/ }).click();
+
+  const mobileRooms = mobile.locator('.rooms-panel');
+  await mobileRooms.getByRole('button', { name: 'Pool Terrace — 46 sqm', exact: true }).click();
   await mobile.locator('.room-details h3').filter({ hasText: 'Pool Terrace' }).waitFor();
   await waitForModel(mobile);
 
