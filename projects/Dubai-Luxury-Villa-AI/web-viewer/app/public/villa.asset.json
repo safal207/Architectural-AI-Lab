@@ -9,11 +9,12 @@
     "light": "v0.3-l2 PASS / FROZEN",
     "life": "v0.3-life2 PASS / FROZEN",
     "interior": "v0.4-interior2 baseline",
-    "upper_landing_repair": "v0.4-interior3 gated candidate"
+    "upper_landing_repair": "v0.4-interior3 gated candidate",
+    "web_light_boundary": "Three.js owns runtime lighting; Blender punctual lights stripped from GLB"
   },
   "glb": {
-    "bytes": 7843820,
-    "sha256": "f3c85f2d0ec77228dd9cd9e86d92eee32c9fa0854339c85e677ec885ae7d563d",
+    "bytes": 7840060,
+    "sha256": "036626cb1876779db3201197ac133e32b18f7467d0440cdce9beeb9a135f2ceb",
     "version": 2
   },
   "room_anchors": [
@@ -26,7 +27,8 @@
     "clear upper landing circulation candidate",
     "open master-suite threshold",
     "family-specific finish moods",
-    "human-scale 64 degree first-person FOV"
+    "human-scale 64 degree first-person FOV",
+    "browser-owned Day Evening Night lighting without duplicated Blender punctual lights"
   ],
   "generator": "Native Blender 4.0.2 pipeline via GitHub Actions",
   "promotion_scope": "feat/first-person-house-tour only; main is intentionally untouched",
