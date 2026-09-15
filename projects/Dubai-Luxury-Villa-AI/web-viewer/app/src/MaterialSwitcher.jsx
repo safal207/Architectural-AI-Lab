@@ -1,28 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const MATERIALS = [
   {
-    id: "classic-marble",
-    name: "Classic Marble",
-    description: "Light stone palette for a premium interior presentation.",
-    swatch: "#e8e1d6"
+    id: "warm-limestone",
+    name: "Warm Limestone",
+    description: "Ivory plaster, warm limestone and walnut remain distinct instead of collapsing into one pale tint.",
+    swatch: "#c7b79f",
+    familyColors: {
+      stone: "#b9a083",
+      plaster: "#d7d0c3",
+      timber: "#5d3a27",
+      deck: "#8d7b68"
+    }
   },
   {
-    id: "warm-wood",
-    name: "Warm Wood",
-    description: "Natural timber accents for a softer residential atmosphere.",
-    swatch: "#a8784f"
+    id: "sandstone",
+    name: "Sandstone Warmth",
+    description: "Muted travertine and sand tones with darker timber for a calm residential presentation.",
+    swatch: "#b79570",
+    familyColors: {
+      stone: "#b58f68",
+      plaster: "#c8b89f",
+      timber: "#68412b",
+      deck: "#88705c"
+    }
   },
   {
-    id: "dark-stone",
-    name: "Dark Stone",
-    description: "Graphite stone surfaces for an evening luxury concept.",
-    swatch: "#3d4147"
+    id: "graphite-mineral",
+    name: "Graphite Mineral",
+    description: "Warm mineral contrast with restrained graphite stone while plaster and timber keep their own identity.",
+    swatch: "#655f58",
+    familyColors: {
+      stone: "#56514b",
+      plaster: "#aaa49a",
+      timber: "#4b3025",
+      deck: "#625d56"
+    }
   }
 ];
 
 export default function MaterialSwitcher({ onChange }) {
   const [activeId, setActiveId] = useState(MATERIALS[0].id);
+
+  useEffect(() => {
+    onChange?.(MATERIALS[0]);
+  }, [onChange]);
 
   function select(material) {
     setActiveId(material.id);
@@ -30,8 +52,8 @@ export default function MaterialSwitcher({ onChange }) {
   }
 
   return (
-    <section className="material-switcher" aria-label="Material variants">
-      <h2>Material Variants</h2>
+    <section className="material-switcher" aria-label="Material finish moods">
+      <h2>Finish Moods</h2>
       <div className="material-switcher__options">
         {MATERIALS.map((material) => (
           <button
@@ -54,7 +76,7 @@ export default function MaterialSwitcher({ onChange }) {
         ))}
       </div>
       <p className="material-switcher__note">
-        Presentation control: only the allow-listed v0.3 architectural finish materials are tinted. Glass, water, metal and Life-stage landscape materials remain protected.
+        Presentation mood control. Each preset now preserves separate stone, plaster, timber and deck families instead of tinting every architectural finish as one surface.
       </p>
     </section>
   );

@@ -1,15 +1,22 @@
-// WebGL renderer initialization prototype
-
+// WebGL renderer tuned for luxury architectural presentation.
+// Color management is kept here so every viewer mode uses the same photographic baseline.
 export function createRenderer(THREE, container) {
   const renderer = new THREE.WebGLRenderer({
-    antialias: true
+    antialias: true,
+    powerPreference: 'high-performance'
   });
 
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(
     container.clientWidth,
     container.clientHeight
   );
+
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.70;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   container.appendChild(renderer.domElement);
 

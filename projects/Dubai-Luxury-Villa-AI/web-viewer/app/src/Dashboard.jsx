@@ -33,6 +33,14 @@ export default function Dashboard() {
     if (matchingStop) setActiveTourStopId(matchingStop.id);
   };
 
+  const toggleTourMode = (enabled) => {
+    setTourMode(enabled);
+    if (enabled && activeTourStopId === 'overview') {
+      const entry = TOUR_STOPS.find((stop) => stop.id === 'entry');
+      if (entry) selectTourStop(entry);
+    }
+  };
+
   return (
     <main className="app-shell">
       <DeveloperCase />
@@ -41,15 +49,15 @@ export default function Dashboard() {
         activeStopId={activeTourStopId}
         onSelectStop={selectTourStop}
         tourMode={tourMode}
-        onToggleTourMode={setTourMode}
+        onToggleTourMode={toggleTourMode}
       />
 
       <header className="viewer-toolbar" id="viewer">
         <div>
-          <p className="eyebrow">Interactive proof environment · gated v0.4 Interior2</p>
+          <p className="eyebrow">Interactive proof environment · protected walkthrough branch</p>
           <h2>Dubai Luxury Villa AI</h2>
           <p>
-            Explore the promoted interior model, two-floor room plan, furniture, doors, staircase, lighting, materials and guided first-person viewing path.
+            Explore the promoted interior model, two-floor room plan, furniture, doors, staircase, lighting, materials and bounded first-person walkthrough.
           </p>
         </div>
         <nav aria-label="Lighting mode">
@@ -110,7 +118,7 @@ export default function Dashboard() {
       <footer>
         <span>Lighting: {activeLighting.name}</span>
         <span>Material: {material?.name ?? 'Original hero materials'}</span>
-        <span>View: {tourMode ? 'Guided first-person' : 'Orbit'}</span>
+        <span>View: {tourMode ? 'Bounded first-person' : 'Orbit'}</span>
         <span>Concept portfolio — not construction documentation</span>
       </footer>
     </main>

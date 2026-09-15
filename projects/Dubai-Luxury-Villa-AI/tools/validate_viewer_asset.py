@@ -8,6 +8,26 @@ APP_ROOT = PROJECT_ROOT / 'web-viewer' / 'app'
 GLB_PATH = APP_ROOT / 'public' / 'villa.glb'
 MANIFEST_PATH = APP_ROOT / 'public' / 'villa.asset.json'
 
+V04_TOUR_ANCHORS = {
+    'tour_graph_root',
+    'tour_entry',
+    'tour_living',
+    'tour_dining',
+    'tour_stair_ground',
+    'tour_stair_upper',
+    'tour_master',
+    'tour_pool',
+}
+V04_LOOK_TARGETS = {
+    'tour_look_entry',
+    'tour_look_living',
+    'tour_look_dining',
+    'tour_look_stair_ground',
+    'tour_look_stair_upper',
+    'tour_look_master',
+    'tour_look_pool',
+}
+
 VERSION_RULES = {
     'v0.3-life2': {
         'status': 'FORM_MATERIAL_LIGHT_LIFE_GATED',
@@ -15,29 +35,14 @@ VERSION_RULES = {
         'required_tour_anchors': set(),
         'required_look_targets': set(),
         'required_interior_nodes': set(),
+        'promotion_kind': 'released',
+        'forbid_punctual_lights': False,
     },
     'v0.4-interior2': {
         'status': 'FORM_MATERIAL_LIGHT_LIFE_INTERIOR_TOUR_GATED',
         'promotion': PROJECT_ROOT / 'validation' / 'v0.4-viewer-promotion.json',
-        'required_tour_anchors': {
-            'tour_graph_root',
-            'tour_entry',
-            'tour_living',
-            'tour_dining',
-            'tour_stair_ground',
-            'tour_stair_upper',
-            'tour_master',
-            'tour_pool',
-        },
-        'required_look_targets': {
-            'tour_look_entry',
-            'tour_look_living',
-            'tour_look_dining',
-            'tour_look_stair_ground',
-            'tour_look_stair_upper',
-            'tour_look_master',
-            'tour_look_pool',
-        },
+        'required_tour_anchors': V04_TOUR_ANCHORS,
+        'required_look_targets': V04_LOOK_TARGETS,
         'required_interior_nodes': {
             'stair_step_v04_00',
             'stair_landing_v04',
@@ -49,6 +54,30 @@ VERSION_RULES = {
             'master_door_v04',
             'private_door_v04',
         },
+        'promotion_kind': 'released',
+        'forbid_punctual_lights': False,
+    },
+    'v0.4-interior3-feature-candidate': {
+        'status': 'FEATURE_BRANCH_VISUAL_QA_ONLY',
+        'promotion': PROJECT_ROOT / 'validation' / 'v0.4-interior3-feature-promotion.json',
+        'required_tour_anchors': V04_TOUR_ANCHORS,
+        'required_look_targets': V04_LOOK_TARGETS,
+        'required_interior_nodes': {
+            'stair_step_v04_00',
+            'stair_landing_v04',
+            'stair_top_rail_v04_r2',
+            'stair_glass_guard_v04_r2',
+            'upper_landing_side_wall_v04_r4',
+            'upper_corridor_bridge_v04_r3',
+            'kitchen_island_v04',
+            'living_media_wall_v04',
+            'master_bed_base_v04',
+            'master_door_open_v04_r4',
+            'master_door_handle_open_v04_r4',
+            'private_door_v04',
+        },
+        'promotion_kind': 'feature-candidate',
+        'forbid_punctual_lights': True,
     },
 }
 
@@ -83,6 +112,29 @@ def parse_glb(raw):
     return json.loads(raw[20:20 + json_length].decode('utf-8').rstrip('\x00 '))
 
 
+def validate_promotion(version, rules, promotion, raw, digest):
+    if promotion.get('bytes') != len(raw):
+        fail('promotion receipt byte count does not match committed asset')
+    if promotion.get('sha256') != digest:
+        fail('promotion receipt SHA-256 does not match committed asset')
+
+    if rules['promotion_kind'] == 'released':
+        if promotion.get('promotion') != 'APPROVED_FOR_PORTFOLIO_VIEWER':
+            fail(f"viewer promotion not approved: {promotion.get('promotion')}")
+        return
+
+    if rules['promotion_kind'] == 'feature-candidate':
+        if promotion.get('scope') != 'FEATURE_BRANCH_ONLY':
+            fail(f"Interior3 feature scope mismatch: {promotion.get('scope')}")
+        if promotion.get('main_untouched') is not True:
+            fail('Interior3 feature receipt does not preserve main boundary')
+        if promotion.get('lighting_boundary') != 'BLENDER_PUNCTUAL_LIGHTS_STRIPPED_BROWSER_OWNS_RUNTIME_LIGHTING':
+            fail(f"Interior3 lighting boundary mismatch: {promotion.get('lighting_boundary')}")
+        return
+
+    fail(f'unknown promotion kind for {version}: {rules["promotion_kind"]}')
+
+
 def main():
     for path in (GLB_PATH, MANIFEST_PATH):
         if not path.is_file() or path.stat().st_size == 0:
@@ -108,12 +160,8 @@ def main():
         fail('manifest GLB byte count does not match committed asset')
     if manifest.get('glb', {}).get('sha256') != digest:
         fail('manifest SHA-256 does not match committed asset')
-    if promotion.get('bytes') != len(raw):
-        fail('promotion receipt byte count does not match committed asset')
-    if promotion.get('sha256') != digest:
-        fail('promotion receipt SHA-256 does not match committed asset')
-    if promotion.get('promotion') != 'APPROVED_FOR_PORTFOLIO_VIEWER':
-        fail(f"viewer promotion not approved: {promotion.get('promotion')}")
+
+    validate_promotion(version, rules, promotion, raw, digest)
 
     document = parse_glb(raw)
     node_names = {node.get('name') for node in document.get('nodes', []) if node.get('name')}
@@ -148,6 +196,27 @@ def main():
     if missing_interior:
         fail(f'missing interior-tour nodes: {missing_interior}')
 
+    if version == 'v0.4-interior3-feature-candidate':
+        if 'upper_stone_spine' in node_names:
+            fail('Interior3 viewer regressed: legacy upper_stone_spine is present')
+        if 'master_door_v04' in node_names:
+            fail('Interior3 viewer regressed: closed master_door_v04 is present')
+
+    if rules['forbid_punctual_lights']:
+        used_extensions = set(document.get('extensionsUsed') or [])
+        top_extensions = document.get('extensions') or {}
+        node_light_refs = [
+            node.get('name')
+            for node in document.get('nodes', [])
+            if 'KHR_lights_punctual' in (node.get('extensions') or {})
+        ]
+        if (
+            'KHR_lights_punctual' in used_extensions
+            or 'KHR_lights_punctual' in top_extensions
+            or node_light_refs
+        ):
+            fail(f'Interior3 runtime-lighting boundary violated: {node_light_refs}')
+
     if version == 'v0.4-interior2':
         if promotion.get('vite_build') != 'PASS':
             fail('v0.4 promotion did not record Vite build PASS')
@@ -165,6 +234,8 @@ def main():
         print('Virtual-tour anchors OK:', ', '.join(sorted(required_tour)))
         print('Virtual-tour look targets OK:', ', '.join(sorted(required_look)))
         print('Interior nodes OK:', ', '.join(sorted(required_interior)))
+    if rules['forbid_punctual_lights']:
+        print('Runtime-lighting boundary OK: GLB has no KHR_lights_punctual')
 
 
 if __name__ == '__main__':
