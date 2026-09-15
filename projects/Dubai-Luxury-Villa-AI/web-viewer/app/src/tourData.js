@@ -65,12 +65,11 @@ export const TOUR_STOPS = [
     title: 'Upper landing',
     floor: 2,
     nodeName: 'tour_stair_upper',
-    targetNodeName: 'master_door_v04',
-    cameraOffsetLocal: [-1.4, 0, -0.7],
+    targetNodeName: 'tour_look_stair_upper',
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'stairs',
-    description: 'Arrive on Floor 2 from a pulled-back diagonal viewpoint and face the master-suite threshold directly, isolating target direction from the camera-distance fix.'
+    description: 'Arrive at the repaired Interior3 landing eye point and look through the open master-suite threshold without any legacy client-side camera compensation.'
   },
   {
     id: 'master',
