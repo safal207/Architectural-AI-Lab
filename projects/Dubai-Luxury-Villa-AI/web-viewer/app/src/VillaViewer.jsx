@@ -23,12 +23,12 @@ const ROOM_NODE_NAMES = {
   'pool-terrace': 'pool_terrace'
 };
 
-const SWITCHABLE_ARCHITECTURAL_MATERIALS = new Set([
-  'M4_OrganicWarmLimestone',
-  'M3_IvoryPlaster',
-  'M2_WalnutTimber',
-  'M3_DeckStone'
-]);
+const MATERIAL_FAMILY_BY_NAME = {
+  M4_OrganicWarmLimestone: 'stone',
+  M3_IvoryPlaster: 'plaster',
+  M2_WalnutTimber: 'timber',
+  M3_DeckStone: 'deck'
+};
 
 function buildFallbackMassing(scene, accentColor) {
   const group = new THREE.Group();
@@ -65,15 +65,18 @@ function buildFallbackMassing(scene, accentColor) {
 }
 
 function applyMaterialConcept(root, selectedMaterial) {
-  if (!root || !selectedMaterial?.swatch) return;
+  if (!root || !selectedMaterial?.familyColors) return;
 
   root.traverse((object) => {
     if (!object.isMesh || !object.material) return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     const nextMaterials = materials.map((source) => {
-      if (!SWITCHABLE_ARCHITECTURAL_MATERIALS.has(source.name)) return source;
+      const family = MATERIAL_FAMILY_BY_NAME[source.name];
+      const familyColor = family ? selectedMaterial.familyColors[family] : null;
+      if (!familyColor) return source;
+
       const cloned = source.clone();
-      cloned.color = new THREE.Color(selectedMaterial.swatch);
+      cloned.color = new THREE.Color(familyColor);
       return cloned;
     });
     object.material = nextMaterials.length === 1 ? nextMaterials[0] : nextMaterials;
@@ -126,7 +129,7 @@ export default function VillaViewer({
     setWalkGraphReady(false);
 
     const scene = createScene(THREE);
-    scene.background = new THREE.Color(lightingMode?.name === 'Night' ? '#08111c' : '#dfe8ee');
+    scene.background = new THREE.Color(lightingMode?.background ?? '#bfd0d7');
 
     const camera = createCamera(THREE);
     camera.aspect = container.clientWidth / Math.max(container.clientHeight, 1);
@@ -135,13 +138,15 @@ export default function VillaViewer({
 
     const renderer = createRenderer(THREE, container);
     renderer.shadowMap.enabled = true;
+    renderer.toneMappingExposure = lightingMode?.exposure ?? 0.72;
     renderer.setClearColor(scene.background);
     renderer.domElement.style.touchAction = 'none';
 
-    const { ambient, sun } = createLights(THREE, scene);
-    const intensity = lightingMode?.intensity ?? 1;
-    ambient.intensity = 0.75 * intensity + 0.18;
-    sun.intensity = 2.1 * intensity;
+    const { ambient, hemisphere, sun, fill } = createLights(THREE, scene);
+    ambient.intensity = lightingMode?.ambient ?? 0.62;
+    hemisphere.intensity = lightingMode?.hemisphere ?? 0.42;
+    sun.intensity = lightingMode?.sun ?? 1.65;
+    fill.intensity = lightingMode?.fill ?? 0.18;
 
     const isFirstPerson = tourMode && activeTourStopId !== 'overview';
     if (isFirstPerson && !isTouchDevice) {
@@ -384,6 +389,8 @@ export default function VillaViewer({
           data-view-mode={isFirstPerson ? 'first-person' : 'orbit'}
           data-tour-stop={activeTourStopId}
           data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
+          data-lighting-mode={lightingMode?.name ?? 'Day'}
+          data-material-mode={material?.id ?? 'default'}
           aria-label="Interactive Dubai luxury villa virtual tour prototype"
         />
 
