@@ -9,6 +9,11 @@ function check(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+async function fastClick(locator) {
+  await locator.waitFor({ state: 'visible' });
+  await locator.evaluate((element) => element.click());
+}
+
 async function waitForModel(page) {
   await page.locator('.three-canvas canvas').waitFor({ state: 'visible', timeout: 120_000 });
   await page.waitForFunction(
@@ -21,7 +26,7 @@ async function waitForModel(page) {
 async function enterHouse(page) {
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
-  await tour.getByRole('button', { name: 'Enter the house', exact: true }).click();
+  await fastClick(tour.getByRole('button', { name: 'Enter the house', exact: true }));
   await page.waitForFunction(() => {
     const canvas = document.querySelector('.three-canvas');
     return canvas?.dataset.viewMode === 'first-person' && canvas?.dataset.tourStop === 'entry';
@@ -48,11 +53,11 @@ try {
   await enterHouse(desktop);
 
   const tour = desktop.locator('.tour-experience');
-  await tour.locator('.client-graph li').filter({ hasText: 'Kitchen + dining' }).getByRole('button').click();
+  await fastClick(tour.locator('.client-graph li').filter({ hasText: 'Kitchen + dining' }).getByRole('button'));
   await desktop.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.tourStop === 'dining');
-  await tour.locator('.client-graph li').filter({ hasText: 'Stair hall' }).getByRole('button').click();
+  await fastClick(tour.locator('.client-graph li').filter({ hasText: 'Stair hall' }).getByRole('button'));
   await desktop.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.tourStop === 'stair-ground');
-  await tour.locator('.client-graph li').filter({ hasText: 'Upper landing' }).getByRole('button').click();
+  await fastClick(tour.locator('.client-graph li').filter({ hasText: 'Upper landing' }).getByRole('button'));
   await desktop.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.tourStop === 'stair-upper');
   await desktop.locator('.first-person-hud').getByText(/Floor 2/i).waitFor();
   await desktop.screenshot({ path: `${outputDir}/desktop-first-person.png`, fullPage: true });
