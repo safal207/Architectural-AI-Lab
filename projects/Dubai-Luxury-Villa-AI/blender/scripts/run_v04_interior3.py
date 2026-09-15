@@ -16,6 +16,7 @@ PROJECT_ROOT = HERE.parents[1]
 RENDER_PATH = PROJECT_ROOT / 'renders' / 'villa-v0.4-interior3-upper-landing.png'
 BLEND_PATH = PROJECT_ROOT / 'exports' / 'villa-v0.4-interior3.blend'
 GLB_PATH = PROJECT_ROOT / 'exports' / 'villa-v0.4-interior3.glb'
+STAGE_ID = 'v0.4-interior3-root-cause-repair'
 
 LANDING_CAMERA = (-3.65, 1.80, 4.95)
 LANDING_TARGET = (-0.10, 1.45, 4.65)
@@ -183,6 +184,7 @@ def save_outputs():
 
 
 def main():
+    print(f'Building {STAGE_ID}')
     build_scene()
     save_outputs()
     print('Dubai Luxury Villa AI v0.4 Interior3 — clear upper circulation, open master threshold and human-eye landing camera generated')
