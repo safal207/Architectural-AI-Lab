@@ -36,6 +36,20 @@ async function verifyPublishedAsset(page) {
   return { version: manifest.version, bytes: glb.length, sha256: digest };
 }
 
+async function verifySalesCase(page) {
+  await page.getByRole('heading', {
+    level: 1,
+    name: 'Turn an architectural concept into an investor-ready interactive property story.',
+    exact: true
+  }).waitFor();
+
+  await page.getByRole('heading', { level: 2, name: 'Request a 5-day digital twin pilot', exact: true }).waitFor();
+  const pilotLink = page.getByRole('link', { name: 'Request a 5-day pilot', exact: true });
+  await pilotLink.waitFor();
+  const href = await pilotLink.getAttribute('href');
+  check(href?.includes('/Architectural-AI-Lab/issues/new'), `Unexpected pilot CTA href: ${href}`);
+}
+
 const browser = await chromium.launch({ headless: true });
 const report = {
   url: baseUrl,
@@ -63,7 +77,7 @@ try {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
   observe(desktop);
   await desktop.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
-  await desktop.getByRole('heading', { level: 1, name: 'Dubai Luxury Villa AI', exact: true }).waitFor();
+  await verifySalesCase(desktop);
   await waitForModel(desktop);
   report.desktop.asset = await verifyPublishedAsset(desktop);
 
@@ -94,6 +108,7 @@ try {
   check(await desktop.locator('.three-canvas').getAttribute('data-model-state') === 'loaded', 'Model stopped being loaded after orbit/zoom interaction');
 
   await desktop.screenshot({ path: `${outputDir}/desktop.png`, fullPage: true });
+  report.desktop.salesCase = 'PASS';
   report.desktop.roomSelection = 'PASS';
   report.desktop.lighting = 'PASS';
   report.desktop.materialState = 'PASS';
@@ -102,7 +117,7 @@ try {
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
   observe(mobile);
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
-  await mobile.getByRole('heading', { level: 1, name: 'Dubai Luxury Villa AI', exact: true }).waitFor();
+  await verifySalesCase(mobile);
   await waitForModel(mobile);
 
   const mobileRooms = mobile.locator('.rooms-panel');
@@ -119,6 +134,7 @@ try {
   const mobileCanvas = await mobile.locator('.three-canvas canvas').boundingBox();
   check(mobileCanvas && mobileCanvas.width >= 300 && mobileCanvas.height >= 180, 'Mobile WebGL canvas is unexpectedly small');
   await mobile.screenshot({ path: `${outputDir}/mobile.png`, fullPage: true });
+  report.mobile.salesCase = 'PASS';
   report.mobile.roomSelection = 'PASS';
   report.mobile.noHorizontalOverflow = 'PASS';
   report.mobile.canvas = 'PASS';
