@@ -7,12 +7,20 @@ Public target: https://safal207.github.io/Architectural-AI-Lab/
 Latest verified run:
 
 - workflow: `Live Browser QA`
-- run id: `34943513043`
-- source commit: `cad9dcf73982aa769f4d95d33cd6fd6fab0aa220`
+- run id: `34949976641`
+- source commit: `f60e06bac0855b051228e2f2d7e6a12255b4991c`
 - browser: Playwright Chromium, headless
 - live viewer asset: `v0.3-life2`
 - GLB bytes: `7,311,972`
 - GLB SHA-256: `715ced4b3c7182618191adcdc9b71cef9320d6b65bc0ba6a691d5c1e0f0e1e51`
+
+## Developer-facing sales case checks
+
+- developer-case hero rendered on desktop — PASS
+- developer-case hero rendered on mobile — PASS
+- `Request a 5-day digital twin pilot` section rendered — PASS
+- pilot CTA points to the repository public issue intake path — PASS
+- public-request confidentiality warning rendered — PASS
 
 ## Desktop checks
 
@@ -30,6 +38,7 @@ Latest verified run:
 
 Viewport: `390 × 844`.
 
+- sales case and pilot CTA rendered — PASS
 - actual promoted GLB reached loaded state — PASS
 - Pool Terrace room selection/focus path — PASS
 - WebGL canvas visible at usable size — PASS
@@ -46,11 +55,11 @@ Viewport: `390 × 844`.
 
 GitHub Actions artifact: `dubai-villa-live-browser-qa`
 
-Run artifact id: `10385848360`
+Run artifact id: `10388294783`
 
 Artifact ZIP SHA-256:
 
-`775989af0402ae8dc1b17e766d9d03503bc24f1d7792954223b79923adeddf12`
+`7926054e4a17d322b5a1625ca6359c89fcdfb96138cc27a28988e617844e425f`
 
 The artifact contains:
 
@@ -60,6 +69,8 @@ The artifact contains:
 
 ## Claim boundary
 
-This evidence proves live browser delivery, promoted-asset integrity, selected interaction paths, responsive layout behavior and absence of detected runtime/network errors in the tested run.
+This evidence proves live browser delivery, promoted-asset integrity, selected interaction paths, responsive layout behavior, developer-case/CTA delivery and absence of detected runtime/network errors in the tested run.
 
-It does **not** turn this portfolio prototype into BIM, engineering or construction documentation, code-compliance evidence, valuation, or a sales forecast. It also does not silently replace the separate architectural/render aesthetic gate recorded by the Life-stage validation documents.
+The `5-day digital twin pilot` is a bounded service offer, not evidence that every future client property can be completed in five days irrespective of source quality, scope or access. Scope and source materials must be agreed first.
+
+This evidence does **not** turn the portfolio prototype into BIM, engineering or construction documentation, code-compliance evidence, valuation, or a sales forecast. It also does not silently replace the separate architectural/render aesthetic gate recorded by the Life-stage validation documents.
