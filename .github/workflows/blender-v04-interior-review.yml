@@ -41,7 +41,7 @@ jobs:
           d marble_01_nor_gl_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_nor_gl_2k.jpg
           d marble_01_rough_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_rough_2k.jpg
 
-      - name: Render first-person interior review views
+      - name: Render refined first-person interior review views
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
@@ -54,7 +54,7 @@ jobs:
           from pathlib import Path
           import struct
 
-          root = Path('projects/Dubai-Luxury-Villa-AI/renders/v0.4-interior-review')
+          root = Path('projects/Dubai-Luxury-Villa-AI/renders/v0.4-interior2-review')
           expected = ['living-to-dining.png', 'stair-hall.png', 'master-suite.png']
           for name in expected:
               path = root / name
@@ -69,10 +69,10 @@ jobs:
               print(name, width, height, path.stat().st_size)
           PY
 
-      - name: Upload interior visual review
+      - name: Upload Interior2 visual review
         uses: actions/upload-artifact@v4
         with:
-          name: dubai-villa-v0.4-interior-visual-review
-          path: projects/Dubai-Luxury-Villa-AI/renders/v0.4-interior-review/*.png
+          name: dubai-villa-v0.4-interior2-visual-review
+          path: projects/Dubai-Luxury-Villa-AI/renders/v0.4-interior2-review/*.png
           if-no-files-found: error
           retention-days: 14
