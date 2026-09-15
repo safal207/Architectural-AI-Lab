@@ -65,12 +65,11 @@ export const TOUR_STOPS = [
     title: 'Upper landing',
     floor: 2,
     nodeName: 'tour_stair_upper',
-    targetNodeName: 'master_door_v04',
-    cameraOffsetLocal: [1.18, 0, 0.9],
+    targetNodeName: 'tour_look_stair_upper',
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'stairs',
-    description: 'Arrive on the upper floor centered in the landing corridor, facing the master-suite doorway instead of a solid wall.'
+    description: 'Arrive at the authored upper-floor eye point and follow the intended corridor sightline toward the master-suite threshold.'
   },
   {
     id: 'master',
