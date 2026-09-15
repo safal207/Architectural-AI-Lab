@@ -54,7 +54,7 @@ export default function MaterialSwitcher({ onChange }) {
         ))}
       </div>
       <p className="material-switcher__note">
-        Prototype only: visual material switching must be bound to named GLB materials after the villa model is exported.
+        Presentation control: only the allow-listed v0.3 architectural finish materials are tinted. Glass, water, metal and Life-stage landscape materials remain protected.
       </p>
     </section>
   );
