@@ -46,10 +46,10 @@ export default function Dashboard() {
 
       <header className="viewer-toolbar" id="viewer">
         <div>
-          <p className="eyebrow">Interactive proof environment</p>
+          <p className="eyebrow">Interactive proof environment · gated v0.4 Interior2</p>
           <h2>Dubai Luxury Villa AI</h2>
           <p>
-            Explore the promoted model, room plan, lighting, materials and guided first-person viewing path.
+            Explore the promoted interior model, two-floor room plan, furniture, doors, staircase, lighting, materials and guided first-person viewing path.
           </p>
         </div>
         <nav aria-label="Lighting mode">
