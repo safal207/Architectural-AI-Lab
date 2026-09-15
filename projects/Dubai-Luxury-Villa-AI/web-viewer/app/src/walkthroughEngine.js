@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { TOUR_STOPS } from './tourData';
-import { WALKTHROUGH_EDGES, WALKTHROUGH_PLAYER } from './navigationData';
+import { TOUR_STOPS } from './tourData.js';
+import { WALKTHROUGH_EDGES, WALKTHROUGH_PLAYER } from './navigationData.js';
 
 const ROOM_NODE_NAMES = {
   'living-room': 'living_room',
