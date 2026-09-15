@@ -2,22 +2,22 @@ import { useState } from "react";
 
 const MATERIALS = [
   {
-    id: "classic-marble",
-    name: "Classic Marble",
-    description: "Light stone palette for a premium interior presentation.",
-    swatch: "#e8e1d6"
+    id: "warm-limestone",
+    name: "Warm Limestone",
+    description: "Soft ivory mineral mood that keeps the villa warm instead of paper-white.",
+    swatch: "#d3c7b5"
   },
   {
-    id: "warm-wood",
-    name: "Warm Wood",
-    description: "Natural timber accents for a softer residential atmosphere.",
-    swatch: "#a8784f"
+    id: "sandstone",
+    name: "Sandstone Warmth",
+    description: "Muted sand and travertine mood for a calm residential presentation.",
+    swatch: "#b99b78"
   },
   {
-    id: "dark-stone",
-    name: "Dark Stone",
-    description: "Graphite stone surfaces for an evening luxury concept.",
-    swatch: "#3d4147"
+    id: "graphite-mineral",
+    name: "Graphite Mineral",
+    description: "Deep warm graphite without the blue-black cast of a generic dark theme.",
+    swatch: "#625c55"
   }
 ];
 
@@ -30,8 +30,8 @@ export default function MaterialSwitcher({ onChange }) {
   }
 
   return (
-    <section className="material-switcher" aria-label="Material variants">
-      <h2>Material Variants</h2>
+    <section className="material-switcher" aria-label="Material finish moods">
+      <h2>Finish Moods</h2>
       <div className="material-switcher__options">
         {MATERIALS.map((material) => (
           <button
@@ -54,7 +54,7 @@ export default function MaterialSwitcher({ onChange }) {
         ))}
       </div>
       <p className="material-switcher__note">
-        Presentation control: only the allow-listed v0.3 architectural finish materials are tinted. Glass, water, metal and Life-stage landscape materials remain protected.
+        Presentation mood control only. The next material-family pass will separate wall, stone, timber, metal and fabric instead of tinting every architectural finish as one surface.
       </p>
     </section>
   );
