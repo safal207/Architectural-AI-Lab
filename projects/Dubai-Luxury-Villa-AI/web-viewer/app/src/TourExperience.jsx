@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FLOOR_PLAN_ZONES, TOUR_STOPS } from './tourData';
+import './TourExperience.css';
 
 export default function TourExperience({
   activeStopId,
