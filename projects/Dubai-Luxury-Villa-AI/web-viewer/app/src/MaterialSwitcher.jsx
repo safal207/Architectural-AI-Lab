@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const MATERIALS = [
   {
@@ -23,6 +23,10 @@ const MATERIALS = [
 
 export default function MaterialSwitcher({ onChange }) {
   const [activeId, setActiveId] = useState(MATERIALS[0].id);
+
+  useEffect(() => {
+    onChange?.(MATERIALS[0]);
+  }, [onChange]);
 
   function select(material) {
     setActiveId(material.id);
