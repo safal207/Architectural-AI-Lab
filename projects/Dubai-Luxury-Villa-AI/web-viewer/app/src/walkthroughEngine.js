@@ -25,42 +25,117 @@ export function findTourNode(root, stop) {
   return null;
 }
 
-function findFallbackLookTarget(root, stop, position) {
+function rootLocalOffsetToWorld(root, localOffset) {
+  const offset = new THREE.Vector3(...localOffset);
+  const quaternion = new THREE.Quaternion();
+  root.getWorldQuaternion(quaternion);
+  return offset.applyQuaternion(quaternion);
+}
+
+export function resolveTourPosition(root, stop) {
+  const node = findTourNode(root, stop);
+  if (!node) return null;
+  const position = new THREE.Vector3();
+  node.getWorldPosition(position);
+  if (stop.cameraOffsetLocal) {
+    position.add(rootLocalOffsetToWorld(root, stop.cameraOffsetLocal));
+  }
+  return position;
+}
+
+function resolveLookTarget(root, stop, position) {
+  if (stop.lookAtStopId) {
+    const targetStop = TOUR_STOPS.find((item) => item.id === stop.lookAtStopId);
+    const targetStopPosition = targetStop ? resolveTourPosition(root, targetStop) : null;
+    if (targetStopPosition && targetStopPosition.distanceTo(position) > 0.25) {
+      return targetStopPosition;
+    }
+  }
+
+  if (stop.targetNodeName) {
+    const targetNode = root.getObjectByName(stop.targetNodeName);
+    if (targetNode) {
+      const target = new THREE.Vector3();
+      targetNode.getWorldPosition(target);
+      if (target.distanceTo(position) > 0.25) return target;
+    }
+  }
+
   const index = TOUR_STOPS.findIndex((item) => item.id === stop.id);
   for (let offset = 1; offset < TOUR_STOPS.length; offset += 1) {
     const candidate = TOUR_STOPS[(index + offset) % TOUR_STOPS.length];
-    const candidateNode = findTourNode(root, candidate);
-    if (!candidateNode) continue;
-    const target = new THREE.Vector3();
-    candidateNode.getWorldPosition(target);
-    if (target.distanceTo(position) > 0.25) return target;
+    const target = resolveTourPosition(root, candidate);
+    if (target && target.distanceTo(position) > 0.25) return target;
   }
+
   return null;
 }
 
 export function placeFirstPersonCamera(camera, root, activeStopId) {
   const stop = TOUR_STOPS.find((item) => item.id === activeStopId);
-  const node = findTourNode(root, stop);
-  if (!stop || !node) return false;
+  if (!stop) return false;
 
-  const position = new THREE.Vector3();
-  node.getWorldPosition(position);
+  const position = resolveTourPosition(root, stop);
+  if (!position) return false;
   camera.position.copy(position);
 
-  let target = null;
-  if (stop.targetNodeName) {
-    const targetNode = root.getObjectByName(stop.targetNodeName);
-    if (targetNode) {
-      target = new THREE.Vector3();
-      targetNode.getWorldPosition(target);
-    }
-  }
-
-  if (!target) target = findFallbackLookTarget(root, stop, position);
-  if (!target) target = position.clone().add(new THREE.Vector3(0, 0, -4));
+  const target = resolveLookTarget(root, stop, position)
+    ?? position.clone().add(new THREE.Vector3(0, 0, -4));
   target.y = Math.max(target.y, position.y - 0.55);
   camera.lookAt(target);
   return true;
+}
+
+function authoredStairEyePoints(root) {
+  const steps = [];
+  root.traverse((object) => {
+    const match = object.name?.match(/^stair_step_v04_(\d+)$/);
+    if (!match) return;
+    const box = new THREE.Box3().setFromObject(object);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    steps.push({
+      index: Number(match[1]),
+      position: new THREE.Vector3(center.x, box.max.y + 1.6, center.z)
+    });
+  });
+  return steps.sort((a, b) => a.index - b.index).map((item) => item.position);
+}
+
+function expandWalkEdge(root, edge, index, from, to) {
+  if (edge.type !== 'stairs') {
+    return [{
+      ...edge,
+      id: `${edge.from}:${edge.to}:${index}`,
+      a: from.position.clone(),
+      b: to.position.clone()
+    }];
+  }
+
+  const stairPoints = authoredStairEyePoints(root);
+  if (!stairPoints.length) {
+    return [{
+      ...edge,
+      id: `${edge.from}:${edge.to}:${index}`,
+      a: from.position.clone(),
+      b: to.position.clone()
+    }];
+  }
+
+  const forwardDistance = from.position.distanceTo(stairPoints[0])
+    + stairPoints[stairPoints.length - 1].distanceTo(to.position);
+  const reverseDistance = from.position.distanceTo(stairPoints[stairPoints.length - 1])
+    + stairPoints[0].distanceTo(to.position);
+  if (reverseDistance < forwardDistance) stairPoints.reverse();
+
+  const points = [from.position.clone(), ...stairPoints, to.position.clone()];
+  return points.slice(0, -1).map((point, segmentIndex) => ({
+    ...edge,
+    radius: Math.min(edge.radius ?? 1, 0.72),
+    id: `${edge.from}:${edge.to}:${index}:stair:${segmentIndex}`,
+    a: point.clone(),
+    b: points[segmentIndex + 1].clone()
+  }));
 }
 
 export function buildWalkGraph(root) {
@@ -68,10 +143,8 @@ export function buildWalkGraph(root) {
 
   TOUR_STOPS.forEach((stop) => {
     if (stop.id === 'overview') return;
-    const node = findTourNode(root, stop);
-    if (!node) return;
-    const position = new THREE.Vector3();
-    node.getWorldPosition(position);
+    const position = resolveTourPosition(root, stop);
+    if (!position) return;
     stopPoints.set(stop.id, { stop, position });
   });
 
@@ -79,12 +152,7 @@ export function buildWalkGraph(root) {
     const from = stopPoints.get(edge.from);
     const to = stopPoints.get(edge.to);
     if (!from || !to) return [];
-    return [{
-      ...edge,
-      id: `${edge.from}:${edge.to}:${index}`,
-      a: from.position.clone(),
-      b: to.position.clone()
-    }];
+    return expandWalkEdge(root, edge, index, from, to);
   });
 
   return { stopPoints, edges };
