@@ -175,19 +175,23 @@ def save_outputs():
         export_yup=True,
         export_materials='EXPORT',
         export_extras=True,
-        export_lights=True,
+        # The browser owns Day / Evening / Night lighting. Blender's authored
+        # light rig uses Blender energy units that export to very large glTF
+        # punctual-light intensities and then stack on top of the Three.js rig.
+        # Keep emissive fixture meshes, but strip punctual lights at the engine boundary.
+        export_lights=False,
     )
 
     print(f'Rendered v0.4 Interior3 Upper Landing review: {RENDER_PATH}')
     print(f'Saved v0.4 Interior3 Blender source: {BLEND_PATH}')
-    print(f'Exported v0.4 Interior3 GLB: {GLB_PATH}')
+    print(f'Exported v0.4 Interior3 GLB without punctual lights: {GLB_PATH}')
 
 
 def main():
     print(f'Building {STAGE_ID}')
     build_scene()
     save_outputs()
-    print('Dubai Luxury Villa AI v0.4 Interior3 — clear upper circulation, open master threshold and human-eye landing camera generated')
+    print('Dubai Luxury Villa AI v0.4 Interior3 — clear upper circulation, open master threshold and browser-safe lighting boundary generated')
 
 
 if __name__ == '__main__':
