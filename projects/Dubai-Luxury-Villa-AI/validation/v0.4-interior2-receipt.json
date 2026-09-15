@@ -1,0 +1,65 @@
+{
+  "version": "v0.4-interior2",
+  "stage": "INTERIOR_TOUR",
+  "parent_baseline": "v0.3-life2 PASS / FROZEN",
+  "supersedes": "v0.4-interior1 visual review",
+  "quality_status": "INTERIOR_TOUR_REVIEW_PENDING_VISUAL_INSPECTION",
+  "features": [
+    "furniture and kitchen presentation layer",
+    "doors and practical lighting cues",
+    "refined staircase and glass guard presentation geometry",
+    "named first-person camera anchors",
+    "named look targets for curated viewing direction",
+    "ground and upper-floor guided tour path"
+  ],
+  "tour_anchors": [
+    "tour_dining",
+    "tour_entry",
+    "tour_graph_root",
+    "tour_living",
+    "tour_master",
+    "tour_pool",
+    "tour_stair_ground",
+    "tour_stair_upper"
+  ],
+  "look_targets": [
+    "tour_look_dining",
+    "tour_look_entry",
+    "tour_look_living",
+    "tour_look_master",
+    "tour_look_pool",
+    "tour_look_stair_ground",
+    "tour_look_stair_upper"
+  ],
+  "required_interior_nodes": [
+    "kitchen_island_v04",
+    "living_media_wall_v04",
+    "master_bed_base_v04",
+    "master_door_v04",
+    "private_door_v04",
+    "stair_glass_guard_v04_r2",
+    "stair_landing_v04",
+    "stair_step_v04_00",
+    "stair_top_rail_v04_r2"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-interior2.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1621640,
+    "sha256": "723e259469cf6cbaf06d8845669cf790fffcb3ab64a80f11dd07acaa77b607eb"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior2.glb",
+    "version": 2,
+    "bytes": 7848428,
+    "sha256": "0c0aa2e89ba75b8f7b8ecf887c43a97284bf7c19bb455a9972833bbb8458f38e",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior2.blend",
+    "bytes": 7635592,
+    "sha256": "4076ce0ce2305790d7d6cec5943ffe2e46e0d237e6b72fa4101da1eecff44278"
+  },
+  "claim_boundary": "AI-assisted architectural visualization and virtual-tour prototype. Navigation plan and free-walk path are presentation tools, not BIM, measured construction geometry, accessibility/code-compliance evidence or as-built documentation."
+}
