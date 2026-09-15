@@ -1,17 +1,18 @@
 {
   "asset": "Dubai Luxury Villa AI",
   "viewer_asset": "villa.glb",
-  "version": "v0.3-life2",
-  "status": "FORM_MATERIAL_LIGHT_LIFE_GATED",
+  "version": "v0.4-interior2",
+  "status": "FORM_MATERIAL_LIGHT_LIFE_INTERIOR_TOUR_GATED",
   "source_pipeline": {
     "form": "v0.3-r1.2 PASS / FROZEN",
     "material": "v0.3-m4 PASS / FROZEN",
     "light": "v0.3-l2 PASS / FROZEN",
-    "life": "v0.3-life2 PASS / FROZEN"
+    "life": "v0.3-life2 PASS / FROZEN",
+    "interior_tour": "v0.4-interior2 PASS / FROZEN"
   },
   "glb": {
-    "bytes": 7311972,
-    "sha256": "715ced4b3c7182618191adcdc9b71cef9320d6b65bc0ba6a691d5c1e0f0e1e51",
+    "bytes": 7845032,
+    "sha256": "fde86661b3b7ba4ce3352a56b83ad87156428feafd32d2d406dd12529eb97aed",
     "version": 2
   },
   "room_anchors": [
@@ -19,6 +20,33 @@
     "master_bedroom",
     "pool_terrace"
   ],
+  "tour_anchors": [
+    "tour_dining",
+    "tour_entry",
+    "tour_graph_root",
+    "tour_living",
+    "tour_master",
+    "tour_pool",
+    "tour_stair_ground",
+    "tour_stair_upper"
+  ],
+  "tour_look_targets": [
+    "tour_look_dining",
+    "tour_look_entry",
+    "tour_look_living",
+    "tour_look_master",
+    "tour_look_pool",
+    "tour_look_stair_ground",
+    "tour_look_stair_upper"
+  ],
+  "features": [
+    "furniture and kitchen layer",
+    "doors",
+    "practical lighting cues",
+    "refined staircase and upper landing",
+    "first-person tour cameras",
+    "curated look targets and two-floor client viewing graph"
+  ],
   "generator": "Native Blender 4.0.2 pipeline via GitHub Actions",
-  "claim_boundary": "AI-assisted architectural visualization prototype; not BIM, engineering, construction documentation, code-compliance evidence, valuation or sales forecast."
+  "claim_boundary": "AI-assisted architectural visualization and virtual-tour prototype; plan is schematic and free-walk has no collision/navmesh or construction-geometry guarantee."
 }
