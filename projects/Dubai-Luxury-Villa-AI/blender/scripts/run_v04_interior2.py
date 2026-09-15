@@ -22,8 +22,8 @@ TOUR_CAMERA_LOCATIONS = {
     'tour_living': (-2.20, 0.65, 1.65),
     'tour_dining': (4.65, 1.65, 1.65),
     'tour_stair_ground': (-4.75, -2.95, 1.65),
-    'tour_stair_upper': (-4.60, 1.90, 4.95),
-    'tour_master': (4.80, 2.45, 5.00),
+    'tour_stair_upper': (-3.05, 1.90, 4.95),
+    'tour_master': (4.75, 2.40, 5.00),
     'tour_pool': (-0.55, 7.05, 1.65),
 }
 
@@ -32,7 +32,7 @@ TOUR_LOOK_TARGETS = {
     'tour_look_living': (3.15, 0.35, 1.25),
     'tour_look_dining': (2.65, -1.62, 1.15),
     'tour_look_stair_ground': (-4.15, 0.30, 2.35),
-    'tour_look_stair_upper': (1.60, 0.80, 4.75),
+    'tour_look_stair_upper': (-0.90, 1.85, 4.72),
     'tour_look_master': (1.60, 0.15, 4.30),
     'tour_look_pool': (-0.15, 3.90, 1.45),
 }
@@ -75,7 +75,6 @@ def add_refined_stair_guard():
     end = (x, 1.455, 4.27)
     beam_between('stair_top_rail_v04_r2', start, end, 0.026, metal)
 
-    # A restrained glass guard follows the same rise without the oversized post rhythm.
     dy = end[1] - start[1]
     dz = end[2] - start[2]
     angle = math.atan2(dz, dy)
@@ -89,7 +88,6 @@ def add_refined_stair_guard():
     )
     guard.rotation_euler.x = angle
 
-    # Two minimal end posts establish the rail visually without blocking the view.
     for suffix, y, z in (
         ('lower', start[1], start[2] - 0.28),
         ('upper', end[1], end[2] - 0.28),
@@ -126,8 +124,42 @@ def refine_tour_path():
 
 
 def simplify_master_suite():
-    # Keep the new v0.4 bedroom kit as the presentation source and avoid overlapping legacy bed masses.
     remove_objects(('master_bed_r2', 'master_bed_headboard'))
+
+
+def build_master_room_shell():
+    # The v0.3 private upper volume was a solid exterior mass. For a first-person tour
+    # we replace that mass with an actual room shell and a physical stair-to-suite bridge.
+    remove_objects((
+        'upper_private_volume',
+        'upper_interior_back',
+        'master_door_v04',
+        'master_door_handle_v04',
+    ))
+
+    plaster = bpy.data.materials.get('M3_IvoryPlaster') or interior1.material('V04_MasterPlaster', (0.76, 0.72, 0.64), 0.82)
+    floor_mat = bpy.data.materials.get('M4_OrganicWarmLimestone') or interior1.material('V04_MasterFloor', (0.58, 0.49, 0.39), 0.66)
+    walnut = bpy.data.materials.get('M2_WalnutTimber') or interior1.material('V04_MasterWalnut', (0.18, 0.07, 0.03), 0.48)
+    metal = bpy.data.materials.get('V04_CharcoalMetal') or interior1.material('V04_CharcoalMetal', (0.025, 0.030, 0.034), 0.28, metallic=0.72)
+
+    # Rear part of the master floor and ceiling meets the existing glazed-front strip.
+    interior1.cube('master_floor_v04_r3', (7.30, 4.20, 0.10), (2.50, -0.85, 3.68), floor_mat, 0.0)
+    interior1.cube('master_ceiling_v04_r3', (7.30, 4.20, 0.10), (2.50, -0.85, 6.24), plaster, 0.0)
+
+    # Rear and right perimeter walls.
+    interior1.cube('master_rear_wall_v04_r3', (7.30, 0.16, 2.56), (2.50, -3.00, 4.96), plaster, 0.0)
+    interior1.cube('master_right_wall_v04_r3', (0.16, 5.70, 2.56), (6.15, -0.10, 4.96), plaster, 0.0)
+
+    # Left wall is split to leave a real door opening from the upper landing/corridor.
+    interior1.cube('master_left_wall_rear_v04_r3', (0.16, 4.15, 2.56), (-1.15, -0.875, 4.96), plaster, 0.0)
+    interior1.cube('master_left_wall_front_v04_r3', (0.16, 0.25, 2.56), (-1.15, 2.625, 4.96), plaster, 0.0)
+
+    # Bridge overlaps both the stair landing and the front master floor, creating a real visual connection.
+    interior1.cube('upper_corridor_bridge_v04_r3', (2.25, 1.25, 0.16), (-2.175, 1.85, 3.55), floor_mat, 0.015)
+
+    # Actual master-suite entry door located in the left-wall opening.
+    interior1.cube('master_door_v04', (0.10, 1.18, 2.35), (-1.15, 1.85, 4.65), walnut, 0.025)
+    interior1.cube('master_door_handle_v04', (0.04, 0.04, 0.42), (-1.08, 2.25, 4.62), metal, 0.010)
 
 
 def configure_review_camera():
@@ -151,6 +183,7 @@ def configure_review_camera():
 def build_scene():
     interior1.build_scene()
     simplify_master_suite()
+    build_master_room_shell()
     add_refined_stair_guard()
     refine_tour_path()
     configure_review_camera()
@@ -193,7 +226,7 @@ def save_outputs():
 def main():
     build_scene()
     save_outputs()
-    print('Dubai Luxury Villa AI v0.4 Interior2 — refined staircase, camera anchors and look targets generated')
+    print('Dubai Luxury Villa AI v0.4 Interior2 — real upper master room shell, staircase connection, furniture, doors, lights, camera anchors and look targets generated')
 
 
 if __name__ == '__main__':
