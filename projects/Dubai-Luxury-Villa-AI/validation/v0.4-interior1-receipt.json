@@ -1,0 +1,53 @@
+{
+  "version": "v0.4-interior1",
+  "stage": "INTERIOR_TOUR",
+  "parent_baseline": "v0.3-life2 PASS / FROZEN",
+  "quality_status": "INTERIOR_TOUR_REVIEW_PENDING_VISUAL_INSPECTION",
+  "features": [
+    "ground-floor kitchen and island",
+    "living-room media wall and lighting cues",
+    "staircase with upper landing and handrail",
+    "ground-floor and master-suite doors",
+    "master bed, wardrobe, side tables and lights",
+    "named tour anchors for guided first-person navigation"
+  ],
+  "tour_anchors": [
+    "tour_dining",
+    "tour_entry",
+    "tour_graph_root",
+    "tour_living",
+    "tour_master",
+    "tour_pool",
+    "tour_stair_ground",
+    "tour_stair_upper"
+  ],
+  "required_interior_nodes": [
+    "kitchen_island_v04",
+    "living_media_wall_v04",
+    "master_bed_base_v04",
+    "master_door_v04",
+    "private_door_v04",
+    "stair_landing_v04",
+    "stair_step_v04_00"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-interior1.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1888689,
+    "sha256": "c4be85a59fc47c9fb92d95d2f61d6e352421330dd9bed72a76580e6da0d7493f"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior1.glb",
+    "version": 2,
+    "bytes": 7921112,
+    "sha256": "d1c95625bab4575fd3409ef592cc809cbe4c5c84bd4ccdeefdbee79da8e32de8",
+    "container_length_matches": true
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior1.blend",
+    "bytes": 7710312,
+    "sha256": "2b43c02b73bbf66505e6e625c43e475223137b414c5a51a67e86079307d40abc"
+  },
+  "claim_boundary": "AI-assisted architectural visualization and virtual-tour prototype; not BIM, construction documentation, code-compliance evidence or verified as-built geometry."
+}
