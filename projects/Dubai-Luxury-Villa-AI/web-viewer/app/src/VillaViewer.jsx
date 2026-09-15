@@ -8,7 +8,14 @@ import { createCamera } from './three/camera';
 import { createRenderer } from './three/renderer';
 import { createLights } from './three/lights';
 import { TOUR_STOPS } from './tourData';
-import { WALKTHROUGH_EDGES, WALKTHROUGH_PLAYER } from './navigationData';
+import { WALKTHROUGH_PLAYER } from './navigationData';
+import {
+  buildWalkGraph,
+  constrainToWalkGraph,
+  nearestTourStop,
+  placeFirstPersonCamera
+} from './walkthroughEngine';
+import './Walkthrough.css';
 
 const ROOM_NODE_NAMES = {
   'living-room': 'living_room',
@@ -62,16 +69,13 @@ function applyMaterialConcept(root, selectedMaterial) {
 
   root.traverse((object) => {
     if (!object.isMesh || !object.material) return;
-
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     const nextMaterials = materials.map((source) => {
       if (!SWITCHABLE_ARCHITECTURAL_MATERIALS.has(source.name)) return source;
-
       const cloned = source.clone();
       cloned.color = new THREE.Color(selectedMaterial.swatch);
       return cloned;
     });
-
     object.material = nextMaterials.length === 1 ? nextMaterials[0] : nextMaterials;
   });
 }
@@ -81,164 +85,8 @@ function disposeObject(root) {
     if (!object.isMesh) return;
     object.geometry?.dispose();
     const materials = Array.isArray(object.material) ? object.material : [object.material];
-    materials.forEach((material) => material?.dispose?.());
+    materials.forEach((item) => item?.dispose?.());
   });
-}
-
-function findTourNode(root, stop) {
-  if (!root || !stop) return null;
-  if (stop.nodeName) {
-    const authored = root.getObjectByName(stop.nodeName);
-    if (authored) return authored;
-  }
-  if (stop.fallbackNodeName) {
-    const fallback = root.getObjectByName(stop.fallbackNodeName);
-    if (fallback) return fallback;
-  }
-  if (stop.roomId) {
-    const roomName = ROOM_NODE_NAMES[stop.roomId];
-    if (roomName) return root.getObjectByName(roomName);
-  }
-  return null;
-}
-
-function findFallbackLookTarget(root, stop, position) {
-  const index = TOUR_STOPS.findIndex((item) => item.id === stop.id);
-  for (let offset = 1; offset < TOUR_STOPS.length; offset += 1) {
-    const candidate = TOUR_STOPS[(index + offset) % TOUR_STOPS.length];
-    const candidateNode = findTourNode(root, candidate);
-    if (!candidateNode) continue;
-    const target = new THREE.Vector3();
-    candidateNode.getWorldPosition(target);
-    if (target.distanceTo(position) > 0.25) return target;
-  }
-  return null;
-}
-
-function placeFirstPersonCamera(camera, root, activeStopId) {
-  const stop = TOUR_STOPS.find((item) => item.id === activeStopId);
-  const node = findTourNode(root, stop);
-  if (!stop || !node) return false;
-
-  const position = new THREE.Vector3();
-  node.getWorldPosition(position);
-  camera.position.copy(position);
-
-  let target = null;
-  if (stop.targetNodeName) {
-    const targetNode = root.getObjectByName(stop.targetNodeName);
-    if (targetNode) {
-      target = new THREE.Vector3();
-      targetNode.getWorldPosition(target);
-    }
-  }
-
-  if (!target) target = findFallbackLookTarget(root, stop, position);
-  if (!target) target = position.clone().add(new THREE.Vector3(0, 0, -4));
-  target.y = Math.max(target.y, position.y - 0.55);
-  camera.lookAt(target);
-  return true;
-}
-
-function buildWalkGraph(root) {
-  const stopPoints = new Map();
-
-  TOUR_STOPS.forEach((stop) => {
-    if (stop.id === 'overview') return;
-    const node = findTourNode(root, stop);
-    if (!node) return;
-    const position = new THREE.Vector3();
-    node.getWorldPosition(position);
-    stopPoints.set(stop.id, { stop, position });
-  });
-
-  const edges = WALKTHROUGH_EDGES.flatMap((edge, index) => {
-    const from = stopPoints.get(edge.from);
-    const to = stopPoints.get(edge.to);
-    if (!from || !to) return [];
-    return [{
-      ...edge,
-      id: `${edge.from}:${edge.to}:${index}`,
-      a: from.position.clone(),
-      b: to.position.clone()
-    }];
-  });
-
-  return { stopPoints, edges };
-}
-
-function closestPointOnWalkEdge(point, edge, target) {
-  const ax = edge.a.x;
-  const az = edge.a.z;
-  const bx = edge.b.x;
-  const bz = edge.b.z;
-  const dx = bx - ax;
-  const dz = bz - az;
-  const denominator = dx * dx + dz * dz;
-  const t = denominator > 1e-6
-    ? THREE.MathUtils.clamp(((point.x - ax) * dx + (point.z - az) * dz) / denominator, 0, 1)
-    : 0;
-
-  target.set(
-    THREE.MathUtils.lerp(edge.a.x, edge.b.x, t),
-    THREE.MathUtils.lerp(edge.a.y, edge.b.y, t),
-    THREE.MathUtils.lerp(edge.a.z, edge.b.z, t)
-  );
-  return t;
-}
-
-function constrainToWalkGraph(candidate, graph, preferredEdgeId) {
-  if (!graph?.edges?.length) return { position: candidate, edge: null };
-
-  let best = null;
-  const closest = new THREE.Vector3();
-  const orderedEdges = preferredEdgeId
-    ? [
-        ...graph.edges.filter((edge) => edge.id === preferredEdgeId),
-        ...graph.edges.filter((edge) => edge.id !== preferredEdgeId)
-      ]
-    : graph.edges;
-
-  orderedEdges.forEach((edge) => {
-    closestPointOnWalkEdge(candidate, edge, closest);
-    const horizontalDistance = Math.hypot(candidate.x - closest.x, candidate.z - closest.z);
-    const floorPenalty = edge.type === 'stairs' ? 0 : Math.abs(candidate.y - closest.y) * 3.5;
-    const score = horizontalDistance + floorPenalty;
-    if (!best || score < best.score) {
-      best = {
-        edge,
-        closest: closest.clone(),
-        horizontalDistance,
-        score
-      };
-    }
-  });
-
-  if (!best) return { position: candidate, edge: null };
-
-  const radius = best.edge.radius ?? WALKTHROUGH_PLAYER.corridorRadius;
-  const constrained = candidate.clone();
-  constrained.y = best.closest.y;
-
-  if (best.horizontalDistance > radius) {
-    const offsetX = candidate.x - best.closest.x;
-    const offsetZ = candidate.z - best.closest.z;
-    const length = Math.max(Math.hypot(offsetX, offsetZ), 1e-6);
-    constrained.x = best.closest.x + (offsetX / length) * radius;
-    constrained.z = best.closest.z + (offsetZ / length) * radius;
-  }
-
-  return { position: constrained, edge: best.edge };
-}
-
-function nearestTourStop(graph, position) {
-  if (!graph?.stopPoints?.size) return null;
-  let nearest = null;
-  graph.stopPoints.forEach(({ stop, position: stopPosition }) => {
-    const distance = stopPosition.distanceTo(position);
-    if (!nearest || distance < nearest.distance) nearest = { stop, distance };
-  });
-  return nearest?.stop ?? null;
 }
 
 export default function VillaViewer({
@@ -263,9 +111,10 @@ export default function VillaViewer({
     let villaRoot = null;
     let frameId = null;
     let orbitControls = null;
-    let firstPersonControls = null;
+    let pointerLockControls = null;
     let walkGraph = null;
     let currentWalkEdgeId = null;
+    let firstPersonAvailable = false;
     let lastFrameTime = performance.now();
     let statusTimer = 0;
     const keys = new Set();
@@ -294,9 +143,10 @@ export default function VillaViewer({
     ambient.intensity = 0.75 * intensity + 0.18;
     sun.intensity = 2.1 * intensity;
 
-    if (tourMode && activeTourStopId !== 'overview' && !isTouchDevice) {
-      firstPersonControls = new PointerLockControls(camera, renderer.domElement);
-    } else if (!(tourMode && activeTourStopId !== 'overview')) {
+    const isFirstPerson = tourMode && activeTourStopId !== 'overview';
+    if (isFirstPerson && !isTouchDevice) {
+      pointerLockControls = new PointerLockControls(camera, renderer.domElement);
+    } else if (!isFirstPerson) {
       orbitControls = new OrbitControls(camera, renderer.domElement);
       orbitControls.enableDamping = true;
       orbitControls.target.set(0, 2.8, 0);
@@ -315,7 +165,6 @@ export default function VillaViewer({
         villaRoot = gltf.scene;
         villaRoot.name = 'dubai_luxury_villa_active';
         villaRoot.rotation.y = Math.PI;
-
         villaRoot.traverse((object) => {
           if (object.isMesh) {
             object.castShadow = true;
@@ -326,21 +175,20 @@ export default function VillaViewer({
         applyMaterialConcept(villaRoot, material);
         scene.add(villaRoot);
         villaRoot.updateMatrixWorld(true);
+
         walkGraph = buildWalkGraph(villaRoot);
-        setWalkGraphReady(walkGraph.edges.length >= 4);
+        const graphReady = walkGraph.edges.length >= 4;
+        setWalkGraphReady(graphReady);
 
         let tourPlaced = false;
-        if (tourMode && activeTourStopId !== 'overview') {
+        if (isFirstPerson) {
           tourPlaced = placeFirstPersonCamera(camera, villaRoot, activeTourStopId);
-          if (tourPlaced && isTouchDevice) camera.rotation.order = 'YXZ';
+          firstPersonAvailable = tourPlaced;
           setFirstPersonReady(tourPlaced);
+          if (tourPlaced && isTouchDevice) camera.rotation.order = 'YXZ';
           const nearest = nearestTourStop(walkGraph, camera.position);
           if (nearest) {
-            setWalkStatus({
-              label: nearest.title,
-              floor: nearest.floor,
-              edgeType: null
-            });
+            setWalkStatus({ label: nearest.title, floor: nearest.floor, edgeType: null });
           }
         }
 
@@ -366,20 +214,16 @@ export default function VillaViewer({
     );
 
     const keyDown = (event) => {
-      if (!tourMode) return;
-      keys.add(event.code);
+      if (isFirstPerson) keys.add(event.code);
     };
-
-    const keyUp = (event) => {
-      keys.delete(event.code);
-    };
+    const keyUp = (event) => keys.delete(event.code);
 
     const lockFirstPerson = () => {
-      if (firstPersonControls && villaRoot) firstPersonControls.lock();
+      if (pointerLockControls && villaRoot) pointerLockControls.lock();
     };
 
     const pointerDown = (event) => {
-      if (!isTouchDevice || !tourMode || activeTourStopId === 'overview') return;
+      if (!isTouchDevice || !isFirstPerson) return;
       touchLook.active = true;
       touchLook.pointerId = event.pointerId;
       touchLook.x = event.clientX;
@@ -422,7 +266,6 @@ export default function VillaViewer({
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
     };
-
     window.addEventListener('resize', resize);
     resize();
 
@@ -433,16 +276,16 @@ export default function VillaViewer({
 
       if (orbitControls) orbitControls.update();
 
-      const desktopCanWalk = firstPersonControls?.isLocked;
-      const touchCanWalk = isTouchDevice && tourMode && activeTourStopId !== 'overview' && firstPersonReady;
+      const desktopCanWalk = Boolean(pointerLockControls?.isLocked);
+      const touchCanWalk = Boolean(isTouchDevice && isFirstPerson && firstPersonAvailable);
 
       if (desktopCanWalk || touchCanWalk) {
         const keyboardForward = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0)
           - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
         const keyboardRight = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0)
           - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
-        const forwardInput = keyboardForward + mobileMotionRef.current.forward;
-        const rightInput = keyboardRight + mobileMotionRef.current.right;
+        const forwardInput = THREE.MathUtils.clamp(keyboardForward + mobileMotionRef.current.forward, -1, 1);
+        const rightInput = THREE.MathUtils.clamp(keyboardRight + mobileMotionRef.current.right, -1, 1);
 
         if (forwardInput !== 0 || rightInput !== 0) {
           const sprint = keys.has('ShiftLeft') || keys.has('ShiftRight');
@@ -500,8 +343,9 @@ export default function VillaViewer({
       renderer.domElement.removeEventListener('pointerup', pointerUp);
       renderer.domElement.removeEventListener('pointercancel', pointerUp);
       orbitControls?.dispose();
-      firstPersonControls?.unlock();
-      firstPersonControls?.dispose();
+      pointerLockControls?.unlock();
+      pointerLockControls?.dispose();
+      mobileMotionRef.current = { forward: 0, right: 0 };
       if (villaRoot) {
         scene.remove(villaRoot);
         disposeObject(villaRoot);
@@ -509,16 +353,13 @@ export default function VillaViewer({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [selectedRoom, lightingMode, material, tourMode, activeTourStopId, firstPersonReady]);
+  }, [selectedRoom, lightingMode, material, tourMode, activeTourStopId]);
 
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
   const isFirstPerson = tourMode && activeTourStopId !== 'overview';
 
   const setMobileMotion = (axis, value) => {
-    mobileMotionRef.current = {
-      ...mobileMotionRef.current,
-      [axis]: value
-    };
+    mobileMotionRef.current = { ...mobileMotionRef.current, [axis]: value };
   };
 
   return (
@@ -534,6 +375,7 @@ export default function VillaViewer({
             : 'Drag to orbit · scroll to zoom · select a room or tour point to change focus'}
         </p>
       </div>
+
       <div className="three-canvas-shell">
         <div
           ref={mountRef}
@@ -544,6 +386,7 @@ export default function VillaViewer({
           data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
           aria-label="Interactive Dubai luxury villa virtual tour prototype"
         />
+
         {isFirstPerson && (
           <>
             <div className="first-person-hud" aria-live="polite">
@@ -552,9 +395,10 @@ export default function VillaViewer({
                 {walkStatus.floor ? `Floor ${walkStatus.floor}` : 'Site'}
                 {walkStatus.edgeType ? ` · ${walkStatus.edgeType}` : ''}
                 {' · '}
-                {walkGraphReady ? 'bounded walk route' : 'anchor fallback'}
+                {walkGraphReady ? 'bounded walk route' : firstPersonReady ? 'anchor fallback' : 'tour anchor unavailable'}
               </span>
             </div>
+
             <div className="touch-walk-pad" aria-label="Touch walkthrough controls">
               <button
                 type="button"
@@ -592,8 +436,9 @@ export default function VillaViewer({
           </>
         )}
       </div>
+
       <p className="viewer-note">
-        Walk mode follows authored room/door/stair anchors and constrains movement to a presentation route. It is safer than unrestricted free-fly, but it is still a portfolio navigation graph rather than a measured construction navmesh.
+        Walk mode follows authored room, door and stair anchors and constrains movement to a presentation route. It is safer than unrestricted free-fly, but it remains a portfolio navigation graph rather than a measured construction navmesh.
       </p>
     </section>
   );
