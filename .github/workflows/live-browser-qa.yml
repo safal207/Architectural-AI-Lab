@@ -1,0 +1,47 @@
+name: Live Browser QA
+
+on:
+  workflow_run:
+    workflows: ['Deploy Villa Viewer']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run live desktop and mobile browser QA
+        env:
+          VILLA_URL: https://safal207.github.io/Architectural-AI-Lab/
+          QA_OUTPUT: qa-output
+        run: node qa/live-browser.mjs
+
+      - name: Upload live QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-live-browser-qa
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-output
+          if-no-files-found: warn
+          retention-days: 14
