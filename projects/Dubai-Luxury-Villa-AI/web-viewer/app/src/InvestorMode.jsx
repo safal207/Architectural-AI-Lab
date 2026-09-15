@@ -12,9 +12,9 @@ export default function InvestorMode() {
   const largest = [...rooms].sort((a, b) => b.area - a.area)[0];
 
   return (
-    <section aria-label="Investor presentation summary">
+    <section className="investor-mode" aria-label="Investor presentation summary">
       <div>
-        <p>Investor Mode</p>
+        <p className="investor-mode__label">Investor Mode</p>
         <h2>Dubai Luxury Villa AI</h2>
         <p>
           Portfolio digital-twin concept for luxury real-estate presentation.
@@ -22,20 +22,20 @@ export default function InvestorMode() {
         </p>
       </div>
 
-      <div>
-        <article>
+      <div className="investor-mode__stats" aria-label="Prototype metrics">
+        <article className="investor-mode__stat">
           <strong>{total} m²</strong>
           <span>Listed prototype area</span>
         </article>
-        <article>
+        <article className="investor-mode__stat">
           <strong>{rooms.length}</strong>
           <span>Modelled spaces</span>
         </article>
-        <article>
+        <article className="investor-mode__stat">
           <strong>{floors}</strong>
           <span>Floors represented</span>
         </article>
-        <article>
+        <article className="investor-mode__stat">
           <strong>{largest?.name ?? "—"}</strong>
           <span>
             Largest listed space{largest ? ` · ${largest.area} m²` : ""}
@@ -43,7 +43,7 @@ export default function InvestorMode() {
         </article>
       </div>
 
-      <div>
+      <div className="investor-mode__goals">
         <h3>Presentation goals</h3>
         <ul>
           <li>Make spatial relationships understandable before construction.</li>
@@ -53,7 +53,7 @@ export default function InvestorMode() {
         </ul>
       </div>
 
-      <p>
+      <p className="investor-mode__boundary">
         Concept portfolio only. Not a valuation, sales forecast, BIM deliverable, or construction document.
       </p>
     </section>
