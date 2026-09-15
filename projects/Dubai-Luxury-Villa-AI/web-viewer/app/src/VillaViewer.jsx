@@ -101,6 +101,19 @@ function findTourNode(root, stop) {
   return null;
 }
 
+function findFallbackLookTarget(root, stop, position) {
+  const index = TOUR_STOPS.findIndex((item) => item.id === stop.id);
+  for (let offset = 1; offset < TOUR_STOPS.length; offset += 1) {
+    const candidate = TOUR_STOPS[(index + offset) % TOUR_STOPS.length];
+    const candidateNode = findTourNode(root, candidate);
+    if (!candidateNode) continue;
+    const target = new THREE.Vector3();
+    candidateNode.getWorldPosition(target);
+    if (target.distanceTo(position) > 0.25) return target;
+  }
+  return null;
+}
+
 function placeFirstPersonCamera(camera, root, activeStopId) {
   const stop = TOUR_STOPS.find((item) => item.id === activeStopId);
   const node = findTourNode(root, stop);
@@ -110,20 +123,18 @@ function placeFirstPersonCamera(camera, root, activeStopId) {
   node.getWorldPosition(position);
   camera.position.copy(position);
 
-  const index = TOUR_STOPS.findIndex((item) => item.id === stop.id);
   let target = null;
-  for (let offset = 1; offset < TOUR_STOPS.length; offset += 1) {
-    const candidate = TOUR_STOPS[(index + offset) % TOUR_STOPS.length];
-    const candidateNode = findTourNode(root, candidate);
-    if (!candidateNode) continue;
-    target = new THREE.Vector3();
-    candidateNode.getWorldPosition(target);
-    if (target.distanceTo(position) > 0.25) break;
-    target = null;
+  if (stop.targetNodeName) {
+    const targetNode = root.getObjectByName(stop.targetNodeName);
+    if (targetNode) {
+      target = new THREE.Vector3();
+      targetNode.getWorldPosition(target);
+    }
   }
 
+  if (!target) target = findFallbackLookTarget(root, stop, position);
   if (!target) target = position.clone().add(new THREE.Vector3(0, 0, -4));
-  target.y = Math.max(target.y, position.y - 0.35);
+  target.y = Math.max(target.y, position.y - 0.55);
   camera.lookAt(target);
   return true;
 }
@@ -241,7 +252,7 @@ export default function VillaViewer({
     };
 
     const lockFirstPerson = () => {
-      if (firstPersonControls && modelState !== 'fallback') firstPersonControls.lock();
+      if (firstPersonControls && villaRoot) firstPersonControls.lock();
     };
 
     window.addEventListener('keydown', keyDown);
