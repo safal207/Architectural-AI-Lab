@@ -1,0 +1,254 @@
+name: Promote v0.4 Interior2 to Viewer
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-interior2-critique.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dubai-villa-v04-viewer-promotion
+  cancel-in-progress: true
+
+jobs:
+  promote:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Require human visual gate PASS
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          critique = Path('projects/Dubai-Luxury-Villa-AI/validation/v0.4-interior2-critique.md')
+          if not critique.is_file():
+              raise SystemExit('Interior2 critique is missing; promotion blocked')
+          text = critique.read_text(encoding='utf-8')
+          required = 'INTERIOR TOUR GATE — PASS / FREEZE INTERIOR2'
+          if required not in text:
+              raise SystemExit(f'Interior2 visual gate is not frozen: expected {required!r}')
+          print('Human visual gate PASS confirmed')
+          PY
+
+      - name: Install Blender and software rendering stack
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-numpy libegl1 libgl1-mesa-dri libglx-mesa0 xvfb
+          blender --version | head -n 1
+
+      - name: Fetch CC0 Poly Haven maps used by frozen material baseline
+        run: |
+          set -euxo pipefail
+          A='projects/Dubai-Luxury-Villa-AI/assets/third-party/polyhaven'
+          mkdir -p "$A"
+          d(){ curl -L --fail --retry 3 --retry-delay 2 -o "$A/$1" "$2"; }
+          d toposcope_sunset_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/toposcope_sunset_2k.exr
+          d qwantani_dusk_2_puresky_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/qwantani_dusk_2_puresky_2k.exr
+          d synthetic_wood_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_diff_1k.jpg
+          d synthetic_wood_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_nor_gl_1k.jpg
+          d synthetic_wood_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_rough_1k.jpg
+          d beige_wall_001_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg
+          d beige_wall_001_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_nor_gl_1k.jpg
+          d beige_wall_001_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_rough_1k.jpg
+          d marble_01_diff_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_diff_2k.jpg
+          d marble_01_nor_gl_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_nor_gl_2k.jpg
+          d marble_01_rough_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_rough_2k.jpg
+
+      - name: Reproduce frozen Interior2 asset in native Blender
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          xvfb-run -a -s '-screen 0 1600x900x24' \
+            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_interior2.py
+
+      - name: Verify reproducibility, GLB structure, tour graph and interior nodes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import struct
+
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          glb = root / 'exports/villa-v0.4-interior2.glb'
+          receipt_path = root / 'validation/v0.4-interior2-receipt.json'
+          raw = glb.read_bytes()
+          receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+
+          digest = hashlib.sha256(raw).hexdigest()
+          expected = receipt['glb']
+          assert len(raw) == expected['bytes'], (len(raw), expected['bytes'])
+          assert digest == expected['sha256'], (digest, expected['sha256'])
+
+          magic, version, length = struct.unpack_from('<4sII', raw, 0)
+          assert magic == b'glTF' and version == 2 and length == len(raw)
+          json_length, json_type = struct.unpack_from('<II', raw, 12)
+          assert json_type == 0x4E4F534A
+          document = json.loads(raw[20:20 + json_length].decode('utf-8').rstrip('\x00 '))
+          nodes = {node.get('name') for node in document.get('nodes', []) if node.get('name')}
+          materials = {mat.get('name') for mat in document.get('materials', []) if mat.get('name')}
+
+          rooms = {'living_room', 'master_bedroom', 'pool_terrace'}
+          tour = {
+              'tour_graph_root', 'tour_entry', 'tour_living', 'tour_dining',
+              'tour_stair_ground', 'tour_stair_upper', 'tour_master', 'tour_pool'
+          }
+          looks = {
+              'tour_look_entry', 'tour_look_living', 'tour_look_dining',
+              'tour_look_stair_ground', 'tour_look_stair_upper',
+              'tour_look_master', 'tour_look_pool'
+          }
+          interior = {
+              'stair_step_v04_00', 'stair_landing_v04',
+              'stair_top_rail_v04_r2', 'stair_glass_guard_v04_r2',
+              'kitchen_island_v04', 'living_media_wall_v04',
+              'master_bed_base_v04', 'master_door_v04', 'private_door_v04'
+          }
+          frozen_materials = {
+              'M4_OrganicWarmLimestone', 'M3_IvoryPlaster', 'M2_WalnutTimber',
+              'M3_SmokeArchitecturalGlass', 'M3_MineralAquaWater'
+          }
+          assert not rooms - nodes, sorted(rooms - nodes)
+          assert not tour - nodes, sorted(tour - nodes)
+          assert not looks - nodes, sorted(looks - nodes)
+          assert not interior - nodes, sorted(interior - nodes)
+          assert not frozen_materials - materials, sorted(frozen_materials - materials)
+          print(f'Reproduced Interior2 GLB: {len(raw)} bytes sha256={digest}')
+          PY
+
+      - name: Promote verified Interior2 GLB and write viewer provenance
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import shutil
+
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          source = root / 'exports/villa-v0.4-interior2.glb'
+          target = root / 'web-viewer/app/public/villa.glb'
+          receipt = json.loads((root / 'validation/v0.4-interior2-receipt.json').read_text(encoding='utf-8'))
+          raw = source.read_bytes()
+          digest = hashlib.sha256(raw).hexdigest()
+
+          target.parent.mkdir(parents=True, exist_ok=True)
+          shutil.copyfile(source, target)
+
+          tour = sorted(receipt['tour_anchors'])
+          looks = sorted(receipt['look_targets'])
+          manifest = {
+              'asset': 'Dubai Luxury Villa AI',
+              'viewer_asset': 'villa.glb',
+              'version': 'v0.4-interior2',
+              'status': 'FORM_MATERIAL_LIGHT_LIFE_INTERIOR_TOUR_GATED',
+              'source_pipeline': {
+                  'form': 'v0.3-r1.2 PASS / FROZEN',
+                  'material': 'v0.3-m4 PASS / FROZEN',
+                  'light': 'v0.3-l2 PASS / FROZEN',
+                  'life': 'v0.3-life2 PASS / FROZEN',
+                  'interior_tour': 'v0.4-interior2 PASS / FROZEN'
+              },
+              'glb': {'bytes': len(raw), 'sha256': digest, 'version': receipt['glb']['version']},
+              'room_anchors': ['living_room', 'master_bedroom', 'pool_terrace'],
+              'tour_anchors': tour,
+              'tour_look_targets': looks,
+              'features': [
+                  'furniture and kitchen layer', 'doors', 'practical lighting cues',
+                  'refined staircase and upper landing', 'first-person tour cameras',
+                  'curated look targets and two-floor client viewing graph'
+              ],
+              'generator': 'Native Blender 4.0.2 pipeline via GitHub Actions',
+              'claim_boundary': 'AI-assisted architectural visualization and virtual-tour prototype; plan is schematic and free-walk has no collision/navmesh or construction-geometry guarantee.'
+          }
+          (target.parent / 'villa.asset.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(manifest, indent=2))
+          PY
+
+      - name: Install viewer dependencies
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+        run: npm install --no-audit --no-fund
+
+      - name: Build viewer against promoted v0.4 Interior2 asset
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+        run: npm run build
+
+      - name: Smoke test viewer and exact binary delivery
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-viewer-vite.log 2>&1 &
+          PID=$!
+          trap 'kill $PID || true' EXIT
+          sleep 2
+          curl --fail --silent --show-error http://127.0.0.1:4173/ > /tmp/viewer-index.html
+          curl --fail --silent --show-error http://127.0.0.1:4173/villa.asset.json > /tmp/viewer-villa.asset.json
+          curl --fail --silent --show-error http://127.0.0.1:4173/villa.glb > /tmp/viewer-villa.glb
+          cmp public/villa.asset.json /tmp/viewer-villa.asset.json
+          cmp public/villa.glb /tmp/viewer-villa.glb
+          echo 'Viewer HTML, v0.4 manifest and exact Interior2 GLB served successfully'
+
+      - name: Write v0.4 viewer promotion receipt
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          asset = root / 'web-viewer/app/public/villa.glb'
+          source_receipt = json.loads((root / 'validation/v0.4-interior2-receipt.json').read_text(encoding='utf-8'))
+          raw = asset.read_bytes()
+          report = {
+              'version': 'v0.4-interior2-viewer-promotion',
+              'source': 'v0.4-interior2 PASS / FROZEN',
+              'viewer_asset': str(asset),
+              'bytes': len(raw),
+              'sha256': hashlib.sha256(raw).hexdigest(),
+              'room_anchors_verified': ['living_room', 'master_bedroom', 'pool_terrace'],
+              'tour_anchors_verified': sorted(source_receipt['tour_anchors']),
+              'tour_look_targets_verified': sorted(source_receipt['look_targets']),
+              'vite_build': 'PASS',
+              'binary_delivery_smoke_test': 'PASS',
+              'promotion': 'APPROVED_FOR_PORTFOLIO_VIEWER',
+              'claim_boundary': 'AI-assisted architectural visualization and virtual-tour prototype; not BIM, measured construction geometry, code-compliance evidence or as-built documentation.'
+          }
+          out = root / 'validation/v0.4-viewer-promotion.json'
+          out.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Upload verified v0.4 viewer packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-v0.4-interior2-viewer
+          path: |
+            projects/Dubai-Luxury-Villa-AI/web-viewer/app/dist
+            projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.glb
+            projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.asset.json
+            projects/Dubai-Luxury-Villa-AI/validation/v0.4-viewer-promotion.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish promoted v0.4 viewer asset and receipt
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.glb \
+            projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.asset.json \
+            projects/Dubai-Luxury-Villa-AI/validation/v0.4-viewer-promotion.json
+          if git diff --cached --quiet; then
+            echo 'Promoted v0.4 viewer asset already current'
+            exit 0
+          fi
+          git commit -m 'Promote gated Dubai villa v0.4 Interior2 to viewer'
+          git reset --hard HEAD
+          git clean -fd
+          git pull --rebase origin main
+          git push origin HEAD:main
