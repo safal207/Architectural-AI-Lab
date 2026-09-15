@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createScene } from './three/scene';
 import { createCamera } from './three/camera';
 import { createRenderer } from './three/renderer';
 import { createLights } from './three/lights';
+import { TOUR_STOPS } from './tourData';
 
 const ROOM_NODE_NAMES = {
   'living-room': 'living_room',
@@ -13,9 +15,6 @@ const ROOM_NODE_NAMES = {
   'pool-terrace': 'pool_terrace'
 };
 
-// Only architectural finish families are tintable in the presentation layer.
-// Glass, water, metal, landscape and Life-stage materials are protected by
-// default because they are not included in this explicit allow-list.
 const SWITCHABLE_ARCHITECTURAL_MATERIALS = new Set([
   'M4_OrganicWarmLimestone',
   'M3_IvoryPlaster',
@@ -85,9 +84,60 @@ function disposeObject(root) {
   });
 }
 
-export default function VillaViewer({ selectedRoom, lightingMode, material }) {
+function findTourNode(root, stop) {
+  if (!root || !stop) return null;
+  if (stop.nodeName) {
+    const authored = root.getObjectByName(stop.nodeName);
+    if (authored) return authored;
+  }
+  if (stop.fallbackNodeName) {
+    const fallback = root.getObjectByName(stop.fallbackNodeName);
+    if (fallback) return fallback;
+  }
+  if (stop.roomId) {
+    const roomName = ROOM_NODE_NAMES[stop.roomId];
+    if (roomName) return root.getObjectByName(roomName);
+  }
+  return null;
+}
+
+function placeFirstPersonCamera(camera, root, activeStopId) {
+  const stop = TOUR_STOPS.find((item) => item.id === activeStopId);
+  const node = findTourNode(root, stop);
+  if (!stop || !node) return false;
+
+  const position = new THREE.Vector3();
+  node.getWorldPosition(position);
+  camera.position.copy(position);
+
+  const index = TOUR_STOPS.findIndex((item) => item.id === stop.id);
+  let target = null;
+  for (let offset = 1; offset < TOUR_STOPS.length; offset += 1) {
+    const candidate = TOUR_STOPS[(index + offset) % TOUR_STOPS.length];
+    const candidateNode = findTourNode(root, candidate);
+    if (!candidateNode) continue;
+    target = new THREE.Vector3();
+    candidateNode.getWorldPosition(target);
+    if (target.distanceTo(position) > 0.25) break;
+    target = null;
+  }
+
+  if (!target) target = position.clone().add(new THREE.Vector3(0, 0, -4));
+  target.y = Math.max(target.y, position.y - 0.35);
+  camera.lookAt(target);
+  return true;
+}
+
+export default function VillaViewer({
+  selectedRoom,
+  lightingMode,
+  material,
+  tourMode = false,
+  activeTourStopId = 'overview'
+}) {
   const mountRef = useRef(null);
   const [modelState, setModelState] = useState('loading');
+  const [firstPersonReady, setFirstPersonReady] = useState(false);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -96,7 +146,13 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     let disposed = false;
     let villaRoot = null;
     let frameId = null;
+    let orbitControls = null;
+    let firstPersonControls = null;
+    let lastFrameTime = performance.now();
+    const keys = new Set();
+
     setModelState('loading');
+    setFirstPersonReady(false);
 
     const scene = createScene(THREE);
     scene.background = new THREE.Color(lightingMode?.name === 'Night' ? '#08111c' : '#dfe8ee');
@@ -115,11 +171,15 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     ambient.intensity = 0.75 * intensity + 0.18;
     sun.intensity = 2.1 * intensity;
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.target.set(0, 2.8, 0);
-    controls.minDistance = 8;
-    controls.maxDistance = 60;
+    if (tourMode && activeTourStopId !== 'overview') {
+      firstPersonControls = new PointerLockControls(camera, renderer.domElement);
+    } else {
+      orbitControls = new OrbitControls(camera, renderer.domElement);
+      orbitControls.enableDamping = true;
+      orbitControls.target.set(0, 2.8, 0);
+      orbitControls.minDistance = 8;
+      orbitControls.maxDistance = 60;
+    }
 
     const loader = new GLTFLoader();
     const modelUrl = `${import.meta.env.BASE_URL}villa.glb`;
@@ -130,7 +190,7 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
         if (disposed) return;
 
         villaRoot = gltf.scene;
-        villaRoot.name = 'dubai_luxury_villa_v03_life2';
+        villaRoot.name = 'dubai_luxury_villa_active';
         villaRoot.rotation.y = Math.PI;
 
         villaRoot.traverse((object) => {
@@ -142,13 +202,22 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
 
         applyMaterialConcept(villaRoot, material);
         scene.add(villaRoot);
+        villaRoot.updateMatrixWorld(true);
 
-        const roomNodeName = ROOM_NODE_NAMES[selectedRoom?.id];
-        const roomNode = roomNodeName ? villaRoot.getObjectByName(roomNodeName) : null;
-        if (roomNode) {
-          const target = new THREE.Vector3();
-          roomNode.getWorldPosition(target);
-          controls.target.copy(target);
+        let tourPlaced = false;
+        if (tourMode && activeTourStopId !== 'overview') {
+          tourPlaced = placeFirstPersonCamera(camera, villaRoot, activeTourStopId);
+          setFirstPersonReady(tourPlaced);
+        }
+
+        if (!tourPlaced && orbitControls) {
+          const roomNodeName = ROOM_NODE_NAMES[selectedRoom?.id];
+          const roomNode = roomNodeName ? villaRoot.getObjectByName(roomNodeName) : null;
+          if (roomNode) {
+            const target = new THREE.Vector3();
+            roomNode.getWorldPosition(target);
+            orbitControls.target.copy(target);
+          }
         }
 
         setModelState('loaded');
@@ -162,6 +231,23 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
       }
     );
 
+    const keyDown = (event) => {
+      if (!tourMode) return;
+      keys.add(event.code);
+    };
+
+    const keyUp = (event) => {
+      keys.delete(event.code);
+    };
+
+    const lockFirstPerson = () => {
+      if (firstPersonControls && modelState !== 'fallback') firstPersonControls.lock();
+    };
+
+    window.addEventListener('keydown', keyDown);
+    window.addEventListener('keyup', keyUp);
+    renderer.domElement.addEventListener('click', lockFirstPerson);
+
     const resize = () => {
       const width = container.clientWidth;
       const height = Math.max(container.clientHeight, 1);
@@ -173,9 +259,21 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
     window.addEventListener('resize', resize);
     resize();
 
-    const animate = () => {
+    const animate = (now = performance.now()) => {
       frameId = requestAnimationFrame(animate);
-      controls.update();
+      const delta = Math.min((now - lastFrameTime) / 1000, 0.05);
+      lastFrameTime = now;
+
+      if (orbitControls) orbitControls.update();
+
+      if (firstPersonControls?.isLocked) {
+        const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 6.0 : 3.0;
+        if (keys.has('KeyW') || keys.has('ArrowUp')) firstPersonControls.moveForward(speed * delta);
+        if (keys.has('KeyS') || keys.has('ArrowDown')) firstPersonControls.moveForward(-speed * delta);
+        if (keys.has('KeyA') || keys.has('ArrowLeft')) firstPersonControls.moveRight(-speed * delta);
+        if (keys.has('KeyD') || keys.has('ArrowRight')) firstPersonControls.moveRight(speed * delta);
+      }
+
       renderer.render(scene, camera);
     };
     animate();
@@ -184,7 +282,12 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
       disposed = true;
       if (frameId) cancelAnimationFrame(frameId);
       window.removeEventListener('resize', resize);
-      controls.dispose();
+      window.removeEventListener('keydown', keyDown);
+      window.removeEventListener('keyup', keyUp);
+      renderer.domElement.removeEventListener('click', lockFirstPerson);
+      orbitControls?.dispose();
+      firstPersonControls?.unlock();
+      firstPersonControls?.dispose();
       if (villaRoot) {
         scene.remove(villaRoot);
         disposeObject(villaRoot);
@@ -192,25 +295,42 @@ export default function VillaViewer({ selectedRoom, lightingMode, material }) {
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [selectedRoom, lightingMode, material]);
+  }, [selectedRoom, lightingMode, material, tourMode, activeTourStopId]);
+
+  const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
+  const isFirstPerson = tourMode && activeTourStopId !== 'overview';
 
   return (
     <section>
       <div className="viewer-heading">
         <div>
-          <p className="eyebrow">Native Blender GLB · v0.3 Life2 gated</p>
-          <h2>3D Villa Viewer</h2>
+          <p className="eyebrow">Native Blender GLB · interactive tour viewer</p>
+          <h2>{isFirstPerson ? `First-person · ${activeStop.title}` : '3D Villa Viewer'}</h2>
         </div>
-        <p>Drag to orbit · scroll to zoom · select a room to change focus</p>
+        <p>
+          {isFirstPerson
+            ? 'Click inside the 3D view to look around · WASD to walk · Shift to move faster · Esc to release cursor'
+            : 'Drag to orbit · scroll to zoom · select a room or tour point to change focus'}
+        </p>
       </div>
-      <div
-        ref={mountRef}
-        className="three-canvas"
-        data-model-state={modelState}
-        aria-label="Interactive gated v0.3 Dubai luxury villa prototype"
-      />
+      <div className="three-canvas-shell">
+        <div
+          ref={mountRef}
+          className="three-canvas"
+          data-model-state={modelState}
+          data-view-mode={isFirstPerson ? 'first-person' : 'orbit'}
+          data-tour-stop={activeTourStopId}
+          aria-label="Interactive Dubai luxury villa virtual tour prototype"
+        />
+        {isFirstPerson && (
+          <div className="first-person-hud" aria-live="polite">
+            <strong>{activeStop.order}. {activeStop.title}</strong>
+            <span>{firstPersonReady ? 'Camera at tour anchor · click view to enter' : 'Using nearest verified room anchor until the interior-tour asset is promoted'}</span>
+          </div>
+        )}
+      </div>
       <p className="viewer-note">
-        CI verifies the promoted v0.3 Life2 GLB, provenance manifest, room anchors and exact binary delivery. Interactive web lighting and material variants are presentation controls, not a pixel-identical Blender L2 render.
+        The house plan and guided camera path are presentation/navigation features. Free-walk mode currently has no collision or navmesh guarantee; the measured plan and construction geometry remain outside this prototype scope.
       </p>
     </section>
   );
