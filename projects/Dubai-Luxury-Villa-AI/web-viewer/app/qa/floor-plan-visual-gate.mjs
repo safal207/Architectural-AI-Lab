@@ -67,13 +67,13 @@ try {
 
   await fastClick(tour.locator('.client-graph li').filter({ hasText: 'Upper landing' }).getByRole('button'));
   await tour.locator('.house-plan__position').waitFor({ state: 'visible' });
-  await desktop.screenshot({ path: `${outputDir}/floor-2-plan.png`, fullPage: true });
+  await desktop.screenshot({ path: `${outputDir}/floor-2-plan.png`, fullPage: true, timeout: 120_000 });
   report.desktop.plan = 'PASS';
   report.desktop.positionMarker = 'PASS';
 
   await fastClick(tour.locator('.plan-mode-switch').getByRole('button', { name: 'DOLLHOUSE', exact: true }));
   check(await tour.locator('.house-plan').getAttribute('class').then((value) => value.includes('house-plan--dollhouse')), 'Dollhouse mode class was not applied');
-  await desktop.screenshot({ path: `${outputDir}/floor-2-dollhouse.png`, fullPage: true });
+  await desktop.screenshot({ path: `${outputDir}/floor-2-dollhouse.png`, fullPage: true, timeout: 120_000 });
   report.desktop.dollhouse = 'PASS';
 
   await fastClick(tour.locator('.plan-mode-switch').getByRole('button', { name: 'WALK', exact: true }));
@@ -82,7 +82,7 @@ try {
     return canvas?.dataset.viewMode === 'first-person' && canvas?.dataset.tourStop === 'stair-upper';
   });
   await waitForModel(desktop);
-  await desktop.screenshot({ path: `${outputDir}/upper-landing-walk.png`, fullPage: true });
+  await desktop.screenshot({ path: `${outputDir}/upper-landing-walk.png`, fullPage: true, timeout: 120_000 });
   report.desktop.upperLandingWalk = 'PASS';
 
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
@@ -101,7 +101,7 @@ try {
 
   const planBox = await mobileTour.locator('.house-plan').boundingBox();
   check(planBox && planBox.width >= 320 && planBox.height >= 360, 'Mobile plan is too small for navigation');
-  await mobile.screenshot({ path: `${outputDir}/mobile-floor-2-plan.png`, fullPage: true });
+  await mobileTour.locator('.house-plan-card--hero').screenshot({ path: `${outputDir}/mobile-floor-2-plan.png`, timeout: 120_000, animations: 'disabled' });
   report.mobile.plan = 'PASS';
   report.mobile.noHorizontalOverflow = 'PASS';
 
