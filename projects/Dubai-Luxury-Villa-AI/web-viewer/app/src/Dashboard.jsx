@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import roomsData from '../data/rooms.json';
+import DeveloperCase from './DeveloperCase';
 import VillaViewer from './VillaViewer';
 import RoomSelector from './RoomSelector';
 import AIPropertyAssistant from './AIPropertyAssistant';
@@ -16,11 +17,13 @@ export default function Dashboard() {
 
   return (
     <main className="app-shell">
-      <header className="app-header">
+      <DeveloperCase />
+
+      <header className="viewer-toolbar" id="viewer">
         <div>
-          <p className="eyebrow">Architectural-AI-Lab</p>
-          <h1>Dubai Luxury Villa AI</h1>
-          <p>Interactive AI-assisted architectural visualization prototype</p>
+          <p className="eyebrow">Interactive proof environment</p>
+          <h2>Dubai Luxury Villa AI</h2>
+          <p>Explore the promoted v0.3 Life2 asset and its presentation controls.</p>
         </div>
         <nav aria-label="Lighting mode">
           {Object.entries(lightingModes).map(([key, mode]) => (
