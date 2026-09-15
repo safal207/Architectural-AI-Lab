@@ -6,12 +6,14 @@ on:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
       - 'projects/Dubai-Luxury-Villa-AI/tools/**'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.3-viewer-promotion.json'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-viewer-promotion.json'
       - '.github/workflows/viewer-build.yml'
   pull_request:
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
       - 'projects/Dubai-Luxury-Villa-AI/tools/**'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.3-viewer-promotion.json'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-viewer-promotion.json'
       - '.github/workflows/viewer-build.yml'
 
 jobs:
@@ -31,65 +33,8 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Validate promoted v0.3 Life2 GLB and provenance
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import hashlib
-          import json
-          import struct
-
-          glb = Path('public/villa.glb')
-          manifest_path = Path('public/villa.asset.json')
-          promotion_path = Path('../../validation/v0.3-viewer-promotion.json')
-
-          for path in (glb, manifest_path, promotion_path):
-              if not path.is_file() or path.stat().st_size == 0:
-                  raise SystemExit(f'missing promoted viewer evidence: {path}')
-
-          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
-          promotion = json.loads(promotion_path.read_text(encoding='utf-8'))
-          raw = glb.read_bytes()
-          digest = hashlib.sha256(raw).hexdigest()
-
-          assert manifest['version'] == 'v0.3-life2', manifest['version']
-          assert manifest['status'] == 'FORM_MATERIAL_LIGHT_LIFE_GATED', manifest['status']
-          assert manifest['glb']['bytes'] == len(raw), (manifest['glb']['bytes'], len(raw))
-          assert manifest['glb']['sha256'] == digest, (manifest['glb']['sha256'], digest)
-          assert promotion['bytes'] == len(raw), (promotion['bytes'], len(raw))
-          assert promotion['sha256'] == digest, (promotion['sha256'], digest)
-          assert promotion['promotion'] == 'APPROVED_FOR_PORTFOLIO_VIEWER', promotion['promotion']
-
-          magic, version, length = struct.unpack_from('<4sII', raw, 0)
-          assert magic == b'glTF', magic
-          assert version == 2, version
-          assert length == len(raw), (length, len(raw))
-
-          json_length, json_type = struct.unpack_from('<II', raw, 12)
-          assert json_type == 0x4E4F534A, hex(json_type)
-          document = json.loads(raw[20:20 + json_length].decode('utf-8').rstrip('\x00 '))
-
-          node_names = {node.get('name') for node in document.get('nodes', [])}
-          required_anchors = {'living_room', 'master_bedroom', 'pool_terrace'}
-          missing_anchors = sorted(required_anchors - node_names)
-          assert not missing_anchors, f'missing room anchors: {missing_anchors}'
-          assert set(manifest['room_anchors']) == required_anchors, manifest['room_anchors']
-
-          material_names = {mat.get('name') for mat in document.get('materials', [])}
-          required_materials = {
-              'M4_OrganicWarmLimestone',
-              'M3_IvoryPlaster',
-              'M2_WalnutTimber',
-              'M3_SmokeArchitecturalGlass',
-              'M3_MineralAquaWater',
-          }
-          missing_materials = sorted(required_materials - material_names)
-          assert not missing_materials, f'missing frozen v0.3 materials: {missing_materials}'
-
-          print(f'promoted v0.3 Life2 GLB OK: {len(raw)} bytes sha256={digest}')
-          print('room anchors OK:', ', '.join(sorted(required_anchors)))
-          print('frozen material family OK')
-          PY
+      - name: Validate current gated GLB and provenance
+        run: python ../../tools/validate_viewer_asset.py
 
       - name: Build viewer
         run: npm run build
@@ -108,12 +53,12 @@ jobs:
           test -s /tmp/viewer-villa.glb
           cmp public/villa.asset.json /tmp/viewer-villa.asset.json
           cmp public/villa.glb /tmp/viewer-villa.glb
-          echo 'Viewer HTML, v0.3 provenance manifest and exact promoted GLB served successfully'
+          echo 'Viewer HTML, provenance manifest and exact gated GLB served successfully'
 
       - name: Upload verified viewer build
         uses: actions/upload-artifact@v4
         with:
-          name: dubai-villa-v03-viewer-dist
+          name: dubai-villa-viewer-dist
           path: |
             projects/Dubai-Luxury-Villa-AI/web-viewer/app/dist
             projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.asset.json
