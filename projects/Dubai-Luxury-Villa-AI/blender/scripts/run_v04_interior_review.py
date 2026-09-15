@@ -5,32 +5,32 @@ import bpy
 import mathutils
 
 HERE = Path(__file__).resolve().parent
-SOURCE = HERE / 'run_v04_interior1.py'
+SOURCE = HERE / 'run_v04_interior2.py'
 
-spec = importlib.util.spec_from_file_location('villa_v04_interior1', SOURCE)
+spec = importlib.util.spec_from_file_location('villa_v04_interior2', SOURCE)
 interior = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(interior)
 
 PROJECT_ROOT = HERE.parents[1]
-RENDER_DIR = PROJECT_ROOT / 'renders' / 'v0.4-interior-review'
+RENDER_DIR = PROJECT_ROOT / 'renders' / 'v0.4-interior2-review'
 
 VIEWS = [
     {
         'name': 'living-to-dining',
-        'location': (-0.60, 2.25, 1.65),
-        'target': (3.00, 1.15, 1.55),
+        'location': interior.TOUR_CAMERA_LOCATIONS['tour_living'],
+        'target': interior.TOUR_LOOK_TARGETS['tour_look_living'],
         'lens': 24,
     },
     {
         'name': 'stair-hall',
-        'location': (-2.60, -2.60, 1.65),
-        'target': (-4.15, 0.45, 1.85),
+        'location': interior.TOUR_CAMERA_LOCATIONS['tour_stair_ground'],
+        'target': interior.TOUR_LOOK_TARGETS['tour_look_stair_ground'],
         'lens': 25,
     },
     {
         'name': 'master-suite',
-        'location': (1.75, 2.05, 4.95),
-        'target': (1.75, 0.10, 4.35),
+        'location': interior.TOUR_CAMERA_LOCATIONS['tour_master'],
+        'target': interior.TOUR_LOOK_TARGETS['tour_look_master'],
         'lens': 25,
     },
 ]
@@ -81,9 +81,9 @@ def main():
         path = RENDER_DIR / f"{view['name']}.png"
         bpy.context.scene.render.filepath = str(path)
         bpy.ops.render.render(write_still=True)
-        print(f"Rendered first-person review view: {path}")
+        print(f"Rendered refined first-person review view: {path}")
 
-    print('Dubai Luxury Villa AI v0.4 interior first-person review complete')
+    print('Dubai Luxury Villa AI v0.4 Interior2 first-person review complete')
 
 
 if __name__ == '__main__':
