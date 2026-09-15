@@ -60,7 +60,7 @@ export default function Dashboard() {
                 <div><dt>Floor</dt><dd>{selectedRoom.floor}</dd></div>
               </dl>
               <p>
-                Portfolio metadata. The current v0.2 hero GLB contains named room anchors used by the viewer to change focus.
+                Portfolio metadata. The promoted v0.3 Life2 GLB contains verified named room anchors used by the viewer to change focus.
               </p>
             </div>
           ) : (
