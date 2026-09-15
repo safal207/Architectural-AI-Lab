@@ -8,6 +8,7 @@ import { createCamera } from './three/camera';
 import { createRenderer } from './three/renderer';
 import { createLights } from './three/lights';
 import { TOUR_STOPS } from './tourData';
+import { WALKTHROUGH_EDGES, WALKTHROUGH_PLAYER } from './navigationData';
 
 const ROOM_NODE_NAMES = {
   'living-room': 'living_room',
@@ -139,6 +140,107 @@ function placeFirstPersonCamera(camera, root, activeStopId) {
   return true;
 }
 
+function buildWalkGraph(root) {
+  const stopPoints = new Map();
+
+  TOUR_STOPS.forEach((stop) => {
+    if (stop.id === 'overview') return;
+    const node = findTourNode(root, stop);
+    if (!node) return;
+    const position = new THREE.Vector3();
+    node.getWorldPosition(position);
+    stopPoints.set(stop.id, { stop, position });
+  });
+
+  const edges = WALKTHROUGH_EDGES.flatMap((edge, index) => {
+    const from = stopPoints.get(edge.from);
+    const to = stopPoints.get(edge.to);
+    if (!from || !to) return [];
+    return [{
+      ...edge,
+      id: `${edge.from}:${edge.to}:${index}`,
+      a: from.position.clone(),
+      b: to.position.clone()
+    }];
+  });
+
+  return { stopPoints, edges };
+}
+
+function closestPointOnWalkEdge(point, edge, target) {
+  const ax = edge.a.x;
+  const az = edge.a.z;
+  const bx = edge.b.x;
+  const bz = edge.b.z;
+  const dx = bx - ax;
+  const dz = bz - az;
+  const denominator = dx * dx + dz * dz;
+  const t = denominator > 1e-6
+    ? THREE.MathUtils.clamp(((point.x - ax) * dx + (point.z - az) * dz) / denominator, 0, 1)
+    : 0;
+
+  target.set(
+    THREE.MathUtils.lerp(edge.a.x, edge.b.x, t),
+    THREE.MathUtils.lerp(edge.a.y, edge.b.y, t),
+    THREE.MathUtils.lerp(edge.a.z, edge.b.z, t)
+  );
+  return t;
+}
+
+function constrainToWalkGraph(candidate, graph, preferredEdgeId) {
+  if (!graph?.edges?.length) return { position: candidate, edge: null };
+
+  let best = null;
+  const closest = new THREE.Vector3();
+  const orderedEdges = preferredEdgeId
+    ? [
+        ...graph.edges.filter((edge) => edge.id === preferredEdgeId),
+        ...graph.edges.filter((edge) => edge.id !== preferredEdgeId)
+      ]
+    : graph.edges;
+
+  orderedEdges.forEach((edge) => {
+    closestPointOnWalkEdge(candidate, edge, closest);
+    const horizontalDistance = Math.hypot(candidate.x - closest.x, candidate.z - closest.z);
+    const floorPenalty = edge.type === 'stairs' ? 0 : Math.abs(candidate.y - closest.y) * 3.5;
+    const score = horizontalDistance + floorPenalty;
+    if (!best || score < best.score) {
+      best = {
+        edge,
+        closest: closest.clone(),
+        horizontalDistance,
+        score
+      };
+    }
+  });
+
+  if (!best) return { position: candidate, edge: null };
+
+  const radius = best.edge.radius ?? WALKTHROUGH_PLAYER.corridorRadius;
+  const constrained = candidate.clone();
+  constrained.y = best.closest.y;
+
+  if (best.horizontalDistance > radius) {
+    const offsetX = candidate.x - best.closest.x;
+    const offsetZ = candidate.z - best.closest.z;
+    const length = Math.max(Math.hypot(offsetX, offsetZ), 1e-6);
+    constrained.x = best.closest.x + (offsetX / length) * radius;
+    constrained.z = best.closest.z + (offsetZ / length) * radius;
+  }
+
+  return { position: constrained, edge: best.edge };
+}
+
+function nearestTourStop(graph, position) {
+  if (!graph?.stopPoints?.size) return null;
+  let nearest = null;
+  graph.stopPoints.forEach(({ stop, position: stopPosition }) => {
+    const distance = stopPosition.distanceTo(position);
+    if (!nearest || distance < nearest.distance) nearest = { stop, distance };
+  });
+  return nearest?.stop ?? null;
+}
+
 export default function VillaViewer({
   selectedRoom,
   lightingMode,
@@ -147,8 +249,11 @@ export default function VillaViewer({
   activeTourStopId = 'overview'
 }) {
   const mountRef = useRef(null);
+  const mobileMotionRef = useRef({ forward: 0, right: 0 });
   const [modelState, setModelState] = useState('loading');
   const [firstPersonReady, setFirstPersonReady] = useState(false);
+  const [walkGraphReady, setWalkGraphReady] = useState(false);
+  const [walkStatus, setWalkStatus] = useState({ label: 'Tour anchor', floor: null, edgeType: null });
 
   useEffect(() => {
     const container = mountRef.current;
@@ -159,11 +264,17 @@ export default function VillaViewer({
     let frameId = null;
     let orbitControls = null;
     let firstPersonControls = null;
+    let walkGraph = null;
+    let currentWalkEdgeId = null;
     let lastFrameTime = performance.now();
+    let statusTimer = 0;
     const keys = new Set();
+    const touchLook = { active: false, pointerId: null, x: 0, y: 0 };
+    const isTouchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
 
     setModelState('loading');
     setFirstPersonReady(false);
+    setWalkGraphReady(false);
 
     const scene = createScene(THREE);
     scene.background = new THREE.Color(lightingMode?.name === 'Night' ? '#08111c' : '#dfe8ee');
@@ -176,15 +287,16 @@ export default function VillaViewer({
     const renderer = createRenderer(THREE, container);
     renderer.shadowMap.enabled = true;
     renderer.setClearColor(scene.background);
+    renderer.domElement.style.touchAction = 'none';
 
     const { ambient, sun } = createLights(THREE, scene);
     const intensity = lightingMode?.intensity ?? 1;
     ambient.intensity = 0.75 * intensity + 0.18;
     sun.intensity = 2.1 * intensity;
 
-    if (tourMode && activeTourStopId !== 'overview') {
+    if (tourMode && activeTourStopId !== 'overview' && !isTouchDevice) {
       firstPersonControls = new PointerLockControls(camera, renderer.domElement);
-    } else {
+    } else if (!(tourMode && activeTourStopId !== 'overview')) {
       orbitControls = new OrbitControls(camera, renderer.domElement);
       orbitControls.enableDamping = true;
       orbitControls.target.set(0, 2.8, 0);
@@ -214,11 +326,22 @@ export default function VillaViewer({
         applyMaterialConcept(villaRoot, material);
         scene.add(villaRoot);
         villaRoot.updateMatrixWorld(true);
+        walkGraph = buildWalkGraph(villaRoot);
+        setWalkGraphReady(walkGraph.edges.length >= 4);
 
         let tourPlaced = false;
         if (tourMode && activeTourStopId !== 'overview') {
           tourPlaced = placeFirstPersonCamera(camera, villaRoot, activeTourStopId);
+          if (tourPlaced && isTouchDevice) camera.rotation.order = 'YXZ';
           setFirstPersonReady(tourPlaced);
+          const nearest = nearestTourStop(walkGraph, camera.position);
+          if (nearest) {
+            setWalkStatus({
+              label: nearest.title,
+              floor: nearest.floor,
+              edgeType: null
+            });
+          }
         }
 
         if (!tourPlaced && orbitControls) {
@@ -255,9 +378,42 @@ export default function VillaViewer({
       if (firstPersonControls && villaRoot) firstPersonControls.lock();
     };
 
+    const pointerDown = (event) => {
+      if (!isTouchDevice || !tourMode || activeTourStopId === 'overview') return;
+      touchLook.active = true;
+      touchLook.pointerId = event.pointerId;
+      touchLook.x = event.clientX;
+      touchLook.y = event.clientY;
+      renderer.domElement.setPointerCapture?.(event.pointerId);
+    };
+
+    const pointerMove = (event) => {
+      if (!touchLook.active || touchLook.pointerId !== event.pointerId) return;
+      const dx = event.clientX - touchLook.x;
+      const dy = event.clientY - touchLook.y;
+      touchLook.x = event.clientX;
+      touchLook.y = event.clientY;
+      camera.rotation.y -= dx * WALKTHROUGH_PLAYER.touchTurnSpeed;
+      camera.rotation.x = THREE.MathUtils.clamp(
+        camera.rotation.x - dy * WALKTHROUGH_PLAYER.touchTurnSpeed,
+        -Math.PI * 0.42,
+        Math.PI * 0.42
+      );
+    };
+
+    const pointerUp = (event) => {
+      if (touchLook.pointerId !== event.pointerId) return;
+      touchLook.active = false;
+      touchLook.pointerId = null;
+    };
+
     window.addEventListener('keydown', keyDown);
     window.addEventListener('keyup', keyUp);
     renderer.domElement.addEventListener('click', lockFirstPerson);
+    renderer.domElement.addEventListener('pointerdown', pointerDown);
+    renderer.domElement.addEventListener('pointermove', pointerMove);
+    renderer.domElement.addEventListener('pointerup', pointerUp);
+    renderer.domElement.addEventListener('pointercancel', pointerUp);
 
     const resize = () => {
       const width = container.clientWidth;
@@ -277,12 +433,55 @@ export default function VillaViewer({
 
       if (orbitControls) orbitControls.update();
 
-      if (firstPersonControls?.isLocked) {
-        const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 6.0 : 3.0;
-        if (keys.has('KeyW') || keys.has('ArrowUp')) firstPersonControls.moveForward(speed * delta);
-        if (keys.has('KeyS') || keys.has('ArrowDown')) firstPersonControls.moveForward(-speed * delta);
-        if (keys.has('KeyA') || keys.has('ArrowLeft')) firstPersonControls.moveRight(-speed * delta);
-        if (keys.has('KeyD') || keys.has('ArrowRight')) firstPersonControls.moveRight(speed * delta);
+      const desktopCanWalk = firstPersonControls?.isLocked;
+      const touchCanWalk = isTouchDevice && tourMode && activeTourStopId !== 'overview' && firstPersonReady;
+
+      if (desktopCanWalk || touchCanWalk) {
+        const keyboardForward = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0)
+          - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
+        const keyboardRight = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0)
+          - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
+        const forwardInput = keyboardForward + mobileMotionRef.current.forward;
+        const rightInput = keyboardRight + mobileMotionRef.current.right;
+
+        if (forwardInput !== 0 || rightInput !== 0) {
+          const sprint = keys.has('ShiftLeft') || keys.has('ShiftRight');
+          const speed = sprint ? WALKTHROUGH_PLAYER.sprintSpeed : WALKTHROUGH_PLAYER.walkSpeed;
+          const forward = new THREE.Vector3();
+          camera.getWorldDirection(forward);
+          forward.y = 0;
+          if (forward.lengthSq() < 1e-6) forward.set(0, 0, -1);
+          forward.normalize();
+          const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+          const desired = camera.position.clone()
+            .addScaledVector(forward, forwardInput * speed * delta)
+            .addScaledVector(right, rightInput * speed * delta);
+
+          const constrained = constrainToWalkGraph(desired, walkGraph, currentWalkEdgeId);
+          camera.position.copy(constrained.position);
+          currentWalkEdgeId = constrained.edge?.id ?? currentWalkEdgeId;
+        }
+
+        statusTimer += delta;
+        if (statusTimer >= 0.25) {
+          statusTimer = 0;
+          const nearest = nearestTourStop(walkGraph, camera.position);
+          const currentEdge = walkGraph?.edges?.find((edge) => edge.id === currentWalkEdgeId) ?? null;
+          if (nearest) {
+            setWalkStatus((previous) => {
+              const next = {
+                label: nearest.title,
+                floor: nearest.floor,
+                edgeType: currentEdge?.type ?? null
+              };
+              return previous.label === next.label
+                && previous.floor === next.floor
+                && previous.edgeType === next.edgeType
+                ? previous
+                : next;
+            });
+          }
+        }
       }
 
       renderer.render(scene, camera);
@@ -296,6 +495,10 @@ export default function VillaViewer({
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
       renderer.domElement.removeEventListener('click', lockFirstPerson);
+      renderer.domElement.removeEventListener('pointerdown', pointerDown);
+      renderer.domElement.removeEventListener('pointermove', pointerMove);
+      renderer.domElement.removeEventListener('pointerup', pointerUp);
+      renderer.domElement.removeEventListener('pointercancel', pointerUp);
       orbitControls?.dispose();
       firstPersonControls?.unlock();
       firstPersonControls?.dispose();
@@ -306,21 +509,28 @@ export default function VillaViewer({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [selectedRoom, lightingMode, material, tourMode, activeTourStopId]);
+  }, [selectedRoom, lightingMode, material, tourMode, activeTourStopId, firstPersonReady]);
 
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
   const isFirstPerson = tourMode && activeTourStopId !== 'overview';
+
+  const setMobileMotion = (axis, value) => {
+    mobileMotionRef.current = {
+      ...mobileMotionRef.current,
+      [axis]: value
+    };
+  };
 
   return (
     <section>
       <div className="viewer-heading">
         <div>
-          <p className="eyebrow">Native Blender GLB · interactive tour viewer</p>
+          <p className="eyebrow">Native Blender GLB · bounded first-person walkthrough</p>
           <h2>{isFirstPerson ? `First-person · ${activeStop.title}` : '3D Villa Viewer'}</h2>
         </div>
         <p>
           {isFirstPerson
-            ? 'Click inside the 3D view to look around · WASD to walk · Shift to move faster · Esc to release cursor'
+            ? 'Desktop: click view + WASD · Shift sprint · Esc release. Touch: drag to look + use movement pad.'
             : 'Drag to orbit · scroll to zoom · select a room or tour point to change focus'}
         </p>
       </div>
@@ -331,17 +541,59 @@ export default function VillaViewer({
           data-model-state={modelState}
           data-view-mode={isFirstPerson ? 'first-person' : 'orbit'}
           data-tour-stop={activeTourStopId}
+          data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
           aria-label="Interactive Dubai luxury villa virtual tour prototype"
         />
         {isFirstPerson && (
-          <div className="first-person-hud" aria-live="polite">
-            <strong>{activeStop.order}. {activeStop.title}</strong>
-            <span>{firstPersonReady ? 'Camera at tour anchor · click view to enter' : 'Using nearest verified room anchor until the interior-tour asset is promoted'}</span>
-          </div>
+          <>
+            <div className="first-person-hud" aria-live="polite">
+              <strong>{walkStatus.label || activeStop.title}</strong>
+              <span>
+                {walkStatus.floor ? `Floor ${walkStatus.floor}` : 'Site'}
+                {walkStatus.edgeType ? ` · ${walkStatus.edgeType}` : ''}
+                {' · '}
+                {walkGraphReady ? 'bounded walk route' : 'anchor fallback'}
+              </span>
+            </div>
+            <div className="touch-walk-pad" aria-label="Touch walkthrough controls">
+              <button
+                type="button"
+                aria-label="Walk forward"
+                onPointerDown={() => setMobileMotion('forward', 1)}
+                onPointerUp={() => setMobileMotion('forward', 0)}
+                onPointerCancel={() => setMobileMotion('forward', 0)}
+                onPointerLeave={() => setMobileMotion('forward', 0)}
+              >↑</button>
+              <button
+                type="button"
+                aria-label="Step left"
+                onPointerDown={() => setMobileMotion('right', -1)}
+                onPointerUp={() => setMobileMotion('right', 0)}
+                onPointerCancel={() => setMobileMotion('right', 0)}
+                onPointerLeave={() => setMobileMotion('right', 0)}
+              >←</button>
+              <button
+                type="button"
+                aria-label="Walk backward"
+                onPointerDown={() => setMobileMotion('forward', -1)}
+                onPointerUp={() => setMobileMotion('forward', 0)}
+                onPointerCancel={() => setMobileMotion('forward', 0)}
+                onPointerLeave={() => setMobileMotion('forward', 0)}
+              >↓</button>
+              <button
+                type="button"
+                aria-label="Step right"
+                onPointerDown={() => setMobileMotion('right', 1)}
+                onPointerUp={() => setMobileMotion('right', 0)}
+                onPointerCancel={() => setMobileMotion('right', 0)}
+                onPointerLeave={() => setMobileMotion('right', 0)}
+              >→</button>
+            </div>
+          </>
         )}
       </div>
       <p className="viewer-note">
-        The house plan and guided camera path are presentation/navigation features. Free-walk mode currently has no collision or navmesh guarantee; the measured plan and construction geometry remain outside this prototype scope.
+        Walk mode follows authored room/door/stair anchors and constrains movement to a presentation route. It is safer than unrestricted free-fly, but it is still a portfolio navigation graph rather than a measured construction navmesh.
       </p>
     </section>
   );
