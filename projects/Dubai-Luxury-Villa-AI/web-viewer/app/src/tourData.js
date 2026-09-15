@@ -17,6 +17,8 @@ export const TOUR_STOPS = [
     floor: 1,
     nodeName: 'tour_entry',
     targetNodeName: 'tour_look_entry',
+    lookAtStopId: 'living',
+    cameraOffsetLocal: [0.35, 0, 0],
     roomId: null,
     feature: 'door',
     description: 'Cross the arrival threshold and see the first interior axis.'
@@ -40,6 +42,7 @@ export const TOUR_STOPS = [
     floor: 1,
     nodeName: 'tour_dining',
     targetNodeName: 'tour_look_dining',
+    lookAtStopId: 'living',
     roomId: 'living-room',
     fallbackNodeName: 'living_room',
     feature: 'furniture-lighting',
@@ -63,10 +66,12 @@ export const TOUR_STOPS = [
     floor: 2,
     nodeName: 'tour_stair_upper',
     targetNodeName: 'tour_look_stair_upper',
+    lookAtStopId: 'master',
+    cameraOffsetLocal: [0.65, 0, 0.9],
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'stairs',
-    description: 'Arrive on the upper floor at human-eye height.'
+    description: 'Arrive on the upper floor at human-eye height outside the solid stone spine.'
   },
   {
     id: 'master',
@@ -74,7 +79,7 @@ export const TOUR_STOPS = [
     title: 'Master bedroom',
     floor: 2,
     nodeName: 'tour_master',
-    targetNodeName: 'tour_look_master',
+    targetNodeName: 'master_bedroom',
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'furniture-doors-lighting',
@@ -106,5 +111,43 @@ export const FLOOR_PLAN_ZONES = {
   2: [
     { id: 'landing', label: 'Upper Landing', tourStopId: 'stair-upper', x: 7, y: 42, w: 27, h: 46 },
     { id: 'master', label: 'Master Bedroom', tourStopId: 'master', roomId: 'master-bedroom', x: 38, y: 12, w: 56, h: 76 }
+  ]
+};
+
+export const FLOOR_PLAN_FURNITURE = {
+  1: [
+    { id: 'sofa', label: 'Sofa', kind: 'sofa', x: 13, y: 18, w: 20, h: 7 },
+    { id: 'coffee-table', label: 'Table', kind: 'table', x: 20, y: 29, w: 10, h: 6 },
+    { id: 'dining-table', label: 'Dining', kind: 'table', x: 63, y: 18, w: 20, h: 8 },
+    { id: 'kitchen-island', label: 'Island', kind: 'kitchen', x: 63, y: 31, w: 20, h: 6 },
+    { id: 'stair-flight', label: '↑', kind: 'stairs', x: 35, y: 56, w: 8, h: 24 }
+  ],
+  2: [
+    { id: 'master-bed', label: 'Bed', kind: 'bed', x: 58, y: 28, w: 19, h: 22 },
+    { id: 'master-side-left', label: '', kind: 'side-table', x: 53, y: 34, w: 4, h: 8 },
+    { id: 'master-side-right', label: '', kind: 'side-table', x: 78, y: 34, w: 4, h: 8 },
+    { id: 'upper-stair', label: '↑', kind: 'stairs', x: 15, y: 54, w: 10, h: 24 }
+  ]
+};
+
+export const FLOOR_PLAN_PORTALS = {
+  1: [
+    { id: 'entry-door', label: 'Door', x: 25.5, y: 72, orientation: 'vertical' },
+    { id: 'pool-slider', label: 'Slider', x: 76, y: 57, orientation: 'vertical' }
+  ],
+  2: [
+    { id: 'master-door', label: 'Door', x: 37, y: 55, orientation: 'vertical' }
+  ]
+};
+
+export const FLOOR_PLAN_LIGHTS = {
+  1: [
+    { id: 'living-light', x: 28, y: 17 },
+    { id: 'dining-light', x: 73, y: 19 },
+    { id: 'entry-light', x: 17, y: 68 }
+  ],
+  2: [
+    { id: 'master-light', x: 68, y: 22 },
+    { id: 'landing-light', x: 21, y: 49 }
   ]
 };
