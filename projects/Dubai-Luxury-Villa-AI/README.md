@@ -8,6 +8,21 @@ AI-assisted digital-twin presentation prototype for luxury real estate.
 
 The public viewer is built from the gated `v0.3-life2` Blender asset. GitHub Actions verifies the promoted GLB and its provenance before deployment, then a post-deploy Playwright workflow exercises the live site on desktop and mobile.
 
+The live page is now structured as a developer-facing portfolio case: value proposition → verified proof → interactive twin → bounded pilot offer.
+
+## Developer pilot offer
+
+**5-day digital twin pilot** — a deliberately small first engagement intended to test whether one property concept or one priority zone can become a useful interactive presentation before committing to a larger visualization programme.
+
+Pilot framing shown on the live site:
+
+- one property concept or one priority zone
+- Blender → GLB → web-viewer path
+- core interaction and room-linked metadata
+- QA receipt with explicit claim boundaries
+
+The five-day framing is a service offer, not a blanket delivery guarantee. Scope, source quality, access and required outputs must be agreed first. The public GitHub intake must not contain confidential client materials.
+
 ## Vision
 
 Transform architectural concepts into interactive digital experiences with a reproducible engineering pipeline.
@@ -45,7 +60,7 @@ Each gate is reviewed separately so later presentation work does not silently re
 - Vite production build passes against that exact promoted asset.
 - CI starts the production preview server and byte-compares the served GLB with the promoted file.
 - GitHub Pages build and deployment complete successfully.
-- Post-deploy Playwright QA verifies the **live public site**, including real GLB load state, live SHA-256/byte integrity, room selection, presentation lighting/material state, orbit/zoom smoke paths and mobile layout.
+- Post-deploy Playwright QA verifies the **live public site**, including the developer-facing sales case, pilot CTA, real GLB load state, live SHA-256/byte integrity, room selection, presentation lighting/material state, orbit/zoom smoke paths and mobile layout.
 - Latest live browser QA reports **zero console errors, zero uncaught page errors and zero HTTP responses >= 400** in the tested paths.
 
 Current promoted viewer asset:
@@ -58,10 +73,11 @@ Current promoted viewer asset:
 
 Latest live browser QA:
 
-- workflow run: `34943513043`
-- source commit: `cad9dcf73982aa769f4d95d33cd6fd6fab0aa220`
-- desktop: room selection, Night state, Warm Wood state, orbit/zoom — PASS
-- mobile `390 × 844`: Pool Terrace selection, canvas, no horizontal overflow — PASS
+- workflow run: `34949976641`
+- source commit: `f60e06bac0855b051228e2f2d7e6a12255b4991c`
+- desktop: sales case, Master Bedroom, Night, Warm Wood, orbit/zoom — PASS
+- mobile `390 × 844`: sales case, Pool Terrace, canvas, no horizontal overflow — PASS
+- runtime: console errors `0`, uncaught page errors `0`, failed HTTP responses `0`
 
 See:
 
@@ -71,6 +87,8 @@ See:
 
 ## Current viewer features
 
+- developer-facing luxury real-estate case narrative
+- bounded 5-day pilot CTA through public GitHub issue intake
 - gated native Blender GLB loading with Three.js `GLTFLoader`
 - orbit and zoom camera controls
 - room selection and room-anchor focus
@@ -100,4 +118,4 @@ This is an AI-assisted architectural visualization and digital-twin portfolio pr
 
 ## Status
 
-**Public gated portfolio prototype with live browser proof.** The v0.3 Form → Material → Light → Life chain is frozen, the approved Life2 GLB is promoted into the Three.js viewer, CI validates the production build and exact binary delivery, the viewer is deployed on GitHub Pages, and post-deploy desktop/mobile browser QA passes on the live public site.
+**Public gated portfolio prototype with live browser proof and a bounded pilot offer.** The v0.3 Form → Material → Light → Life chain is frozen, the approved Life2 GLB is promoted into the Three.js viewer, CI validates the production build and exact binary delivery, the viewer is deployed on GitHub Pages, and post-deploy desktop/mobile browser QA passes on the live public site.
