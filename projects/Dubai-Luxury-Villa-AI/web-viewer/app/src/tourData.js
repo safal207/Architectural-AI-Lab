@@ -65,12 +65,12 @@ export const TOUR_STOPS = [
     title: 'Upper landing',
     floor: 2,
     nodeName: 'tour_stair_upper',
-    targetNodeName: 'tour_look_stair_upper',
+    targetNodeName: 'master_door_v04',
     cameraOffsetLocal: [-1.4, 0, -0.7],
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'stairs',
-    description: 'Arrive on Floor 2 from a pulled-back diagonal viewpoint so the landing, threshold and circulation depth can be judged before entering the master suite.'
+    description: 'Arrive on Floor 2 from a pulled-back diagonal viewpoint and face the master-suite threshold directly, isolating target direction from the camera-distance fix.'
   },
   {
     id: 'master',
