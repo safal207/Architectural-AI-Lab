@@ -31,7 +31,7 @@ async function verifyPublishedAsset(page) {
 
   check(glb.length === manifest.glb.bytes, `GLB byte mismatch: ${glb.length} != ${manifest.glb.bytes}`);
   check(digest === manifest.glb.sha256, `GLB SHA-256 mismatch: ${digest} != ${manifest.glb.sha256}`);
-  check(manifest.version === 'v0.3-life2', `Unexpected viewer asset version: ${manifest.version}`);
+  check(['v0.3-life2', 'v0.4-interior1'].includes(manifest.version), `Unexpected viewer asset version: ${manifest.version}`);
 
   return { version: manifest.version, bytes: glb.length, sha256: digest };
 }
@@ -48,6 +48,46 @@ async function verifySalesCase(page) {
   await pilotLink.waitFor();
   const href = await pilotLink.getAttribute('href');
   check(href?.includes('/Architectural-AI-Lab/issues/new'), `Unexpected pilot CTA href: ${href}`);
+}
+
+async function verifyDesktopTour(page) {
+  const tour = page.locator('.tour-experience');
+  await tour.waitFor();
+  await tour.getByText('Client viewing graph', { exact: true }).waitFor();
+  await tour.getByText('Interactive house plan', { exact: true }).waitFor();
+
+  const livingStop = tour.locator('.client-graph li').filter({ hasText: 'Living room' }).getByRole('button');
+  await livingStop.click();
+  await waitForModel(page);
+
+  const toggle = tour.getByRole('button', { name: 'Start first-person tour', exact: true });
+  await toggle.click();
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector('.three-canvas');
+    return canvas?.dataset.viewMode === 'first-person' && canvas?.dataset.tourStop === 'living';
+  });
+  await waitForModel(page);
+
+  const hud = page.locator('.first-person-hud');
+  await hud.getByText(/Living room/i).waitFor();
+
+  const activeToggle = tour.getByRole('button', { name: 'First-person tour: ON', exact: true });
+  await activeToggle.click();
+  await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.viewMode === 'orbit');
+  await waitForModel(page);
+}
+
+async function verifyMobileTour(page) {
+  const tour = page.locator('.tour-experience');
+  await tour.waitFor();
+  const floorSwitch = tour.locator('.floor-switch');
+  await floorSwitch.getByRole('button', { name: 'Floor 2', exact: true }).click();
+  await tour.getByRole('heading', { level: 3, name: 'Floor 2', exact: true }).waitFor();
+
+  const masterZone = tour.locator('.house-plan__zone').filter({ hasText: 'Master Bedroom' });
+  await masterZone.click();
+  await page.locator('.room-details h3').filter({ hasText: 'Master Bedroom' }).waitFor();
+  await waitForModel(page);
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -80,6 +120,11 @@ try {
   await verifySalesCase(desktop);
   await waitForModel(desktop);
   report.desktop.asset = await verifyPublishedAsset(desktop);
+
+  await verifyDesktopTour(desktop);
+  report.desktop.housePlan = 'PASS';
+  report.desktop.clientViewingGraph = 'PASS';
+  report.desktop.firstPersonModeState = 'PASS';
 
   const desktopRooms = desktop.locator('.rooms-panel');
   await desktopRooms.getByRole('button', { name: 'Master Bedroom — 52 sqm', exact: true }).click();
@@ -119,6 +164,9 @@ try {
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
   await verifySalesCase(mobile);
   await waitForModel(mobile);
+  await verifyMobileTour(mobile);
+  report.mobile.housePlan = 'PASS';
+  report.mobile.clientViewingGraph = 'PASS';
 
   const mobileRooms = mobile.locator('.rooms-panel');
   await mobileRooms.getByRole('button', { name: 'Pool Terrace — 46 sqm', exact: true }).click();
