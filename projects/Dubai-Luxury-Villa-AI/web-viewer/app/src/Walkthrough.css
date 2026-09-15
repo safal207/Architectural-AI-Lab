@@ -15,6 +15,7 @@
   background: rgba(5, 14, 21, .78);
   backdrop-filter: blur(10px);
   pointer-events: none;
+  z-index: 4;
 }
 
 .first-person-hud strong {
@@ -35,7 +36,7 @@
   grid-template-columns: repeat(3, 46px);
   grid-template-rows: repeat(2, 46px);
   gap: 6px;
-  z-index: 3;
+  z-index: 5;
 }
 
 .touch-walk-pad button {
@@ -58,7 +59,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 16px;
+  margin: 0 0 16px;
 }
 
 .walkthrough-feature {
@@ -84,6 +85,106 @@
   font-size: .73rem;
   line-height: 1.3;
 }
+
+.house-plan__fixture,
+.house-plan__portal,
+.house-plan__light {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.house-plan__fixture {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(237, 226, 207, .52);
+  border-radius: 5px;
+  color: #f0e6d4;
+  background: rgba(189, 162, 120, .16);
+  font-size: .58rem;
+  line-height: 1;
+}
+
+.house-plan__fixture--sofa {
+  border-radius: 8px;
+  background: rgba(183, 193, 199, .19);
+}
+
+.house-plan__fixture--table {
+  border-radius: 999px;
+}
+
+.house-plan__fixture--kitchen {
+  border-radius: 3px;
+  background: rgba(116, 139, 150, .22);
+}
+
+.house-plan__fixture--bed {
+  border-radius: 6px 6px 12px 12px;
+  background: rgba(214, 194, 165, .22);
+}
+
+.house-plan__fixture--side-table {
+  border-radius: 50%;
+}
+
+.house-plan__fixture--stairs {
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(212, 180, 131, .3) 0,
+    rgba(212, 180, 131, .3) 3px,
+    rgba(8, 18, 25, .4) 3px,
+    rgba(8, 18, 25, .4) 7px
+  );
+}
+
+.house-plan__portal {
+  width: 20px;
+  height: 20px;
+  border-top: 2px solid #d4b483;
+  border-right: 2px solid #d4b483;
+  border-radius: 0 16px 0 0;
+}
+
+.house-plan__portal--vertical {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.house-plan__light {
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  color: #ffe3a4;
+  filter: drop-shadow(0 0 7px rgba(255, 211, 125, .72));
+  font-size: 1rem;
+  text-align: center;
+}
+
+.house-plan-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 10px;
+  color: #8ea2ad;
+  font-size: .72rem;
+}
+
+.house-plan-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.house-plan-legend i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+}
+
+.legend-furniture { border: 1px solid #c8b18e; border-radius: 3px; }
+.legend-door { border-top: 2px solid #d4b483; border-right: 2px solid #d4b483; border-radius: 0 10px 0 0; }
+.legend-light { border-radius: 50%; background: #ffe3a4; box-shadow: 0 0 7px rgba(255, 211, 125, .6); }
+.legend-stair { background: repeating-linear-gradient(180deg, #d4b483 0, #d4b483 2px, transparent 2px, transparent 4px); }
 
 @media (pointer: coarse) {
   .touch-walk-pad {
