@@ -18,7 +18,7 @@ export const TOUR_STOPS = [
     nodeName: 'tour_entry',
     targetNodeName: 'tour_look_entry',
     lookAtStopId: 'living',
-    cameraOffsetLocal: [0.35, 0, 0],
+    cameraOffsetLocal: [1.15, 0, -1.2],
     roomId: null,
     feature: 'door',
     description: 'Cross the arrival threshold and see the first interior axis.'
@@ -67,11 +67,11 @@ export const TOUR_STOPS = [
     nodeName: 'tour_stair_upper',
     targetNodeName: 'tour_look_stair_upper',
     lookAtStopId: 'master',
-    cameraOffsetLocal: [0.65, 0, 0.9],
+    cameraOffsetLocal: [2.25, 0.05, -0.35],
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'stairs',
-    description: 'Arrive on the upper floor at human-eye height outside the solid stone spine.'
+    description: 'Arrive on the upper floor at human-eye height with the master suite visible ahead.'
   },
   {
     id: 'master',
