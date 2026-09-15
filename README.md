@@ -26,6 +26,8 @@ Validated GLB 2.0
 Three.js portfolio viewer
   ↓
 GitHub Pages
+  ↓
+Live desktop/mobile browser QA ✓
 ```
 
 Current promoted asset: **v0.3-life2** — Form, Material, Light and Life gates passed and frozen before presentation.
@@ -39,6 +41,10 @@ Current promoted asset: **v0.3-life2** — Form, Material, Light and Life gates 
 - React / Three.js production build
 - exact GLB binary-delivery smoke test
 - successful GitHub Pages deployment
+- post-deploy Playwright checks against the live public viewer
+- desktop room/lighting/material/orbit/zoom paths — PASS
+- mobile room/canvas/no-horizontal-overflow paths — PASS
+- tested run reports zero console errors, zero uncaught page errors and zero HTTP responses >= 400
 
 Project details and evidence: [`projects/Dubai-Luxury-Villa-AI`](projects/Dubai-Luxury-Villa-AI)
 
