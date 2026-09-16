@@ -41,7 +41,7 @@ const MATERIAL_FAMILY_BY_NAME = {
 };
 
 const MATERIAL_RESPONSE_PROFILE = 'family-microcontrast-v1';
-const VIEWER_RUNTIME_PROFILE = 'persistent-scene-v1';
+const VIEWER_RUNTIME_PROFILE = 'persistent-scene-v2';
 const MATERIAL_RESPONSE_BY_FAMILY = {
   stone: { roughness: 0.60, normalScale: 1.08 },
   plaster: { roughness: 0.84, normalScale: 0.72 },
@@ -141,39 +141,42 @@ function applyMaterialConcept(root, selectedMaterial) {
       const familyColor = family ? selectedMaterial.familyColors[family] : null;
       if (!familyColor) return source;
 
-      let material = source;
+      let runtimeMaterial = source;
       if (!source.userData?.runtimeMaterialClone) {
-        material = source.clone();
-        material.userData = {
+        runtimeMaterial = source.clone();
+        runtimeMaterial.userData = {
           ...source.userData,
           runtimeMaterialClone: true,
           materialFamily: family,
           materialResponseProfile: MATERIAL_RESPONSE_PROFILE,
           baseNormalScale: source.normalScale ? [source.normalScale.x, source.normalScale.y] : null
         };
-        if (source.normalScale?.clone) material.normalScale = source.normalScale.clone();
+        if (source.normalScale?.clone) runtimeMaterial.normalScale = source.normalScale.clone();
       }
 
-      material.color = new THREE.Color(familyColor);
+      runtimeMaterial.color = new THREE.Color(familyColor);
       const response = MATERIAL_RESPONSE_BY_FAMILY[family];
-      if (response && typeof material.roughness === 'number') {
-        material.roughness = response.roughness;
+      if (response && typeof runtimeMaterial.roughness === 'number') {
+        runtimeMaterial.roughness = response.roughness;
       }
-      if (response && material.normalMap && material.normalScale) {
-        const base = material.userData?.baseNormalScale ?? [1, 1];
-        material.normalScale.set(base[0] * response.normalScale, base[1] * response.normalScale);
+      if (response && runtimeMaterial.normalMap && runtimeMaterial.normalScale) {
+        const base = runtimeMaterial.userData?.baseNormalScale ?? [1, 1];
+        runtimeMaterial.normalScale.set(
+          base[0] * response.normalScale,
+          base[1] * response.normalScale
+        );
       }
 
-      material.userData = {
-        ...material.userData,
+      runtimeMaterial.userData = {
+        ...runtimeMaterial.userData,
         runtimeMaterialClone: true,
         materialFamily: family,
         materialResponseProfile: MATERIAL_RESPONSE_PROFILE
       };
-      material.needsUpdate = true;
+      runtimeMaterial.needsUpdate = true;
       report.materialCount += 1;
       families.add(family);
-      return material;
+      return runtimeMaterial;
     });
     object.material = nextMaterials.length === 1 ? nextMaterials[0] : nextMaterials;
   });
@@ -231,6 +234,7 @@ export default function VillaViewer({
   const runtimeRef = useRef(null);
   const mobileMotionRef = useRef({ forward: 0, right: 0 });
   const latestPropsRef = useRef(null);
+
   const [modelState, setModelState] = useState('loading');
   const [modelLoadCount, setModelLoadCount] = useState(0);
   const [firstPersonReady, setFirstPersonReady] = useState(false);
@@ -238,20 +242,26 @@ export default function VillaViewer({
   const [interiorLightCount, setInteriorLightCount] = useState(0);
   const [importedLightCount, setImportedLightCount] = useState(0);
   const [isTouchUi, setIsTouchUi] = useState(false);
+  const [interactionMode, setInteractionMode] = useState('guided');
   const [hasInteracted, setHasInteracted] = useState(false);
   const [materialResponse, setMaterialResponse] = useState({
     profile: 'pending',
     materialCount: 0,
     familyCount: 0
   });
-  const [walkStatus, setWalkStatus] = useState({ label: 'Tour anchor', floor: null, edgeType: null });
+  const [walkStatus, setWalkStatus] = useState({
+    label: 'Tour anchor',
+    floor: null,
+    edgeType: null
+  });
 
   latestPropsRef.current = {
     selectedRoom,
     lightingMode,
     material,
     tourMode,
-    activeTourStopId
+    activeTourStopId,
+    interactionMode
   };
 
   const syncLighting = () => {
@@ -259,7 +269,11 @@ export default function VillaViewer({
     if (!runtime) return;
     const current = latestPropsRef.current;
     const isFirstPerson = current.tourMode && current.activeTourStopId !== 'overview';
-    const lighting = resolveRuntimeLighting(current.lightingMode, current.activeTourStopId, isFirstPerson);
+    const lighting = resolveRuntimeLighting(
+      current.lightingMode,
+      current.activeTourStopId,
+      isFirstPerson
+    );
 
     runtime.scene.background = new THREE.Color(current.lightingMode?.background ?? '#bfd0d7');
     runtime.renderer.setClearColor(runtime.scene.background);
@@ -284,30 +298,54 @@ export default function VillaViewer({
 
     const current = latestPropsRef.current;
     const isFirstPerson = current.tourMode && current.activeTourStopId !== 'overview';
+    const isExplore = isFirstPerson && current.interactionMode === 'explore';
     const wasFirstPerson = runtime.isFirstPerson;
+
     runtime.isFirstPerson = isFirstPerson;
+    runtime.isExplore = isExplore;
     runtime.currentWalkEdgeId = null;
     runtime.firstPersonAvailable = false;
+    mobileMotionRef.current = { forward: 0, right: 0 };
 
     if (runtime.orbitControls) runtime.orbitControls.enabled = !isFirstPerson;
 
     if (isFirstPerson) {
+      if (!isExplore) runtime.pointerLockControls?.unlock();
+
       runtime.camera.fov = 64;
       runtime.camera.updateProjectionMatrix();
-      const tourPlaced = placeFirstPersonCamera(runtime.camera, runtime.villaRoot, current.activeTourStopId);
+      const tourPlaced = placeFirstPersonCamera(
+        runtime.camera,
+        runtime.villaRoot,
+        current.activeTourStopId,
+        { presentation: !isExplore }
+      );
       runtime.firstPersonAvailable = tourPlaced;
       setFirstPersonReady(tourPlaced);
-      if (tourPlaced && runtime.isTouchDevice) runtime.camera.rotation.order = 'YXZ';
-
-      const nearest = nearestTourStop(runtime.walkGraph, runtime.camera.position);
-      if (nearest) {
-        setWalkStatus({ label: nearest.title, floor: nearest.floor, edgeType: null });
+      if (tourPlaced && runtime.isTouchDevice && isExplore) {
+        runtime.camera.rotation.order = 'YXZ';
       }
-      if (!wasFirstPerson) setHasInteracted(false);
+
+      const activeStop = TOUR_STOPS.find((stop) => stop.id === current.activeTourStopId);
+      if (!isExplore && activeStop) {
+        setWalkStatus({
+          label: activeStop.title,
+          floor: activeStop.floor,
+          edgeType: null
+        });
+      } else {
+        const nearest = nearestTourStop(runtime.walkGraph, runtime.camera.position);
+        if (nearest) {
+          setWalkStatus({ label: nearest.title, floor: nearest.floor, edgeType: null });
+        }
+      }
+
+      if (!wasFirstPerson || !isExplore) setHasInteracted(false);
       return;
     }
 
     runtime.pointerLockControls?.unlock();
+    runtime.isExplore = false;
     setFirstPersonReady(false);
     if (wasFirstPerson) runtime.camera.position.set(18, 12, 20);
     runtime.camera.fov = 45;
@@ -351,7 +389,9 @@ export default function VillaViewer({
 
     const isTouchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     setIsTouchUi(isTouchDevice);
-    const pointerLockControls = isTouchDevice ? null : new PointerLockControls(camera, renderer.domElement);
+    const pointerLockControls = isTouchDevice
+      ? null
+      : new PointerLockControls(camera, renderer.domElement);
 
     const runtime = {
       disposed: false,
@@ -366,6 +406,7 @@ export default function VillaViewer({
       pointerLockControls,
       isTouchDevice,
       isFirstPerson: false,
+      isExplore: false,
       villaRoot: null,
       interiorLightGroup: null,
       walkGraph: null,
@@ -423,26 +464,29 @@ export default function VillaViewer({
       (error) => {
         if (runtime.disposed) return;
         console.warn('villa.glb failed to load; using fallback massing', error);
-        runtime.villaRoot = buildFallbackMassing(scene, latestPropsRef.current.material?.swatch ?? '#d8c8ad');
+        runtime.villaRoot = buildFallbackMassing(
+          scene,
+          latestPropsRef.current.material?.swatch ?? '#d8c8ad'
+        );
         setModelState('fallback');
       }
     );
 
     const keyDown = (event) => {
-      if (!runtime.isFirstPerson) return;
+      if (!runtime.isExplore) return;
       runtime.keys.add(event.code);
       if (/^(Key[WASD]|Arrow|Shift)/.test(event.code)) setHasInteracted(true);
     };
     const keyUp = (event) => runtime.keys.delete(event.code);
 
     const lockFirstPerson = () => {
-      if (!runtime.isFirstPerson || !runtime.pointerLockControls || !runtime.villaRoot) return;
+      if (!runtime.isExplore || !runtime.pointerLockControls || !runtime.villaRoot) return;
       setHasInteracted(true);
       runtime.pointerLockControls.lock();
     };
 
     const pointerDown = (event) => {
-      if (!runtime.isTouchDevice || !runtime.isFirstPerson) return;
+      if (!runtime.isTouchDevice || !runtime.isExplore) return;
       setHasInteracted(true);
       runtime.touchLook.active = true;
       runtime.touchLook.pointerId = event.pointerId;
@@ -497,16 +541,28 @@ export default function VillaViewer({
 
       if (runtime.orbitControls?.enabled) runtime.orbitControls.update();
 
-      const desktopCanWalk = runtime.isFirstPerson && Boolean(runtime.pointerLockControls?.isLocked);
-      const touchCanWalk = Boolean(runtime.isTouchDevice && runtime.isFirstPerson && runtime.firstPersonAvailable);
+      const desktopCanWalk = runtime.isExplore && Boolean(runtime.pointerLockControls?.isLocked);
+      const touchCanWalk = Boolean(
+        runtime.isTouchDevice && runtime.isExplore && runtime.firstPersonAvailable
+      );
 
       if (desktopCanWalk || touchCanWalk) {
-        const keyboardForward = (runtime.keys.has('KeyW') || runtime.keys.has('ArrowUp') ? 1 : 0)
+        const keyboardForward =
+          (runtime.keys.has('KeyW') || runtime.keys.has('ArrowUp') ? 1 : 0)
           - (runtime.keys.has('KeyS') || runtime.keys.has('ArrowDown') ? 1 : 0);
-        const keyboardRight = (runtime.keys.has('KeyD') || runtime.keys.has('ArrowRight') ? 1 : 0)
+        const keyboardRight =
+          (runtime.keys.has('KeyD') || runtime.keys.has('ArrowRight') ? 1 : 0)
           - (runtime.keys.has('KeyA') || runtime.keys.has('ArrowLeft') ? 1 : 0);
-        const forwardInput = THREE.MathUtils.clamp(keyboardForward + mobileMotionRef.current.forward, -1, 1);
-        const rightInput = THREE.MathUtils.clamp(keyboardRight + mobileMotionRef.current.right, -1, 1);
+        const forwardInput = THREE.MathUtils.clamp(
+          keyboardForward + mobileMotionRef.current.forward,
+          -1,
+          1
+        );
+        const rightInput = THREE.MathUtils.clamp(
+          keyboardRight + mobileMotionRef.current.right,
+          -1,
+          1
+        );
 
         if ((forwardInput !== 0 || rightInput !== 0) && runtime.walkGraph) {
           const sprint = runtime.keys.has('ShiftLeft') || runtime.keys.has('ShiftRight');
@@ -521,7 +577,11 @@ export default function VillaViewer({
             .addScaledVector(forward, forwardInput * speed * delta)
             .addScaledVector(right, rightInput * speed * delta);
 
-          const constrained = constrainToWalkGraph(desired, runtime.walkGraph, runtime.currentWalkEdgeId);
+          const constrained = constrainToWalkGraph(
+            desired,
+            runtime.walkGraph,
+            runtime.currentWalkEdgeId
+          );
           camera.position.copy(constrained.position);
           runtime.currentWalkEdgeId = constrained.edge?.id ?? runtime.currentWalkEdgeId;
         }
@@ -530,7 +590,9 @@ export default function VillaViewer({
         if (runtime.statusTimer >= 0.25) {
           runtime.statusTimer = 0;
           const nearest = nearestTourStop(runtime.walkGraph, camera.position);
-          const currentEdge = runtime.walkGraph?.edges?.find((edge) => edge.id === runtime.currentWalkEdgeId) ?? null;
+          const currentEdge = runtime.walkGraph?.edges?.find(
+            (edge) => edge.id === runtime.currentWalkEdgeId
+          ) ?? null;
           if (nearest) {
             setWalkStatus((previous) => {
               const next = {
@@ -588,19 +650,37 @@ export default function VillaViewer({
 
   useEffect(() => {
     syncView();
-  }, [selectedRoom, tourMode, activeTourStopId]);
+  }, [selectedRoom, tourMode, activeTourStopId, interactionMode]);
+
+  useEffect(() => {
+    setInteractionMode('guided');
+    setHasInteracted(false);
+  }, [tourMode, activeTourStopId]);
 
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
   const isFirstPerson = tourMode && activeTourStopId !== 'overview';
-  const runtimeLightingProfile = resolveRuntimeLighting(lightingMode, activeTourStopId, isFirstPerson).profile;
+  const isExplore = isFirstPerson && interactionMode === 'explore';
+  const runtimeLightingProfile = resolveRuntimeLighting(
+    lightingMode,
+    activeTourStopId,
+    isFirstPerson
+  ).profile;
+
   const guidedStops = TOUR_STOPS.filter((stop) => stop.id !== 'overview');
   const guidedIndex = guidedStops.findIndex((stop) => stop.id === activeTourStopId);
   const previousStop = guidedIndex > 0 ? guidedStops[guidedIndex - 1] : null;
-  const nextStop = guidedIndex >= 0 && guidedIndex < guidedStops.length - 1 ? guidedStops[guidedIndex + 1] : null;
+  const nextStop = guidedIndex >= 0 && guidedIndex < guidedStops.length - 1
+    ? guidedStops[guidedIndex + 1]
+    : null;
 
   const setMobileMotion = (axis, value) => {
     if (value !== 0) setHasInteracted(true);
     mobileMotionRef.current = { ...mobileMotionRef.current, [axis]: value };
+  };
+
+  const switchMode = (mode) => {
+    setHasInteracted(false);
+    setInteractionMode(mode);
   };
 
   return (
@@ -612,7 +692,9 @@ export default function VillaViewer({
         </div>
         <p>
           {isFirstPerson
-            ? 'Follow the guided route or look around freely. The villa stays loaded while you move between spaces.'
+            ? isExplore
+              ? 'Explore freely on the authored walk route. Return to Guided at any time without reloading the villa.'
+              : 'Guided presents the strongest authored view. Use the arrows to continue or switch to Explore to walk yourself.'
             : 'Drag to orbit · scroll to zoom · choose a room or enter the guided walkthrough.'}
         </p>
       </div>
@@ -625,6 +707,7 @@ export default function VillaViewer({
           data-model-load-count={modelLoadCount}
           data-viewer-runtime={VIEWER_RUNTIME_PROFILE}
           data-view-mode={isFirstPerson ? 'first-person' : 'orbit'}
+          data-interaction-mode={isFirstPerson ? interactionMode : 'orbit'}
           data-tour-stop={activeTourStopId}
           data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
           data-interior-light-count={interiorLightCount}
@@ -636,7 +719,7 @@ export default function VillaViewer({
           data-material-response-profile={materialResponse.profile}
           data-material-response-count={materialResponse.materialCount}
           data-material-family-count={materialResponse.familyCount}
-          data-navigation-anchor-mode="separate-presentation-v1"
+          data-navigation-anchor-mode="guided-presentation-explore-anchor-v2"
           aria-label="Interactive Dubai luxury villa virtual tour prototype"
         />
 
@@ -654,75 +737,117 @@ export default function VillaViewer({
                 {walkStatus.floor ? `Floor ${walkStatus.floor}` : 'Site'}
                 {walkStatus.edgeType ? ` · ${walkStatus.edgeType}` : ''}
                 {' · '}
-                {walkGraphReady ? 'route ready' : firstPersonReady ? 'anchor ready' : 'preparing route'}
+                {isExplore
+                  ? walkGraphReady ? 'Explore route ready' : firstPersonReady ? 'Explore anchor ready' : 'Preparing route'
+                  : 'Guided view'}
               </span>
             </div>
 
-            {!hasInteracted && (
-              <div className="walkthrough-onboarding" role="status">
-                <strong>{isTouchUi ? 'Drag to look' : 'Click the view to look around'}</strong>
-                <span>{isTouchUi ? 'Use the movement pad to walk.' : 'WASD to move · Shift to move faster · Esc releases the cursor.'}</span>
-              </div>
-            )}
-
             {onExitTour && (
-              <button type="button" className="viewer-exit-tour" onClick={onExitTour} aria-label="Exit walkthrough">
+              <button
+                type="button"
+                className="viewer-exit-tour"
+                onClick={onExitTour}
+                aria-label="Exit walkthrough"
+              >
                 Exit
               </button>
             )}
 
-            {onSelectTourStop && guidedIndex >= 0 && (
+            <div className="viewer-mode-switch" role="group" aria-label="Walkthrough mode">
+              <button
+                type="button"
+                className={interactionMode === 'guided' ? 'is-active' : ''}
+                aria-pressed={interactionMode === 'guided'}
+                onClick={() => switchMode('guided')}
+              >
+                Guided
+              </button>
+              <button
+                type="button"
+                className={interactionMode === 'explore' ? 'is-active' : ''}
+                aria-pressed={interactionMode === 'explore'}
+                onClick={() => switchMode('explore')}
+              >
+                Explore
+              </button>
+            </div>
+
+            {isExplore && !hasInteracted && (
+              <div className="walkthrough-onboarding" role="status">
+                <strong>{isTouchUi ? 'Drag to look' : 'Click the view to look around'}</strong>
+                <span>
+                  {isTouchUi
+                    ? 'Use the movement pad to walk.'
+                    : 'WASD to move · Shift to move faster · Esc releases the cursor.'}
+                </span>
+              </div>
+            )}
+
+            {!isExplore && onSelectTourStop && guidedIndex >= 0 && (
               <nav className="viewer-guided-controls" aria-label="Guided walkthrough controls">
-                <button type="button" disabled={!previousStop} onClick={() => previousStop && onSelectTourStop(previousStop)} aria-label="Previous stop">
+                <button
+                  type="button"
+                  disabled={!previousStop}
+                  onClick={() => previousStop && onSelectTourStop(previousStop)}
+                  aria-label="Previous stop"
+                >
                   ←
                 </button>
                 <span><strong>{guidedIndex + 1}</strong> / {guidedStops.length}</span>
-                <button type="button" disabled={!nextStop} onClick={() => nextStop && onSelectTourStop(nextStop)} aria-label="Next stop">
+                <button
+                  type="button"
+                  disabled={!nextStop}
+                  onClick={() => nextStop && onSelectTourStop(nextStop)}
+                  aria-label="Next stop"
+                >
                   →
                 </button>
               </nav>
             )}
 
-            <div className="touch-walk-pad" aria-label="Touch walkthrough controls">
-              <button
-                type="button"
-                aria-label="Walk forward"
-                onPointerDown={() => setMobileMotion('forward', 1)}
-                onPointerUp={() => setMobileMotion('forward', 0)}
-                onPointerCancel={() => setMobileMotion('forward', 0)}
-                onPointerLeave={() => setMobileMotion('forward', 0)}
-              >↑</button>
-              <button
-                type="button"
-                aria-label="Step left"
-                onPointerDown={() => setMobileMotion('right', -1)}
-                onPointerUp={() => setMobileMotion('right', 0)}
-                onPointerCancel={() => setMobileMotion('right', 0)}
-                onPointerLeave={() => setMobileMotion('right', 0)}
-              >←</button>
-              <button
-                type="button"
-                aria-label="Walk backward"
-                onPointerDown={() => setMobileMotion('forward', -1)}
-                onPointerUp={() => setMobileMotion('forward', 0)}
-                onPointerCancel={() => setMobileMotion('forward', 0)}
-                onPointerLeave={() => setMobileMotion('forward', 0)}
-              >↓</button>
-              <button
-                type="button"
-                aria-label="Step right"
-                onPointerDown={() => setMobileMotion('right', 1)}
-                onPointerUp={() => setMobileMotion('right', 0)}
-                onPointerCancel={() => setMobileMotion('right', 0)}
-                onPointerLeave={() => setMobileMotion('right', 0)}
-              >→</button>
-            </div>
+            {isExplore && isTouchUi && (
+              <div className="touch-walk-pad" aria-label="Touch walkthrough controls">
+                <button
+                  type="button"
+                  aria-label="Walk forward"
+                  onPointerDown={() => setMobileMotion('forward', 1)}
+                  onPointerUp={() => setMobileMotion('forward', 0)}
+                  onPointerCancel={() => setMobileMotion('forward', 0)}
+                  onPointerLeave={() => setMobileMotion('forward', 0)}
+                >↑</button>
+                <button
+                  type="button"
+                  aria-label="Step left"
+                  onPointerDown={() => setMobileMotion('right', -1)}
+                  onPointerUp={() => setMobileMotion('right', 0)}
+                  onPointerCancel={() => setMobileMotion('right', 0)}
+                  onPointerLeave={() => setMobileMotion('right', 0)}
+                >←</button>
+                <button
+                  type="button"
+                  aria-label="Walk backward"
+                  onPointerDown={() => setMobileMotion('forward', -1)}
+                  onPointerUp={() => setMobileMotion('forward', 0)}
+                  onPointerCancel={() => setMobileMotion('forward', 0)}
+                  onPointerLeave={() => setMobileMotion('forward', 0)}
+                >↓</button>
+                <button
+                  type="button"
+                  aria-label="Step right"
+                  onPointerDown={() => setMobileMotion('right', 1)}
+                  onPointerUp={() => setMobileMotion('right', 0)}
+                  onPointerCancel={() => setMobileMotion('right', 0)}
+                  onPointerLeave={() => setMobileMotion('right', 0)}
+                >→</button>
+              </div>
+            )}
           </>
         )}
       </div>
 
       <p className="viewer-note">
-        Guided mode keeps movement on the authored presentation route while the camera framing stays independent from navigation anchors, so visual polish cannot silently distort the walk path.
+        Guided mode may use a presentation camera that is independent from the route. Explore always starts on the authored walk anchor, so a stronger hero frame cannot introduce a navigation snap or hidden graph distortion.
       </p>
     </section>
   );
