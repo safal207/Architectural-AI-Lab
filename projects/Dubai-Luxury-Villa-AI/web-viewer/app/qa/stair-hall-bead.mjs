@@ -53,6 +53,59 @@ async function captureCanvas(page, path) {
   return bytes.length;
 }
 
+async function measureVisualVariation(page) {
+  return page.locator('.three-canvas canvas').evaluate((canvas) => {
+    const probe = document.createElement('canvas');
+    probe.width = canvas.width;
+    probe.height = canvas.height;
+    const context = probe.getContext('2d', { willReadFrequently: true });
+    context.drawImage(canvas, 0, 0);
+    const { data, width, height } = context.getImageData(0, 0, probe.width, probe.height);
+
+    const counts = new Map();
+    const step = Math.max(4, Math.round(Math.min(width, height) / 90));
+    let sampleCount = 0;
+    let luminanceSum = 0;
+    let luminanceSquareSum = 0;
+
+    for (let y = Math.floor(step / 2); y < height; y += step) {
+      for (let x = Math.floor(step / 2); x < width; x += step) {
+        const index = (y * width + x) * 4;
+        const r = data[index];
+        const g = data[index + 1];
+        const b = data[index + 2];
+        const key = `${r >> 4}:${g >> 4}:${b >> 4}`;
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+        const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        luminanceSum += luminance;
+        luminanceSquareSum += luminance * luminance;
+        sampleCount += 1;
+      }
+    }
+
+    let dominant = 0;
+    let entropy = 0;
+    counts.forEach((count) => {
+      dominant = Math.max(dominant, count);
+      const probability = count / sampleCount;
+      entropy -= probability * Math.log2(probability);
+    });
+
+    const luminanceMean = luminanceSum / sampleCount;
+    const luminanceVariance = Math.max(
+      0,
+      luminanceSquareSum / sampleCount - luminanceMean * luminanceMean
+    );
+
+    return {
+      sampleCount,
+      dominantColorFraction: dominant / sampleCount,
+      entropyBits: entropy,
+      luminanceStdDev: Math.sqrt(luminanceVariance)
+    };
+  });
+}
+
 const browser = await chromium.launch({ headless: true });
 const report = {
   status: 'RUNNING',
@@ -67,6 +120,7 @@ const report = {
   lightEngine: null,
   importedLights: 0,
   evidenceBytes: 0,
+  visualVariation: null,
   consoleErrors: [],
   pageErrors: []
 };
@@ -111,6 +165,16 @@ try {
   check(report.walkGraph === 'ready', `Walk graph is ${report.walkGraph}`);
   check(report.lightEngine === 'runtime-only', `Unexpected light engine: ${report.lightEngine}`);
   check(report.importedLights === 0, `Imported GLB lights leaked into browser (${report.importedLights})`);
+
+  report.visualVariation = await measureVisualVariation(page);
+  check(
+    report.visualVariation.dominantColorFraction < 0.60,
+    `Stair Hall frame is visually flat: dominant quantized color occupies ${(report.visualVariation.dominantColorFraction * 100).toFixed(1)}%`
+  );
+  check(
+    report.visualVariation.entropyBits > 1.75,
+    `Stair Hall frame lacks visual variation: entropy ${report.visualVariation.entropyBits.toFixed(2)} bits`
+  );
 
   report.evidenceBytes = await captureCanvas(page, `${outputDir}/stair-hall-day.png`);
   check(report.consoleErrors.length === 0, `Console errors: ${report.consoleErrors.join(' | ')}`);
