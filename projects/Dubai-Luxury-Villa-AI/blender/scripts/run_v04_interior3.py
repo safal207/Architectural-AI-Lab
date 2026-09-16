@@ -15,12 +15,15 @@ interior1 = interior2.interior1
 
 PROJECT_ROOT = HERE.parents[1]
 RENDER_PATH = PROJECT_ROOT / 'renders' / 'villa-v0.4-interior3-upper-landing.png'
+POOL_RENDER_PATH = PROJECT_ROOT / 'renders' / 'villa-v0.4-interior3-pool-context.png'
 BLEND_PATH = PROJECT_ROOT / 'exports' / 'villa-v0.4-interior3.blend'
 GLB_PATH = PROJECT_ROOT / 'exports' / 'villa-v0.4-interior3.glb'
-STAGE_ID = 'v0.4-interior3-root-cause-repair'
+STAGE_ID = 'v0.4-interior3-root-cause-repair-pool-context'
 
 LANDING_CAMERA = (-3.65, 1.80, 4.95)
 LANDING_TARGET = (-0.10, 1.45, 4.65)
+POOL_CAMERA = (-0.55, 7.05, 1.65)
+POOL_TARGET = (-3.75, 11.40, 0.38)
 
 
 def remove_named(*names):
@@ -173,8 +176,6 @@ def refine_master_suite_luxury():
         0.055,
     )
 
-    # Layered bedding is the smallest geometry change that removes the showroom-
-    # block feel from the bed while keeping the source lightweight for the web.
     pillow_left = interior1.cube(
         'master_pillow_left_v04_r6',
         (0.84, 0.46, 0.18),
@@ -206,8 +207,6 @@ def refine_master_suite_luxury():
         0.035,
     )
 
-    # The strip remains emissive as a visual line. Browser punctual illumination
-    # comes from the bedside fixtures only; this avoids a central point-light hotspot.
     interior1.cube(
         'master_headboard_cove_v04_r5',
         (3.08, 0.05, 0.055),
@@ -215,6 +214,105 @@ def refine_master_suite_luxury():
         warm_light,
         0.010,
     )
+
+
+def low_poly_shrub(name, location, scale, mat):
+    """One low-poly organic volume; cheap enough for the web GLB."""
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=1.0, location=location)
+    obj = bpy.context.object
+    obj.name = name
+    obj.scale = scale
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    obj.data.materials.append(mat)
+    return obj
+
+
+def refine_pool_context():
+    """Give the infinity edge real depth without turning the villa into a city scene.
+
+    The Pool Terrace camera and walk anchor remain untouched. Context begins beyond
+    the authored infinity lip at y=11.40, so it cannot become a hidden navigation
+    obstacle. Geometry is intentionally low-poly: a sand datum, one planter band,
+    restrained planting at the sides, and low-contrast distant neighborhood massing.
+    """
+    limestone = bpy.data.materials.get('M4_OrganicWarmLimestone') or interior1.material(
+        'V04_PoolContextLimestone', (0.56, 0.49, 0.40), 0.74
+    )
+    sand = interior1.material('V04_PoolContextSand', (0.39, 0.34, 0.27), 0.96)
+    olive = interior1.material('V04_PoolContextOlive', (0.085, 0.135, 0.095), 0.93)
+    olive_soft = interior1.material('V04_PoolContextOliveSoft', (0.12, 0.17, 0.115), 0.94)
+    trunk = interior1.material('V04_PoolContextTrunk', (0.12, 0.075, 0.045), 0.96)
+    distant = interior1.material('V04_PoolContextMassing', (0.34, 0.32, 0.29), 0.96)
+
+    for obj in list(bpy.data.objects):
+        if obj.name.startswith('pool_context_'):
+            bpy.data.objects.remove(obj, do_unlink=True)
+
+    # Ground datum begins below/behind the infinity edge and extends only into the
+    # visual background. Its low top surface cannot interfere with the pool route.
+    interior1.cube(
+        'pool_context_desert_ground_v04',
+        (26.0, 14.0, 0.14),
+        (-0.55, 18.15, -0.04),
+        sand,
+        0.02,
+    )
+    interior1.cube(
+        'pool_context_planter_v04',
+        (15.10, 0.68, 0.38),
+        (-0.55, 12.28, 0.22),
+        limestone,
+        0.055,
+    )
+
+    shrub_specs = (
+        (-6.15, 12.45, 0.63, (0.72, 0.46, 0.42), olive),
+        (-5.00, 12.60, 0.59, (0.54, 0.40, 0.36), olive_soft),
+        (-3.82, 12.42, 0.61, (0.66, 0.43, 0.39), olive),
+        (2.95, 12.48, 0.60, (0.62, 0.42, 0.38), olive_soft),
+        (4.25, 12.58, 0.65, (0.72, 0.45, 0.42), olive),
+        (5.62, 12.43, 0.58, (0.56, 0.38, 0.35), olive_soft),
+    )
+    for index, (x, y, z, scale, mat) in enumerate(shrub_specs):
+        low_poly_shrub(f'pool_context_shrub_{index:02d}', (x, y, z), scale, mat)
+
+    # Two vertical accents frame rather than block the infinity axis.
+    for side, x, y, height in (
+        ('left', -6.75, 13.35, 2.35),
+        ('right', 6.15, 13.15, 2.15),
+    ):
+        interior1.cylinder(
+            f'pool_context_tree_{side}_trunk',
+            0.12,
+            height,
+            (x, y, height * 0.5),
+            trunk,
+            12,
+        )
+        low_poly_shrub(
+            f'pool_context_tree_{side}_crown',
+            (x, y, height + 0.35),
+            (0.95, 0.78, 0.62),
+            olive,
+        )
+
+    # Distant massing is deliberately low and desaturated: enough parallax/depth
+    # to avoid a blank horizon, but still subordinate to the villa and water.
+    distant_specs = (
+        (-8.2, 21.8, 2.2, 3.2, 2.8),
+        (-4.6, 22.8, 3.0, 3.0, 2.6),
+        (-0.8, 23.4, 2.4, 4.0, 2.8),
+        (3.8, 22.4, 3.8, 3.4, 2.9),
+        (7.9, 23.2, 2.7, 3.1, 2.7),
+    )
+    for index, (x, y, height, width, depth) in enumerate(distant_specs):
+        interior1.cube(
+            f'pool_context_distant_{index:02d}',
+            (width, depth, height),
+            (x, y, height * 0.5 - 0.02),
+            distant,
+            0.06,
+        )
 
 
 def point_inside_axis_aligned_box(point, obj, clearance=0.0):
@@ -254,6 +352,38 @@ def assert_upper_landing_clearance():
     print(f'Upper Landing clearance PASS at {tuple(round(v, 3) for v in anchor.location)}')
 
 
+def assert_pool_context_clearance():
+    anchor = bpy.data.objects.get('tour_pool')
+    lip = bpy.data.objects.get('infinity_lip')
+    if not anchor or not lip:
+        raise RuntimeError('Pool route anchor or infinity lip missing')
+
+    if abs(anchor.location.x - POOL_CAMERA[0]) > 0.01 or abs(anchor.location.y - POOL_CAMERA[1]) > 0.01:
+        raise RuntimeError(f'Pool navigation anchor moved unexpectedly: {tuple(anchor.location)}')
+
+    required = (
+        'pool_context_planter_v04',
+        'pool_context_shrub_00',
+        'pool_context_tree_left_trunk',
+        'pool_context_tree_right_trunk',
+        'pool_context_distant_00',
+    )
+    for name in required:
+        if bpy.data.objects.get(name) is None:
+            raise RuntimeError(f'Missing Pool context object: {name}')
+
+    # Excluding the below-grade desert datum, all vertical context begins safely
+    # behind the infinity edge and outside the walkable/pool presentation envelope.
+    for obj in bpy.data.objects:
+        if not obj.name.startswith('pool_context_') or obj.name == 'pool_context_desert_ground_v04':
+            continue
+        min_y = obj.location.y - obj.dimensions.y * 0.5
+        if min_y < 11.72:
+            raise RuntimeError(f'Pool context leaked into infinity-edge envelope: {obj.name} min_y={min_y:.3f}')
+
+    print('Pool context clearance PASS — navigation anchor frozen and context stays beyond infinity edge')
+
+
 def configure_upper_landing_review_camera():
     cam = bpy.data.objects.get('hero_camera_v02')
     if not cam:
@@ -272,11 +402,31 @@ def configure_upper_landing_review_camera():
     bpy.context.scene.camera = cam
 
 
+def configure_pool_context_review_camera():
+    cam = bpy.data.objects.get('hero_camera_v02')
+    if not cam:
+        cameras = [obj for obj in bpy.data.objects if obj.type == 'CAMERA']
+        if not cameras:
+            raise RuntimeError('No camera available for Pool context review')
+        cam = cameras[0]
+
+    cam.location = POOL_CAMERA
+    cam.data.lens = 24
+    cam.data.sensor_width = 36
+    cam.data.clip_start = 0.06
+    cam.data.clip_end = 180.0
+    target = mathutils.Vector(POOL_TARGET)
+    cam.rotation_euler = (target - cam.location).to_track_quat('-Z', 'Y').to_euler()
+    bpy.context.scene.camera = cam
+
+
 def build_scene():
     interior2.build_scene()
     open_upper_circulation()
     refine_master_suite_luxury()
+    refine_pool_context()
     assert_upper_landing_clearance()
+    assert_pool_context_clearance()
     configure_upper_landing_review_camera()
 
 
@@ -290,14 +440,20 @@ def save_outputs():
     scene.render.resolution_y = 900
     scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = 'PNG'
-    scene.render.filepath = str(RENDER_PATH)
 
     try:
         bpy.ops.file.pack_all()
     except Exception as exc:
         print(f'Warning: pack_all failed: {exc}')
 
+    configure_upper_landing_review_camera()
+    scene.render.filepath = str(RENDER_PATH)
     bpy.ops.render.render(write_still=True)
+
+    configure_pool_context_review_camera()
+    scene.render.filepath = str(POOL_RENDER_PATH)
+    bpy.ops.render.render(write_still=True)
+
     bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_PATH))
     bpy.ops.export_scene.gltf(
         filepath=str(GLB_PATH),
@@ -310,6 +466,7 @@ def save_outputs():
     )
 
     print(f'Rendered v0.4 Interior3 Upper Landing review: {RENDER_PATH}')
+    print(f'Rendered v0.4 Pool context review: {POOL_RENDER_PATH}')
     print(f'Saved v0.4 Interior3 Blender source: {BLEND_PATH}')
     print(f'Exported v0.4 Interior3 GLB without punctual lights: {GLB_PATH}')
 
@@ -318,7 +475,7 @@ def main():
     print(f'Building {STAGE_ID}')
     build_scene()
     save_outputs()
-    print('Dubai Luxury Villa AI v0.4 Interior3 — clear circulation, open master threshold, layered quiet-luxury master composition and browser-safe lighting generated')
+    print('Dubai Luxury Villa AI v0.4 Interior3 — clear circulation, quiet-luxury master suite and restrained infinity-pool landscape context generated')
 
 
 if __name__ == '__main__':
