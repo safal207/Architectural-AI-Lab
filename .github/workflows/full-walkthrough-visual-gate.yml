@@ -1,0 +1,64 @@
+name: Full Walkthrough Visual Gate
+
+on:
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/full-walkthrough-day.mjs'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/full-walkthrough-visual-review-v1.md'
+      - '.github/workflows/full-walkthrough-visual-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-walkthrough-day:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build viewer
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-full-walkthrough.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/villa-full-walkthrough.log
+          exit 1
+
+      - name: Capture full Day walkthrough
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-full-walkthrough-day-output
+        run: node qa/full-walkthrough-day.mjs
+
+      - name: Upload full walkthrough evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-full-walkthrough-day
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-full-walkthrough-day-output
+          if-no-files-found: warn
+          retention-days: 14
