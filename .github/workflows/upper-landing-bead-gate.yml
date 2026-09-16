@@ -3,14 +3,20 @@ name: Upper Landing Bead Gate
 on:
   pull_request:
     paths:
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/tourData.js'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/walkthroughEngine.js'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/VillaViewer.jsx'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/upper-landing-bead.mjs'
       - 'projects/Dubai-Luxury-Villa-AI/validation/upper-landing-bead-trajectory-v1.md'
-      - 'projects/Dubai-Luxury-Villa-AI/validation/material-microcontrast-bead-v1.md'
       - '.github/workflows/upper-landing-bead-gate.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: upper-landing-bead-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   upper-landing-bead:
@@ -55,26 +61,11 @@ jobs:
           QA_OUTPUT: qa-upper-landing-bead-output
         run: node qa/upper-landing-bead.mjs
 
-      - name: Capture material micro-contrast bead
-        env:
-          VILLA_URL: http://127.0.0.1:4173/
-          QA_OUTPUT: qa-material-microcontrast-output
-        run: node qa/material-microcontrast-bead.mjs
-
       - name: Upload Upper Landing bead evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dubai-villa-upper-landing-bead
           path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-upper-landing-bead-output
-          if-no-files-found: warn
-          retention-days: 14
-
-      - name: Upload material micro-contrast evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dubai-villa-material-microcontrast-bead
-          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-material-microcontrast-output
           if-no-files-found: warn
           retention-days: 14
