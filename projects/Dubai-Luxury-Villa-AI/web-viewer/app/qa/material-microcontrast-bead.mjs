@@ -32,28 +32,24 @@ async function waitForModel(page) {
 async function waitForMaterialResponse(page) {
   await page.waitForFunction(() => {
     const dataset = document.querySelector('.three-canvas')?.dataset;
+    const canvas = document.querySelector('.three-canvas canvas');
     return dataset?.materialResponseProfile === 'family-microcontrast-v1'
       && Number(dataset?.materialResponseCount ?? 0) >= 4
-      && Number(dataset?.materialFamilyCount ?? 0) === 4;
+      && Number(dataset?.materialFamilyCount ?? 0) === 4
+      && canvas?.dataset.qaCapture === 'preserved';
   }, undefined, { timeout: 120_000 });
 }
 
-async function captureViewer(page, path) {
-  const viewer = page.locator('.viewer-panel');
-  await viewer.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(400);
-  const box = await viewer.boundingBox();
-  check(box && box.width > 1 && box.height > 1, 'Viewer has no usable bounding box');
-  await page.screenshot({
-    path,
-    clip: {
-      x: Math.max(0, box.x),
-      y: Math.max(0, box.y),
-      width: box.width,
-      height: box.height
-    },
-    timeout: 60_000
-  });
+async function captureCanvas(page, path) {
+  await page.evaluate(() => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+  const dataUrl = await page.locator('.three-canvas canvas').evaluate((canvas) => canvas.toDataURL('image/png'));
+  check(dataUrl.startsWith('data:image/png;base64,'), 'Material bead canvas did not return PNG evidence');
+  const bytes = Buffer.from(dataUrl.slice('data:image/png;base64,'.length), 'base64');
+  check(bytes.length > 10_000, `Material bead evidence is unexpectedly small (${bytes.length} bytes)`);
+  await writeFile(path, bytes);
+  return bytes.length;
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -75,7 +71,9 @@ try {
   });
   page.on('pageerror', (error) => report.pageErrors.push(String(error)));
 
-  await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
+  const captureUrl = new URL(baseUrl);
+  captureUrl.searchParams.set('qaCapture', '1');
+  await page.goto(captureUrl.toString(), { waitUntil: 'networkidle', timeout: 120_000 });
   await waitForModel(page);
 
   const tour = page.locator('.tour-experience');
@@ -100,7 +98,8 @@ try {
       materialResponseProfile: await canvas.getAttribute('data-material-response-profile'),
       materialResponseCount: Number(await canvas.getAttribute('data-material-response-count') ?? 0),
       materialFamilyCount: Number(await canvas.getAttribute('data-material-family-count') ?? 0),
-      walkGraph: await canvas.getAttribute('data-walk-graph')
+      walkGraph: await canvas.getAttribute('data-walk-graph'),
+      evidenceBytes: 0
     };
 
     check(frame.walkGraph === 'ready', `${stop.id}: walk graph is ${frame.walkGraph}`);
@@ -109,7 +108,7 @@ try {
     check(frame.materialResponseCount >= 4, `${stop.id}: too few tuned materials (${frame.materialResponseCount})`);
     check(frame.materialFamilyCount === 4, `${stop.id}: expected 4 material families, got ${frame.materialFamilyCount}`);
 
-    await captureViewer(page, `${outputDir}/${stop.file}`);
+    frame.evidenceBytes = await captureCanvas(page, `${outputDir}/${stop.file}`);
     report.frames.push(frame);
   }
 
