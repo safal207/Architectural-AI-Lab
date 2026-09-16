@@ -77,11 +77,12 @@ export const TOUR_STOPS = [
     title: 'Master bedroom',
     floor: 2,
     nodeName: 'tour_master',
-    targetNodeName: 'master_bedroom',
+    targetNodeName: 'master_headboard_v04',
+    firstPersonFov: 56,
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'furniture-doors-lighting',
-    description: 'Inspect the bed, storage, private door and bedside lighting.'
+    description: 'Inspect the bed, storage, private door and bedside lighting through a tighter presentation frame focused on the authored headboard.'
   },
   {
     id: 'pool',
