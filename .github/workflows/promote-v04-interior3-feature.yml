@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 env:
-  SOURCE_ARTIFACT_ID: '10440601862'
+  SOURCE_ARTIFACT_ID: '10441748957'
   TARGET_BRANCH: 'feat/first-person-house-tour'
 
 concurrency:
@@ -84,7 +84,9 @@ jobs:
               'master_feature_stone_v04_r5',
               'master_feature_fin_left_v04_r5', 'master_feature_fin_right_v04_r5',
               'master_rug_v04_r5', 'master_bench_base_v04_r5',
-              'master_bench_cushion_v04_r5', 'master_headboard_cove_v04_r5'
+              'master_bench_cushion_v04_r5', 'master_headboard_cove_v04_r5',
+              'master_pillow_left_v04_r6', 'master_pillow_right_v04_r6',
+              'master_lumbar_v04_r6', 'master_throw_v04_r6'
           }
           missing = sorted(required - nodes)
           if missing:
@@ -94,9 +96,6 @@ jobs:
           if 'master_door_v04' in nodes:
               raise SystemExit('closed master door reappeared in gated packet')
 
-          # Engine boundary: the browser owns Day / Evening / Night lighting.
-          # Blender punctual lights must not be serialized into the web GLB or
-          # their high exported intensities will stack on top of the Three.js rig.
           used = set(doc.get('extensionsUsed') or [])
           top_extensions = doc.get('extensions') or {}
           node_light_refs = [
@@ -132,6 +131,16 @@ jobs:
           shutil.copyfile(source, target)
           shutil.copyfile(packet / 'validation/v0.4-interior3-receipt.json', root / 'validation/v0.4-interior3-receipt.json')
 
+          tour_anchors = [
+              'tour_graph_root', 'tour_entry', 'tour_living', 'tour_dining',
+              'tour_stair_ground', 'tour_stair_upper', 'tour_master', 'tour_pool'
+          ]
+          tour_look_targets = [
+              'tour_look_entry', 'tour_look_living', 'tour_look_dining',
+              'tour_look_stair_ground', 'tour_look_stair_upper',
+              'tour_look_master', 'tour_look_pool'
+          ]
+
           manifest = {
               'asset': 'Dubai Luxury Villa AI',
               'viewer_asset': 'villa.glb',
@@ -144,18 +153,20 @@ jobs:
                   'life': 'v0.3-life2 PASS / FROZEN',
                   'interior': 'v0.4-interior2 baseline',
                   'upper_landing_repair': 'v0.4-interior3 gated candidate',
-                  'master_composition': 'v0.4-interior3 quiet-luxury r5 layer',
+                  'master_composition': 'v0.4-interior3 quiet-luxury r6 bedding layer',
                   'web_light_boundary': 'Three.js owns runtime lighting; Blender punctual lights stripped from GLB'
               },
               'glb': {'bytes': len(raw), 'sha256': digest, 'version': receipt['glb']['version']},
               'room_anchors': ['living_room', 'master_bedroom', 'pool_terrace'],
+              'tour_anchors': tour_anchors,
+              'tour_look_targets': tour_look_targets,
               'features': [
                   'first-person bounded route',
                   'clear upper landing circulation candidate',
                   'open master-suite threshold',
-                  'quiet-luxury master feature wall rug bench and cove layer',
+                  'quiet-luxury master feature wall rug bench and layered bedding',
+                  'emissive cove without a browser point-light hotspot',
                   'family-specific finish moods',
-                  'human-scale 64 degree first-person FOV',
                   'browser-owned Day Evening Night lighting without duplicated Blender punctual lights'
               ],
               'generator': 'Native Blender 4.0.2 pipeline via GitHub Actions',
@@ -220,5 +231,5 @@ jobs:
             echo 'Interior3 feature candidate already current'
             exit 0
           fi
-          git commit -m 'Promote no-lights Interior3 candidate to feature viewer'
+          git commit -m 'Promote layered Interior3 master-suite candidate to feature viewer'
           git push origin HEAD:${TARGET_BRANCH}
