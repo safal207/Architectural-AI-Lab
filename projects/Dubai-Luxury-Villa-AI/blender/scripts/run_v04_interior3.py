@@ -87,6 +87,109 @@ def open_upper_circulation():
     interior2.add_look_target('tour_look_stair_upper', LANDING_TARGET)
 
 
+def refine_master_suite_luxury():
+    """Add one restrained quiet-luxury composition pass to the master suite.
+
+    The room shell and navigation are already valid. This bead deliberately
+    avoids moving walls, doors or the tour path; it only introduces a layered
+    headboard composition, an under-bed rug, a foot bench and one emissive cove
+    marker so the browser view reads as an authored interior instead of a sparse
+    whitebox.
+    """
+    limestone = bpy.data.materials.get('M4_OrganicWarmLimestone') or interior1.material(
+        'V04_MasterLimestoneFallback', (0.58, 0.49, 0.39), 0.66
+    )
+    walnut = bpy.data.materials.get('M2_WalnutTimber') or interior1.material(
+        'V04_MasterWalnutFallback', (0.18, 0.07, 0.03), 0.50
+    )
+    quiet_fabric = bpy.data.materials.get('V04_QuietFabric') or interior1.material(
+        'V04_MasterQuietFabric', (0.36, 0.31, 0.27), 0.92
+    )
+    rug = bpy.data.materials.get('V04_MasterRugTaupe') or interior1.material(
+        'V04_MasterRugTaupe', (0.24, 0.205, 0.175), 0.94
+    )
+    warm_light = bpy.data.materials.get('V04_WarmEmissive') or interior1.material(
+        'V04_MasterWarmEmissive',
+        (0.92, 0.65, 0.35),
+        0.30,
+        emission=(1.0, 0.55, 0.20),
+        emission_strength=2.2,
+    )
+
+    # Remove only this refinement layer if the script is re-run in Blender.
+    remove_named(
+        'master_feature_stone_v04_r5',
+        'master_feature_fin_left_v04_r5',
+        'master_feature_fin_right_v04_r5',
+        'master_rug_v04_r5',
+        'master_bench_base_v04_r5',
+        'master_bench_cushion_v04_r5',
+        'master_headboard_cove_v04_r5',
+    )
+
+    # Central mineral panel behind the existing upholstered headboard, framed
+    # by two slim walnut fins. The panel is deliberately low-contrast: it should
+    # add depth through surface response rather than read like a TV backdrop.
+    interior1.cube(
+        'master_feature_stone_v04_r5',
+        (3.55, 0.08, 1.82),
+        (1.75, -0.82, 4.92),
+        limestone,
+        0.018,
+    )
+    interior1.cube(
+        'master_feature_fin_left_v04_r5',
+        (0.15, 0.10, 2.28),
+        (0.18, -0.80, 4.98),
+        walnut,
+        0.018,
+    )
+    interior1.cube(
+        'master_feature_fin_right_v04_r5',
+        (0.15, 0.10, 2.28),
+        (3.32, -0.80, 4.98),
+        walnut,
+        0.018,
+    )
+
+    # A broad, dark-taupe rug grounds the pale bed and creates a readable
+    # foreground/midground break without increasing geometry complexity much.
+    interior1.cube(
+        'master_rug_v04_r5',
+        (3.85, 3.10, 0.035),
+        (1.75, 0.54, 3.755),
+        rug,
+        0.035,
+    )
+
+    # Small foot bench: enough furnishing to create perspective overlap and
+    # human scale, but intentionally simpler than the bed so it stays secondary.
+    interior1.cube(
+        'master_bench_base_v04_r5',
+        (1.72, 0.46, 0.22),
+        (1.75, 1.72, 3.88),
+        walnut,
+        0.045,
+    )
+    interior1.cube(
+        'master_bench_cushion_v04_r5',
+        (1.62, 0.43, 0.18),
+        (1.75, 1.72, 4.07),
+        quiet_fabric,
+        0.055,
+    )
+
+    # Emissive line doubles as an authored runtime-light anchor in Three.js.
+    # It adds a warm layer behind the headboard without exporting Blender lights.
+    interior1.cube(
+        'master_headboard_cove_v04_r5',
+        (3.08, 0.05, 0.055),
+        (1.75, -0.765, 5.67),
+        warm_light,
+        0.010,
+    )
+
+
 def point_inside_axis_aligned_box(point, obj, clearance=0.0):
     half = obj.dimensions * 0.5
     return (
@@ -145,6 +248,7 @@ def configure_upper_landing_review_camera():
 def build_scene():
     interior2.build_scene()
     open_upper_circulation()
+    refine_master_suite_luxury()
     assert_upper_landing_clearance()
     configure_upper_landing_review_camera()
 
@@ -191,7 +295,7 @@ def main():
     print(f'Building {STAGE_ID}')
     build_scene()
     save_outputs()
-    print('Dubai Luxury Villa AI v0.4 Interior3 — clear upper circulation, open master threshold and browser-safe lighting boundary generated')
+    print('Dubai Luxury Villa AI v0.4 Interior3 — clear upper circulation, open master threshold, quiet-luxury master composition and browser-safe lighting boundary generated')
 
 
 if __name__ == '__main__':
