@@ -10,11 +10,12 @@
     "life": "v0.3-life2 PASS / FROZEN",
     "interior": "v0.4-interior2 baseline",
     "upper_landing_repair": "v0.4-interior3 gated candidate",
+    "master_composition": "v0.4-interior3 quiet-luxury r5 layer",
     "web_light_boundary": "Three.js owns runtime lighting; Blender punctual lights stripped from GLB"
   },
   "glb": {
-    "bytes": 7840060,
-    "sha256": "036626cb1876779db3201197ac133e32b18f7467d0440cdce9beeb9a135f2ceb",
+    "bytes": 7933312,
+    "sha256": "15c8868e0a8c007209a034ee49b9c0b0ae4f322c71af2409aa194965aa6d37ae",
     "version": 2
   },
   "room_anchors": [
@@ -22,34 +23,15 @@
     "master_bedroom",
     "pool_terrace"
   ],
-  "tour_anchors": [
-    "tour_dining",
-    "tour_entry",
-    "tour_graph_root",
-    "tour_living",
-    "tour_master",
-    "tour_pool",
-    "tour_stair_ground",
-    "tour_stair_upper"
-  ],
-  "tour_look_targets": [
-    "tour_look_dining",
-    "tour_look_entry",
-    "tour_look_living",
-    "tour_look_master",
-    "tour_look_pool",
-    "tour_look_stair_ground",
-    "tour_look_stair_upper"
-  ],
   "features": [
     "first-person bounded route",
     "clear upper landing circulation candidate",
     "open master-suite threshold",
+    "quiet-luxury master feature wall rug bench and cove layer",
     "family-specific finish moods",
     "human-scale 64 degree first-person FOV",
     "browser-owned Day Evening Night lighting without duplicated Blender punctual lights"
   ],
-  "qa_recheck": "no-lights cross-engine boundary candidate",
   "generator": "Native Blender 4.0.2 pipeline via GitHub Actions",
   "promotion_scope": "feat/first-person-house-tour only; main is intentionally untouched",
   "claim_boundary": "AI-assisted architectural visualization and virtual-tour prototype; not BIM, measured construction geometry, code-compliance evidence or as-built documentation."
