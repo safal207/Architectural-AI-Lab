@@ -47,6 +47,9 @@ const report = {
   lighting: null,
   lightingProfile: null,
   material: null,
+  materialResponseProfile: null,
+  materialResponseCount: 0,
+  materialFamilyCount: 0,
   lightEngine: null,
   importedLights: 0,
   interiorLights: 0,
@@ -81,6 +84,9 @@ try {
   report.lighting = await canvas.getAttribute('data-lighting-mode');
   report.lightingProfile = await canvas.getAttribute('data-lighting-profile');
   report.material = await canvas.getAttribute('data-material-mode');
+  report.materialResponseProfile = await canvas.getAttribute('data-material-response-profile');
+  report.materialResponseCount = Number(await canvas.getAttribute('data-material-response-count') ?? 0);
+  report.materialFamilyCount = Number(await canvas.getAttribute('data-material-family-count') ?? 0);
   report.walkGraph = await canvas.getAttribute('data-walk-graph');
   report.lightEngine = await canvas.getAttribute('data-light-engine');
   report.importedLights = Number(await canvas.getAttribute('data-imported-light-count') ?? 0);
@@ -91,6 +97,9 @@ try {
   check(report.walkGraph === 'ready', `Walk graph is ${report.walkGraph}`);
   check(report.lightEngine === 'runtime-only', `Unexpected light engine: ${report.lightEngine}`);
   check(report.lightingProfile === 'landing-adapted', `Unexpected lighting profile: ${report.lightingProfile}`);
+  check(report.materialResponseProfile === 'family-microcontrast-v1', `Unexpected material response: ${report.materialResponseProfile}`);
+  check(report.materialResponseCount >= 4, `Too few runtime material responses: ${report.materialResponseCount}`);
+  check(report.materialFamilyCount === 4, `Expected 4 material families, found ${report.materialFamilyCount}`);
   check(report.interiorLights >= 5, `Runtime interior light layer is incomplete: ${report.interiorLights}`);
   check(report.consoleErrors.length === 0, `Console errors: ${report.consoleErrors.join(' | ')}`);
   check(report.pageErrors.length === 0, `Page errors: ${report.pageErrors.join(' | ')}`);
