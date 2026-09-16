@@ -4,37 +4,37 @@ const MATERIALS = [
   {
     id: "warm-limestone",
     name: "Warm Limestone",
-    description: "Ivory plaster, warm limestone and walnut remain distinct instead of collapsing into one pale tint.",
-    swatch: "#c7b79f",
+    description: "Warm stone, muted ivory plaster and walnut stay visibly separate under interior lighting.",
+    swatch: "#b29b80",
     familyColors: {
-      stone: "#b9a083",
-      plaster: "#d7d0c3",
-      timber: "#5d3a27",
-      deck: "#8d7b68"
+      stone: "#9f896f",
+      plaster: "#c6bdaf",
+      timber: "#523322",
+      deck: "#7f7061"
     }
   },
   {
     id: "sandstone",
     name: "Sandstone Warmth",
-    description: "Muted travertine and sand tones with darker timber for a calm residential presentation.",
-    swatch: "#b79570",
+    description: "Travertine and sand tones with darker timber and quieter plaster for a calm residential presentation.",
+    swatch: "#a98461",
     familyColors: {
-      stone: "#b58f68",
-      plaster: "#c8b89f",
-      timber: "#68412b",
-      deck: "#88705c"
+      stone: "#9f7958",
+      plaster: "#b8a68f",
+      timber: "#583722",
+      deck: "#745f50"
     }
   },
   {
     id: "graphite-mineral",
     name: "Graphite Mineral",
-    description: "Warm mineral contrast with restrained graphite stone while plaster and timber keep their own identity.",
-    swatch: "#655f58",
+    description: "Restrained mineral contrast with warm charcoal stone while plaster and timber keep their own identity.",
+    swatch: "#5c5751",
     familyColors: {
-      stone: "#56514b",
-      plaster: "#aaa49a",
-      timber: "#4b3025",
-      deck: "#625d56"
+      stone: "#4d4944",
+      plaster: "#8f8a83",
+      timber: "#41291f",
+      deck: "#55504b"
     }
   }
 ];
@@ -76,7 +76,7 @@ export default function MaterialSwitcher({ onChange }) {
         ))}
       </div>
       <p className="material-switcher__note">
-        Presentation mood control. Each preset now preserves separate stone, plaster, timber and deck families instead of tinting every architectural finish as one surface.
+        Presentation mood control. Presets preserve separate stone, plaster, timber and deck families while retaining each material's original PBR maps and roughness.
       </p>
     </section>
   );
