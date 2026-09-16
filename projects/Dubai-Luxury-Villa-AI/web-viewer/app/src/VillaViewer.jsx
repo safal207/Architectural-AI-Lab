@@ -40,6 +40,14 @@ const MATERIAL_FAMILY_BY_NAME = {
   TimberCladdingPBR_R5: 'timber'
 };
 
+const MATERIAL_RESPONSE_PROFILE = 'family-microcontrast-v1';
+const MATERIAL_RESPONSE_BY_FAMILY = {
+  stone: { roughness: 0.60, normalScale: 1.08 },
+  plaster: { roughness: 0.84, normalScale: 0.72 },
+  timber: { roughness: 0.86, normalScale: 1.02 },
+  deck: { roughness: 0.88, normalScale: 0.84 }
+};
+
 const INTERIOR_TOUR_STOPS = new Set([
   'entry',
   'living',
@@ -116,8 +124,14 @@ function buildFallbackMassing(scene, accentColor) {
 }
 
 function applyMaterialConcept(root, selectedMaterial) {
-  if (!root || !selectedMaterial?.familyColors) return;
+  const report = {
+    profile: MATERIAL_RESPONSE_PROFILE,
+    materialCount: 0,
+    familyCount: 0
+  };
+  if (!root || !selectedMaterial?.familyColors) return report;
 
+  const families = new Set();
   root.traverse((object) => {
     if (!object.isMesh || !object.material) return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
@@ -128,10 +142,31 @@ function applyMaterialConcept(root, selectedMaterial) {
 
       const cloned = source.clone();
       cloned.color = new THREE.Color(familyColor);
+
+      const response = MATERIAL_RESPONSE_BY_FAMILY[family];
+      if (response && typeof cloned.roughness === 'number') {
+        cloned.roughness = response.roughness;
+      }
+      if (response && cloned.normalMap && cloned.normalScale?.clone) {
+        cloned.normalScale = cloned.normalScale.clone().multiplyScalar(response.normalScale);
+      }
+
+      cloned.userData = {
+        ...source.userData,
+        ...cloned.userData,
+        materialFamily: family,
+        materialResponseProfile: MATERIAL_RESPONSE_PROFILE
+      };
+      cloned.needsUpdate = true;
+      report.materialCount += 1;
+      families.add(family);
       return cloned;
     });
     object.material = nextMaterials.length === 1 ? nextMaterials[0] : nextMaterials;
   });
+
+  report.familyCount = families.size;
+  return report;
 }
 
 function neutralizeImportedLights(root) {
@@ -173,6 +208,11 @@ export default function VillaViewer({
   const [walkGraphReady, setWalkGraphReady] = useState(false);
   const [interiorLightCount, setInteriorLightCount] = useState(0);
   const [importedLightCount, setImportedLightCount] = useState(0);
+  const [materialResponse, setMaterialResponse] = useState({
+    profile: 'pending',
+    materialCount: 0,
+    familyCount: 0
+  });
   const [walkStatus, setWalkStatus] = useState({ label: 'Tour anchor', floor: null, edgeType: null });
 
   useEffect(() => {
@@ -201,6 +241,7 @@ export default function VillaViewer({
     setWalkGraphReady(false);
     setInteriorLightCount(0);
     setImportedLightCount(0);
+    setMaterialResponse({ profile: 'pending', materialCount: 0, familyCount: 0 });
 
     const scene = createScene(THREE);
     scene.background = new THREE.Color(lightingMode?.background ?? '#bfd0d7');
@@ -254,7 +295,8 @@ export default function VillaViewer({
         const disabledImportedLights = neutralizeImportedLights(villaRoot);
         setImportedLightCount(disabledImportedLights);
 
-        applyMaterialConcept(villaRoot, material);
+        const responseReport = applyMaterialConcept(villaRoot, material);
+        setMaterialResponse(responseReport);
         scene.add(villaRoot);
         villaRoot.updateMatrixWorld(true);
 
@@ -484,6 +526,9 @@ export default function VillaViewer({
           data-lighting-profile={runtimeLightingProfile}
           data-lighting-mode={lightingMode?.name ?? 'Day'}
           data-material-mode={material?.id ?? 'default'}
+          data-material-response-profile={materialResponse.profile}
+          data-material-response-count={materialResponse.materialCount}
+          data-material-family-count={materialResponse.familyCount}
           aria-label="Interactive Dubai luxury villa virtual tour prototype"
         />
 
