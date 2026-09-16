@@ -90,11 +90,11 @@ export const TOUR_STOPS = [
     title: 'Pool terrace',
     floor: 1,
     nodeName: 'tour_pool',
-    targetNodeName: 'pool_water',
+    targetNodeName: 'infinity_lip',
     roomId: 'pool-terrace',
     fallbackNodeName: 'pool_terrace',
     feature: 'outdoor',
-    description: 'Finish the tour at the outdoor living edge facing the pool water and infinity axis rather than back through the glazing.'
+    description: 'Finish the tour from the existing terrace eye point looking across the complete pool surface toward the authored infinity edge.'
   }
 ];
 
