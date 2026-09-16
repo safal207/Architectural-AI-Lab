@@ -1,9 +1,15 @@
 // WebGL renderer tuned for luxury architectural presentation.
 // Color management is kept here so every viewer mode uses the same photographic baseline.
 export function createRenderer(THREE, container) {
+  // CI visual gates can opt into a preserved drawing buffer with `?qaCapture=1`.
+  // Production keeps the faster default (`false`), so evidence capture does not
+  // silently tax the client-facing walkthrough.
+  const qaCapture = new URLSearchParams(window.location.search).get('qaCapture') === '1';
+
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
-    powerPreference: 'high-performance'
+    powerPreference: 'high-performance',
+    preserveDrawingBuffer: qaCapture
   });
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -18,6 +24,7 @@ export function createRenderer(THREE, container) {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
+  renderer.domElement.dataset.qaCapture = qaCapture ? 'preserved' : 'off';
   container.appendChild(renderer.domElement);
 
   return renderer;
