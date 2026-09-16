@@ -41,6 +41,7 @@ const MATERIAL_FAMILY_BY_NAME = {
 };
 
 const MATERIAL_RESPONSE_PROFILE = 'family-microcontrast-v1';
+const VIEWER_RUNTIME_PROFILE = 'persistent-scene-v1';
 const MATERIAL_RESPONSE_BY_FAMILY = {
   stone: { roughness: 0.60, normalScale: 1.08 },
   plaster: { roughness: 0.84, normalScale: 0.72 },
@@ -136,31 +137,43 @@ function applyMaterialConcept(root, selectedMaterial) {
     if (!object.isMesh || !object.material) return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     const nextMaterials = materials.map((source) => {
-      const family = inferMaterialFamily(source.name);
+      const family = source.userData?.materialFamily ?? inferMaterialFamily(source.name);
       const familyColor = family ? selectedMaterial.familyColors[family] : null;
       if (!familyColor) return source;
 
-      const cloned = source.clone();
-      cloned.color = new THREE.Color(familyColor);
+      let material = source;
+      if (!source.userData?.runtimeMaterialClone) {
+        material = source.clone();
+        material.userData = {
+          ...source.userData,
+          runtimeMaterialClone: true,
+          materialFamily: family,
+          materialResponseProfile: MATERIAL_RESPONSE_PROFILE,
+          baseNormalScale: source.normalScale ? [source.normalScale.x, source.normalScale.y] : null
+        };
+        if (source.normalScale?.clone) material.normalScale = source.normalScale.clone();
+      }
 
+      material.color = new THREE.Color(familyColor);
       const response = MATERIAL_RESPONSE_BY_FAMILY[family];
-      if (response && typeof cloned.roughness === 'number') {
-        cloned.roughness = response.roughness;
+      if (response && typeof material.roughness === 'number') {
+        material.roughness = response.roughness;
       }
-      if (response && cloned.normalMap && cloned.normalScale?.clone) {
-        cloned.normalScale = cloned.normalScale.clone().multiplyScalar(response.normalScale);
+      if (response && material.normalMap && material.normalScale) {
+        const base = material.userData?.baseNormalScale ?? [1, 1];
+        material.normalScale.set(base[0] * response.normalScale, base[1] * response.normalScale);
       }
 
-      cloned.userData = {
-        ...source.userData,
-        ...cloned.userData,
+      material.userData = {
+        ...material.userData,
+        runtimeMaterialClone: true,
         materialFamily: family,
         materialResponseProfile: MATERIAL_RESPONSE_PROFILE
       };
-      cloned.needsUpdate = true;
+      material.needsUpdate = true;
       report.materialCount += 1;
       families.add(family);
-      return cloned;
+      return material;
     });
     object.material = nextMaterials.length === 1 ? nextMaterials[0] : nextMaterials;
   });
@@ -185,6 +198,17 @@ function neutralizeImportedLights(root) {
   return count;
 }
 
+function setInteriorLightMultiplier(group, multiplier) {
+  if (!group) return;
+  group.traverse((object) => {
+    if (!object.isLight) return;
+    if (typeof object.userData.runtimeBaseIntensity !== 'number') {
+      object.userData.runtimeBaseIntensity = object.intensity;
+    }
+    object.intensity = object.userData.runtimeBaseIntensity * multiplier;
+  });
+}
+
 function disposeObject(root) {
   root?.traverse((object) => {
     if (!object.isMesh) return;
@@ -199,15 +223,22 @@ export default function VillaViewer({
   lightingMode,
   material,
   tourMode = false,
-  activeTourStopId = 'overview'
+  activeTourStopId = 'overview',
+  onSelectTourStop,
+  onExitTour
 }) {
   const mountRef = useRef(null);
+  const runtimeRef = useRef(null);
   const mobileMotionRef = useRef({ forward: 0, right: 0 });
+  const latestPropsRef = useRef(null);
   const [modelState, setModelState] = useState('loading');
+  const [modelLoadCount, setModelLoadCount] = useState(0);
   const [firstPersonReady, setFirstPersonReady] = useState(false);
   const [walkGraphReady, setWalkGraphReady] = useState(false);
   const [interiorLightCount, setInteriorLightCount] = useState(0);
   const [importedLightCount, setImportedLightCount] = useState(0);
+  const [isTouchUi, setIsTouchUi] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [materialResponse, setMaterialResponse] = useState({
     profile: 'pending',
     materialCount: 0,
@@ -215,26 +246,138 @@ export default function VillaViewer({
   });
   const [walkStatus, setWalkStatus] = useState({ label: 'Tour anchor', floor: null, edgeType: null });
 
+  latestPropsRef.current = {
+    selectedRoom,
+    lightingMode,
+    material,
+    tourMode,
+    activeTourStopId
+  };
+
+  const syncLighting = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    const current = latestPropsRef.current;
+    const isFirstPerson = current.tourMode && current.activeTourStopId !== 'overview';
+    const lighting = resolveRuntimeLighting(current.lightingMode, current.activeTourStopId, isFirstPerson);
+
+    runtime.scene.background = new THREE.Color(current.lightingMode?.background ?? '#bfd0d7');
+    runtime.renderer.setClearColor(runtime.scene.background);
+    runtime.renderer.toneMappingExposure = lighting.exposure;
+    runtime.ambient.intensity = lighting.ambient;
+    runtime.hemisphere.intensity = lighting.hemisphere;
+    runtime.sun.intensity = lighting.sun;
+    runtime.fill.intensity = lighting.fill;
+    setInteriorLightMultiplier(runtime.interiorLightGroup, lighting.interior);
+  };
+
+  const syncMaterial = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime?.villaRoot) return;
+    const report = applyMaterialConcept(runtime.villaRoot, latestPropsRef.current.material);
+    setMaterialResponse(report);
+  };
+
+  const syncView = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime?.villaRoot) return;
+
+    const current = latestPropsRef.current;
+    const isFirstPerson = current.tourMode && current.activeTourStopId !== 'overview';
+    const wasFirstPerson = runtime.isFirstPerson;
+    runtime.isFirstPerson = isFirstPerson;
+    runtime.currentWalkEdgeId = null;
+    runtime.firstPersonAvailable = false;
+
+    if (runtime.orbitControls) runtime.orbitControls.enabled = !isFirstPerson;
+
+    if (isFirstPerson) {
+      runtime.camera.fov = 64;
+      runtime.camera.updateProjectionMatrix();
+      const tourPlaced = placeFirstPersonCamera(runtime.camera, runtime.villaRoot, current.activeTourStopId);
+      runtime.firstPersonAvailable = tourPlaced;
+      setFirstPersonReady(tourPlaced);
+      if (tourPlaced && runtime.isTouchDevice) runtime.camera.rotation.order = 'YXZ';
+
+      const nearest = nearestTourStop(runtime.walkGraph, runtime.camera.position);
+      if (nearest) {
+        setWalkStatus({ label: nearest.title, floor: nearest.floor, edgeType: null });
+      }
+      if (!wasFirstPerson) setHasInteracted(false);
+      return;
+    }
+
+    runtime.pointerLockControls?.unlock();
+    setFirstPersonReady(false);
+    if (wasFirstPerson) runtime.camera.position.set(18, 12, 20);
+    runtime.camera.fov = 45;
+    runtime.camera.updateProjectionMatrix();
+
+    if (runtime.orbitControls) {
+      const roomNodeName = ROOM_NODE_NAMES[current.selectedRoom?.id];
+      const roomNode = roomNodeName ? runtime.villaRoot.getObjectByName(roomNodeName) : null;
+      if (roomNode) {
+        const target = new THREE.Vector3();
+        roomNode.getWorldPosition(target);
+        runtime.orbitControls.target.copy(target);
+      } else {
+        runtime.orbitControls.target.set(0, 2.8, 0);
+      }
+      runtime.orbitControls.update();
+    }
+  };
+
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return undefined;
 
-    let disposed = false;
-    let villaRoot = null;
-    let interiorLightGroup = null;
-    let frameId = null;
-    let orbitControls = null;
-    let pointerLockControls = null;
-    let walkGraph = null;
-    let currentWalkEdgeId = null;
-    let firstPersonAvailable = false;
-    let lastFrameTime = performance.now();
-    let statusTimer = 0;
-    const keys = new Set();
-    const touchLook = { active: false, pointerId: null, x: 0, y: 0 };
+    const scene = createScene(THREE);
+    const camera = createCamera(THREE);
+    camera.fov = 45;
+    camera.aspect = container.clientWidth / Math.max(container.clientHeight, 1);
+    camera.updateProjectionMatrix();
+    camera.position.set(18, 12, 20);
+
+    const renderer = createRenderer(THREE, container);
+    renderer.shadowMap.enabled = true;
+    renderer.domElement.style.touchAction = 'none';
+
+    const { ambient, hemisphere, sun, fill } = createLights(THREE, scene);
+    const orbitControls = new OrbitControls(camera, renderer.domElement);
+    orbitControls.enableDamping = true;
+    orbitControls.target.set(0, 2.8, 0);
+    orbitControls.minDistance = 8;
+    orbitControls.maxDistance = 60;
+
     const isTouchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
-    const isFirstPerson = tourMode && activeTourStopId !== 'overview';
-    const runtimeLighting = resolveRuntimeLighting(lightingMode, activeTourStopId, isFirstPerson);
+    setIsTouchUi(isTouchDevice);
+    const pointerLockControls = isTouchDevice ? null : new PointerLockControls(camera, renderer.domElement);
+
+    const runtime = {
+      disposed: false,
+      scene,
+      camera,
+      renderer,
+      ambient,
+      hemisphere,
+      sun,
+      fill,
+      orbitControls,
+      pointerLockControls,
+      isTouchDevice,
+      isFirstPerson: false,
+      villaRoot: null,
+      interiorLightGroup: null,
+      walkGraph: null,
+      currentWalkEdgeId: null,
+      firstPersonAvailable: false,
+      keys: new Set(),
+      touchLook: { active: false, pointerId: null, x: 0, y: 0 },
+      statusTimer: 0,
+      lastFrameTime: performance.now(),
+      frameId: null
+    };
+    runtimeRef.current = runtime;
 
     setModelState('loading');
     setFirstPersonReady(false);
@@ -243,127 +386,73 @@ export default function VillaViewer({
     setImportedLightCount(0);
     setMaterialResponse({ profile: 'pending', materialCount: 0, familyCount: 0 });
 
-    const scene = createScene(THREE);
-    scene.background = new THREE.Color(lightingMode?.background ?? '#bfd0d7');
-
-    const camera = createCamera(THREE);
-    camera.fov = isFirstPerson ? 64 : 45;
-    camera.aspect = container.clientWidth / Math.max(container.clientHeight, 1);
-    camera.updateProjectionMatrix();
-    camera.position.set(18, 12, 20);
-
-    const renderer = createRenderer(THREE, container);
-    renderer.shadowMap.enabled = true;
-    renderer.toneMappingExposure = runtimeLighting.exposure;
-    renderer.setClearColor(scene.background);
-    renderer.domElement.style.touchAction = 'none';
-
-    const { ambient, hemisphere, sun, fill } = createLights(THREE, scene);
-    ambient.intensity = runtimeLighting.ambient;
-    hemisphere.intensity = runtimeLighting.hemisphere;
-    sun.intensity = runtimeLighting.sun;
-    fill.intensity = runtimeLighting.fill;
-
-    if (isFirstPerson && !isTouchDevice) {
-      pointerLockControls = new PointerLockControls(camera, renderer.domElement);
-    } else if (!isFirstPerson) {
-      orbitControls = new OrbitControls(camera, renderer.domElement);
-      orbitControls.enableDamping = true;
-      orbitControls.target.set(0, 2.8, 0);
-      orbitControls.minDistance = 8;
-      orbitControls.maxDistance = 60;
-    }
-
     const loader = new GLTFLoader();
     const modelUrl = `${import.meta.env.BASE_URL}villa.glb`;
-
     loader.load(
       modelUrl,
       (gltf) => {
-        if (disposed) return;
+        if (runtime.disposed) return;
 
-        villaRoot = gltf.scene;
-        villaRoot.name = 'dubai_luxury_villa_active';
-        villaRoot.rotation.y = Math.PI;
-        villaRoot.traverse((object) => {
+        runtime.villaRoot = gltf.scene;
+        runtime.villaRoot.name = 'dubai_luxury_villa_active';
+        runtime.villaRoot.rotation.y = Math.PI;
+        runtime.villaRoot.traverse((object) => {
           if (object.isMesh) {
             object.castShadow = true;
             object.receiveShadow = true;
           }
         });
 
-        const disabledImportedLights = neutralizeImportedLights(villaRoot);
-        setImportedLightCount(disabledImportedLights);
+        setImportedLightCount(neutralizeImportedLights(runtime.villaRoot));
+        scene.add(runtime.villaRoot);
+        runtime.villaRoot.updateMatrixWorld(true);
 
-        const responseReport = applyMaterialConcept(villaRoot, material);
-        setMaterialResponse(responseReport);
-        scene.add(villaRoot);
-        villaRoot.updateMatrixWorld(true);
+        runtime.interiorLightGroup = createInteriorLights(THREE, scene, runtime.villaRoot, 1);
+        setInteriorLightCount(runtime.interiorLightGroup.userData.fixtureCount ?? 0);
 
-        interiorLightGroup = createInteriorLights(
-          THREE,
-          scene,
-          villaRoot,
-          runtimeLighting.interior
-        );
-        setInteriorLightCount(interiorLightGroup.userData.fixtureCount ?? 0);
+        runtime.walkGraph = buildWalkGraph(runtime.villaRoot);
+        setWalkGraphReady(runtime.walkGraph.edges.length >= 4);
 
-        walkGraph = buildWalkGraph(villaRoot);
-        const graphReady = walkGraph.edges.length >= 4;
-        setWalkGraphReady(graphReady);
-
-        let tourPlaced = false;
-        if (isFirstPerson) {
-          tourPlaced = placeFirstPersonCamera(camera, villaRoot, activeTourStopId);
-          firstPersonAvailable = tourPlaced;
-          setFirstPersonReady(tourPlaced);
-          if (tourPlaced && isTouchDevice) camera.rotation.order = 'YXZ';
-          const nearest = nearestTourStop(walkGraph, camera.position);
-          if (nearest) {
-            setWalkStatus({ label: nearest.title, floor: nearest.floor, edgeType: null });
-          }
-        }
-
-        if (!tourPlaced && orbitControls) {
-          const roomNodeName = ROOM_NODE_NAMES[selectedRoom?.id];
-          const roomNode = roomNodeName ? villaRoot.getObjectByName(roomNodeName) : null;
-          if (roomNode) {
-            const target = new THREE.Vector3();
-            roomNode.getWorldPosition(target);
-            orbitControls.target.copy(target);
-          }
-        }
-
+        syncMaterial();
+        syncLighting();
+        syncView();
+        setModelLoadCount((count) => count + 1);
         setModelState('loaded');
       },
       undefined,
       (error) => {
-        if (disposed) return;
+        if (runtime.disposed) return;
         console.warn('villa.glb failed to load; using fallback massing', error);
-        villaRoot = buildFallbackMassing(scene, material?.swatch ?? '#d8c8ad');
+        runtime.villaRoot = buildFallbackMassing(scene, latestPropsRef.current.material?.swatch ?? '#d8c8ad');
         setModelState('fallback');
       }
     );
 
     const keyDown = (event) => {
-      if (isFirstPerson) keys.add(event.code);
+      if (!runtime.isFirstPerson) return;
+      runtime.keys.add(event.code);
+      if (/^(Key[WASD]|Arrow|Shift)/.test(event.code)) setHasInteracted(true);
     };
-    const keyUp = (event) => keys.delete(event.code);
+    const keyUp = (event) => runtime.keys.delete(event.code);
 
     const lockFirstPerson = () => {
-      if (pointerLockControls && villaRoot) pointerLockControls.lock();
+      if (!runtime.isFirstPerson || !runtime.pointerLockControls || !runtime.villaRoot) return;
+      setHasInteracted(true);
+      runtime.pointerLockControls.lock();
     };
 
     const pointerDown = (event) => {
-      if (!isTouchDevice || !isFirstPerson) return;
-      touchLook.active = true;
-      touchLook.pointerId = event.pointerId;
-      touchLook.x = event.clientX;
-      touchLook.y = event.clientY;
+      if (!runtime.isTouchDevice || !runtime.isFirstPerson) return;
+      setHasInteracted(true);
+      runtime.touchLook.active = true;
+      runtime.touchLook.pointerId = event.pointerId;
+      runtime.touchLook.x = event.clientX;
+      runtime.touchLook.y = event.clientY;
       renderer.domElement.setPointerCapture?.(event.pointerId);
     };
 
     const pointerMove = (event) => {
+      const touchLook = runtime.touchLook;
       if (!touchLook.active || touchLook.pointerId !== event.pointerId) return;
       const dx = event.clientX - touchLook.x;
       const dy = event.clientY - touchLook.y;
@@ -378,9 +467,9 @@ export default function VillaViewer({
     };
 
     const pointerUp = (event) => {
-      if (touchLook.pointerId !== event.pointerId) return;
-      touchLook.active = false;
-      touchLook.pointerId = null;
+      if (runtime.touchLook.pointerId !== event.pointerId) return;
+      runtime.touchLook.active = false;
+      runtime.touchLook.pointerId = null;
     };
 
     window.addEventListener('keydown', keyDown);
@@ -402,25 +491,25 @@ export default function VillaViewer({
     resize();
 
     const animate = (now = performance.now()) => {
-      frameId = requestAnimationFrame(animate);
-      const delta = Math.min((now - lastFrameTime) / 1000, 0.05);
-      lastFrameTime = now;
+      runtime.frameId = requestAnimationFrame(animate);
+      const delta = Math.min((now - runtime.lastFrameTime) / 1000, 0.05);
+      runtime.lastFrameTime = now;
 
-      if (orbitControls) orbitControls.update();
+      if (runtime.orbitControls?.enabled) runtime.orbitControls.update();
 
-      const desktopCanWalk = Boolean(pointerLockControls?.isLocked);
-      const touchCanWalk = Boolean(isTouchDevice && isFirstPerson && firstPersonAvailable);
+      const desktopCanWalk = runtime.isFirstPerson && Boolean(runtime.pointerLockControls?.isLocked);
+      const touchCanWalk = Boolean(runtime.isTouchDevice && runtime.isFirstPerson && runtime.firstPersonAvailable);
 
       if (desktopCanWalk || touchCanWalk) {
-        const keyboardForward = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0)
-          - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
-        const keyboardRight = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0)
-          - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
+        const keyboardForward = (runtime.keys.has('KeyW') || runtime.keys.has('ArrowUp') ? 1 : 0)
+          - (runtime.keys.has('KeyS') || runtime.keys.has('ArrowDown') ? 1 : 0);
+        const keyboardRight = (runtime.keys.has('KeyD') || runtime.keys.has('ArrowRight') ? 1 : 0)
+          - (runtime.keys.has('KeyA') || runtime.keys.has('ArrowLeft') ? 1 : 0);
         const forwardInput = THREE.MathUtils.clamp(keyboardForward + mobileMotionRef.current.forward, -1, 1);
         const rightInput = THREE.MathUtils.clamp(keyboardRight + mobileMotionRef.current.right, -1, 1);
 
-        if (forwardInput !== 0 || rightInput !== 0) {
-          const sprint = keys.has('ShiftLeft') || keys.has('ShiftRight');
+        if ((forwardInput !== 0 || rightInput !== 0) && runtime.walkGraph) {
+          const sprint = runtime.keys.has('ShiftLeft') || runtime.keys.has('ShiftRight');
           const speed = sprint ? WALKTHROUGH_PLAYER.sprintSpeed : WALKTHROUGH_PLAYER.walkSpeed;
           const forward = new THREE.Vector3();
           camera.getWorldDirection(forward);
@@ -432,16 +521,16 @@ export default function VillaViewer({
             .addScaledVector(forward, forwardInput * speed * delta)
             .addScaledVector(right, rightInput * speed * delta);
 
-          const constrained = constrainToWalkGraph(desired, walkGraph, currentWalkEdgeId);
+          const constrained = constrainToWalkGraph(desired, runtime.walkGraph, runtime.currentWalkEdgeId);
           camera.position.copy(constrained.position);
-          currentWalkEdgeId = constrained.edge?.id ?? currentWalkEdgeId;
+          runtime.currentWalkEdgeId = constrained.edge?.id ?? runtime.currentWalkEdgeId;
         }
 
-        statusTimer += delta;
-        if (statusTimer >= 0.25) {
-          statusTimer = 0;
-          const nearest = nearestTourStop(walkGraph, camera.position);
-          const currentEdge = walkGraph?.edges?.find((edge) => edge.id === currentWalkEdgeId) ?? null;
+        runtime.statusTimer += delta;
+        if (runtime.statusTimer >= 0.25) {
+          runtime.statusTimer = 0;
+          const nearest = nearestTourStop(runtime.walkGraph, camera.position);
+          const currentEdge = runtime.walkGraph?.edges?.find((edge) => edge.id === runtime.currentWalkEdgeId) ?? null;
           if (nearest) {
             setWalkStatus((previous) => {
               const next = {
@@ -464,8 +553,8 @@ export default function VillaViewer({
     animate();
 
     return () => {
-      disposed = true;
-      if (frameId) cancelAnimationFrame(frameId);
+      runtime.disposed = true;
+      if (runtime.frameId) cancelAnimationFrame(runtime.frameId);
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
@@ -474,27 +563,43 @@ export default function VillaViewer({
       renderer.domElement.removeEventListener('pointermove', pointerMove);
       renderer.domElement.removeEventListener('pointerup', pointerUp);
       renderer.domElement.removeEventListener('pointercancel', pointerUp);
-      orbitControls?.dispose();
-      pointerLockControls?.unlock();
-      pointerLockControls?.dispose();
+      runtime.orbitControls?.dispose();
+      runtime.pointerLockControls?.unlock();
+      runtime.pointerLockControls?.dispose();
       mobileMotionRef.current = { forward: 0, right: 0 };
-      if (interiorLightGroup) {
-        scene.remove(interiorLightGroup);
-      }
-      if (villaRoot) {
-        scene.remove(villaRoot);
-        disposeObject(villaRoot);
+      if (runtime.interiorLightGroup) scene.remove(runtime.interiorLightGroup);
+      if (runtime.villaRoot) {
+        scene.remove(runtime.villaRoot);
+        disposeObject(runtime.villaRoot);
       }
       renderer.dispose();
       renderer.domElement.remove();
+      if (runtimeRef.current === runtime) runtimeRef.current = null;
     };
-  }, [selectedRoom, lightingMode, material, tourMode, activeTourStopId]);
+  }, []);
+
+  useEffect(() => {
+    syncLighting();
+  }, [lightingMode, tourMode, activeTourStopId]);
+
+  useEffect(() => {
+    syncMaterial();
+  }, [material]);
+
+  useEffect(() => {
+    syncView();
+  }, [selectedRoom, tourMode, activeTourStopId]);
 
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
   const isFirstPerson = tourMode && activeTourStopId !== 'overview';
   const runtimeLightingProfile = resolveRuntimeLighting(lightingMode, activeTourStopId, isFirstPerson).profile;
+  const guidedStops = TOUR_STOPS.filter((stop) => stop.id !== 'overview');
+  const guidedIndex = guidedStops.findIndex((stop) => stop.id === activeTourStopId);
+  const previousStop = guidedIndex > 0 ? guidedStops[guidedIndex - 1] : null;
+  const nextStop = guidedIndex >= 0 && guidedIndex < guidedStops.length - 1 ? guidedStops[guidedIndex + 1] : null;
 
   const setMobileMotion = (axis, value) => {
+    if (value !== 0) setHasInteracted(true);
     mobileMotionRef.current = { ...mobileMotionRef.current, [axis]: value };
   };
 
@@ -502,13 +607,13 @@ export default function VillaViewer({
     <section>
       <div className="viewer-heading">
         <div>
-          <p className="eyebrow">Native Blender GLB · bounded first-person walkthrough</p>
-          <h2>{isFirstPerson ? `First-person · ${activeStop.title}` : '3D Villa Viewer'}</h2>
+          <p className="eyebrow">Interactive architectural walkthrough</p>
+          <h2>{isFirstPerson ? activeStop.title : '3D Villa Viewer'}</h2>
         </div>
         <p>
           {isFirstPerson
-            ? 'Desktop: click view + WASD · Shift sprint · Esc release. Touch: drag to look + use movement pad.'
-            : 'Drag to orbit · scroll to zoom · select a room or tour point to change focus'}
+            ? 'Follow the guided route or look around freely. The villa stays loaded while you move between spaces.'
+            : 'Drag to orbit · scroll to zoom · choose a room or enter the guided walkthrough.'}
         </p>
       </div>
 
@@ -517,6 +622,8 @@ export default function VillaViewer({
           ref={mountRef}
           className="three-canvas"
           data-model-state={modelState}
+          data-model-load-count={modelLoadCount}
+          data-viewer-runtime={VIEWER_RUNTIME_PROFILE}
           data-view-mode={isFirstPerson ? 'first-person' : 'orbit'}
           data-tour-stop={activeTourStopId}
           data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
@@ -529,8 +636,15 @@ export default function VillaViewer({
           data-material-response-profile={materialResponse.profile}
           data-material-response-count={materialResponse.materialCount}
           data-material-family-count={materialResponse.familyCount}
+          data-navigation-anchor-mode="separate-presentation-v1"
           aria-label="Interactive Dubai luxury villa virtual tour prototype"
         />
+
+        {modelState === 'loading' && (
+          <div className="viewer-loading" role="status" aria-live="polite">
+            <span /> Loading villa…
+          </div>
+        )}
 
         {isFirstPerson && (
           <>
@@ -540,9 +654,34 @@ export default function VillaViewer({
                 {walkStatus.floor ? `Floor ${walkStatus.floor}` : 'Site'}
                 {walkStatus.edgeType ? ` · ${walkStatus.edgeType}` : ''}
                 {' · '}
-                {walkGraphReady ? 'bounded walk route' : firstPersonReady ? 'anchor fallback' : 'tour anchor unavailable'}
+                {walkGraphReady ? 'route ready' : firstPersonReady ? 'anchor ready' : 'preparing route'}
               </span>
             </div>
+
+            {!hasInteracted && (
+              <div className="walkthrough-onboarding" role="status">
+                <strong>{isTouchUi ? 'Drag to look' : 'Click the view to look around'}</strong>
+                <span>{isTouchUi ? 'Use the movement pad to walk.' : 'WASD to move · Shift to move faster · Esc releases the cursor.'}</span>
+              </div>
+            )}
+
+            {onExitTour && (
+              <button type="button" className="viewer-exit-tour" onClick={onExitTour} aria-label="Exit walkthrough">
+                Exit
+              </button>
+            )}
+
+            {onSelectTourStop && guidedIndex >= 0 && (
+              <nav className="viewer-guided-controls" aria-label="Guided walkthrough controls">
+                <button type="button" disabled={!previousStop} onClick={() => previousStop && onSelectTourStop(previousStop)} aria-label="Previous stop">
+                  ←
+                </button>
+                <span><strong>{guidedIndex + 1}</strong> / {guidedStops.length}</span>
+                <button type="button" disabled={!nextStop} onClick={() => nextStop && onSelectTourStop(nextStop)} aria-label="Next stop">
+                  →
+                </button>
+              </nav>
+            )}
 
             <div className="touch-walk-pad" aria-label="Touch walkthrough controls">
               <button
@@ -583,7 +722,7 @@ export default function VillaViewer({
       </div>
 
       <p className="viewer-note">
-        Walk mode follows authored room, door and stair anchors and constrains movement to a presentation route. It is safer than unrestricted free-fly, but it remains a portfolio navigation graph rather than a measured construction navmesh.
+        Guided mode keeps movement on the authored presentation route while the camera framing stays independent from navigation anchors, so visual polish cannot silently distort the walk path.
       </p>
     </section>
   );
