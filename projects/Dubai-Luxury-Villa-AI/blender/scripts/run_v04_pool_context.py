@@ -121,6 +121,16 @@ def join_prefix(prefix, joined_name):
     return joined
 
 
+def world_min_y(obj):
+    """Return the object's real world-space lower Y bound.
+
+    Joined planting inherits one source object's origin, so location/dimensions is
+    not a reliable proxy for a distributed joined mesh. Transform each authored
+    bounding-box corner through matrix_world instead.
+    """
+    return min((obj.matrix_world @ mathutils.Vector(corner)).y for corner in obj.bound_box)
+
+
 def add_quiet_horizon(material):
     # Low, distant architectural context is intentionally split and pushed back.
     # It gives human scale without turning the pool frame into a city-render shot.
@@ -153,7 +163,6 @@ def refine_pool_context():
     distant = simple_material('V04_PoolContextDistantV3', (0.345, 0.335, 0.315), 0.95)
     gravel = gravel_material()
 
-    # Ground is textured but remains quieter than the pool water.
     interior1.cube(
         'pool_context_ground_v3',
         (31.0, 22.0, 0.12),
@@ -162,7 +171,6 @@ def refine_pool_context():
         0.02,
     )
 
-    # Darker/thinner edge than V2: it should frame water, not become the hero.
     interior1.cube(
         'pool_context_planter_edge_v3',
         (14.55, 0.30, 0.15),
@@ -178,7 +186,6 @@ def refine_pool_context():
         0.018,
     )
 
-    # Reuse the authored agave leaf generator from the earlier desert-luxury pass.
     agave_specs = (
         ('pool_context_agave_v3_l1', (-5.95, 12.76, 0.14), 0.62),
         ('pool_context_agave_v3_l2', (-4.45, 13.02, 0.14), 0.78),
@@ -190,7 +197,6 @@ def refine_pool_context():
     for prefix, location, scale in agave_specs:
         hero_r6.add_agave(prefix, location, scale)
 
-    # Retone the shared authored material after generation into a calmer grey-green.
     agave_mat = hero_r6.r4.make_simple_material('AgaveLeafR6', (0.082, 0.135, 0.095), roughness=0.86)
     for obj in bpy.data.objects:
         if obj.name.startswith('pool_context_agave_v3_') and obj.type == 'MESH':
@@ -206,7 +212,6 @@ def refine_pool_context():
     for prefix, location, scale in grass_specs:
         add_ribbon_grass(prefix, location, scale, grass)
 
-    # Merge leaf-heavy planting into two render/runtime groups to keep draw calls bounded.
     join_prefix('pool_context_agave_v3_', 'pool_context_agaves_v3')
     join_prefix('pool_context_grass_v3_', 'pool_context_grasses_v3')
 
@@ -238,14 +243,13 @@ def assert_context_boundary():
         if bpy.data.objects.get(name) is None:
             raise RuntimeError(f'missing context object: {name}')
 
-    # Everything vertical/decorative stays behind the infinity edge at y=11.40.
     exceptions = {'pool_context_ground_v3'}
     for obj in bpy.data.objects:
         if not obj.name.startswith('pool_context_') or obj.name in exceptions:
             continue
-        min_y = obj.location.y - obj.dimensions.y * 0.5
+        min_y = world_min_y(obj)
         if min_y < 11.72:
-            raise RuntimeError(f'context invades infinity-edge envelope: {obj.name} min_y={min_y:.3f}')
+            raise RuntimeError(f'context invades infinity-edge envelope: {obj.name} world_min_y={min_y:.3f}')
 
     if bpy.data.objects.get('upper_stone_spine') is not None:
         raise RuntimeError('stable Interior3 upper_stone_spine repair regressed')
