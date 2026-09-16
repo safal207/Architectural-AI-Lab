@@ -22,13 +22,6 @@ const FIXTURE_GROUPS = [
     shadowNames: ['master_bedside_lamp_v04_00']
   },
   {
-    names: ['master_headboard_cove_v04_r5'],
-    color: 0xffd5ad,
-    intensity: 24,
-    distance: 4.6,
-    drop: 0.22
-  },
-  {
     names: ['upper_linear_light_r6'],
     color: 0xffe1b9,
     intensity: 88,
@@ -88,6 +81,11 @@ export function createInteriorLights(THREE, scene, root, multiplier = 1) {
       count += addPointFromNode(THREE, group, root, definition, nodeName, multiplier);
     }
   }
+
+  // The master cove remains an emissive architectural line in the GLB. It does
+  // not create a browser PointLight: the earlier single cove point produced an
+  // artificial circular hotspot on the feature wall. Bedside fixtures now own
+  // the local master-suite illumination and preserve a calmer luxury hierarchy.
 
   // Upper Landing gets one additional soft transition fill between the authored
   // stair eye point and look target. This is not a fake camera light: it is a
