@@ -21,9 +21,9 @@ bright ceiling / floor / pale wall planes
         +--> less premium residential atmosphere
 ```
 
-This bead therefore changes **lighting energy and falloff only**. It does not move the camera or alter the Interior3 geometry.
+This bead therefore changes **lighting energy, falloff and material-family continuity** while keeping the camera and Interior3 geometry frozen.
 
-## Controlled changes
+## Bead 1 — global lighting energy
 
 ### Global Day / Evening / Night profiles
 
@@ -59,7 +59,7 @@ The browser-owned fixture layer was softened and made less orange:
 
 Imported GLB punctual lights remain disabled, so one runtime lighting engine still owns the final image.
 
-## Evidence
+### Evidence
 
 Commit: `4bef9a1e312372d449268336b4db4d2ca264465d`
 
@@ -70,27 +70,79 @@ Automated checks:
 - Upper Landing Bead Gate run `35066213489` — **SUCCESS**
 - First Person Tour QA run `35066213495` — **SUCCESS**
 
-Focused browser capture after the pass shows:
+Focused browser capture after the pass showed:
 
-- the repaired landing / master threshold remains readable;
-- the large right-hand wall keeps a warm mineral tone instead of clipping toward flat white;
-- ceiling and floor highlights are calmer;
-- walnut remains visually separate from pale wall/floor families;
-- the left glazing / stair edge still provides a cool-dark depth layer;
-- route and camera logic are unchanged.
+- the repaired landing / master threshold remained readable;
+- the large right-hand wall kept a warm mineral tone instead of clipping toward flat white;
+- ceiling and floor highlights were calmer;
+- walnut remained visually separate from pale wall/floor families;
+- the left glazing / stair edge still provided a cool-dark depth layer;
+- route and camera logic were unchanged.
 
-## Decision
+**Decision:** PASS / FREEZE LIGHTING ENERGY.
 
-**PASS / FREEZE LIGHTING ENERGY FOR THIS BEAD.**
+## Bead 2 — interior-adapted exposure + legacy material-family continuity
 
-Do not return to the brighter runtime fixture values unless a later fixed-gate comparison demonstrates a specific regression.
+The next fixed capture showed that global lighting was no longer the main problem, but some bright legacy material names still bypassed the finish-family switcher and the Upper Landing could benefit from a small exposure adaptation that did not change the global scene for exterior/orbit views.
+
+Controlled changes:
+
+1. `Warm Limestone`, `Sandstone Warmth`, and `Graphite Mineral` were deepened so plaster and stone do not drift toward near-white at browser scale.
+2. The material-family resolver now recognizes legacy/frozen names including `M1_Limestone`, `M1_MineralPlaster`, `M1_WalnutTimber`, `M1_DeckStone`, `WarmTravertine`, `CreamStonePBR_R8`, `MineralFacadePBR_R5`, `NaturalTimber`, and `TimberCladdingPBR_R5` in addition to the current M2/M3/M4 names.
+3. The switcher still clones each original material and changes only the family base color; existing PBR maps, roughness and shader properties remain intact.
+4. First-person interior stops now use an interior-adapted runtime profile. Upper Landing receives the strongest bounded adaptation:
+   - lower exposure than the selected global Day/Evening/Night value;
+   - slightly lower ambient / hemisphere / sun contribution;
+   - slightly stronger local interior fixture contribution so depth comes from bounded practical lights rather than broad global brightness.
+5. The viewer exposes `data-lighting-profile`; the focused Upper Landing gate now requires `landing-adapted`.
+
+No camera, stair route, PLAN/DOLLHOUSE geometry, first-person navigation graph, or Blender Interior3 geometry changed in this bead.
+
+### Evidence
+
+Upper Landing Bead Gate run `35073656635` — **SUCCESS**.
+
+Focused report:
+
+- stop: `stair-upper`;
+- lighting: `Evening`;
+- lighting profile: `landing-adapted`;
+- finish mood: `warm-limestone`;
+- light engine: `runtime-only`;
+- imported punctual lights active: `0`;
+- runtime interior lights: `10`;
+- walk graph: `ready`;
+- console errors: `0`;
+- page errors: `0`.
+
+Broader checks on the same head:
+
+- Viewer Build run `35073656514` — **SUCCESS**;
+- First Person Tour QA run `35073656552` — **SUCCESS**;
+- Floor Plan Visual Gate run `35073656518` — **SUCCESS**.
+
+### Visual result
+
+Relative to the previous bead, the fixed Upper Landing frame now has stronger tonal structure:
+
+- the ceiling reads as a warm dark plane rather than merging into the pale shell;
+- the floor reads as a separate warm stone plane;
+- the master-suite threshold remains clear;
+- timber / door elements keep a darker identity;
+- the right wall is still intentionally large but no longer shares the same value as every adjacent surface;
+- the left stair / glazing side stays readable and preserves orientation.
+
+This is an aesthetic improvement, not a photorealism claim. The remaining question is composition / architectural detail: whether the calm right wall should stay intentionally blank, receive one restrained reveal/feature, or be reduced by a tiny camera-yaw experiment. That belongs in a separate bead.
+
+**Decision:** PASS / FREEZE LIGHTING BEAD v1.
 
 ## Next bead
 
-The next controlled improvement should be **material micro-contrast**, not more global dimming:
+Do not continue global darkening from this point. The next controlled improvement should be **composition / material micro-contrast**:
 
-1. preserve this lighting energy;
-2. tune per-family roughness for limestone, plaster, timber and deck;
-3. retain source PBR maps rather than replacing them with flat colors;
-4. inspect Upper Landing, Living and Master from the same fixed cameras;
-5. only then decide whether the calm right-hand wall needs a small architectural detail or camera-composition change.
+1. preserve the current lighting energy and `landing-adapted` profile;
+2. preserve Interior3 geometry and authored camera anchor as the baseline;
+3. compare one small camera-yaw branch against one restrained wall-detail branch;
+4. retain source PBR maps and tune roughness only if the same material flattens in more than one fixed camera;
+5. inspect Upper Landing, Living and Master from the same fixed Dream Loop views;
+6. keep PLAN / DOLLHOUSE / WALK state continuity green before any release.
