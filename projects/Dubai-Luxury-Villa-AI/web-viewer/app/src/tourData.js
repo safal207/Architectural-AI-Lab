@@ -90,11 +90,11 @@ export const TOUR_STOPS = [
     title: 'Pool terrace',
     floor: 1,
     nodeName: 'tour_pool',
-    targetNodeName: 'tour_look_pool',
+    targetNodeName: 'pool_water',
     roomId: 'pool-terrace',
     fallbackNodeName: 'pool_terrace',
     feature: 'outdoor',
-    description: 'Finish the tour at the outdoor living and pool edge.'
+    description: 'Finish the tour at the outdoor living edge facing the pool water and infinity axis rather than back through the glazing.'
   }
 ];
 
