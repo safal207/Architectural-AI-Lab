@@ -68,12 +68,12 @@ export const TOUR_STOPS = [
     title: 'Upper landing',
     floor: 2,
     nodeName: 'tour_stair_upper',
-    targetNodeName: 'master_headboard_v04',
+    targetNodeName: 'master_bench_cushion_v04_r5',
     firstPersonFov: 60,
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'stairs',
-    description: 'Keep the repaired Interior3 landing eye point fixed while drawing the composition through the open threshold toward the authored master headboard; no camera compensation is used.'
+    description: 'Keep the repaired Interior3 landing eye point fixed while drawing the composition through the actual open threshold toward the visible master bench; no camera compensation is used.'
   },
   {
     id: 'master',
