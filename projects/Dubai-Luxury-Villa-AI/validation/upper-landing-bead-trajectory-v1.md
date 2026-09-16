@@ -55,7 +55,7 @@ single global finish tint
 Changes:
 
 - finish moods changed from one global swatch to separate `stone`, `plaster`, `timber`, and `deck` family colors;
-- Day / Evening / Night changed from one scalar intensity to full profiles with background, exposure, ambient, hemisphere, sun, and fill values;
+- Day / Evening / Night changed from one scalar intensity to full profiles with background, exposure, ambient, hemisphere, sun, fill, and local-interior-light values;
 - ACES Filmic remains the renderer baseline.
 
 Observed: tonal/material semantics improved, but the dominant pale plane remained.
@@ -179,21 +179,53 @@ Promotion checks:
 - exact-binary HTTP smoke test PASS;
 - `main` intentionally untouched.
 
-The feature viewer manifest now identifies `v0.4-interior3-feature-candidate` and explicitly marks it `FEATURE_BRANCH_VISUAL_QA_ONLY`.
+The feature viewer manifest identifies `v0.4-interior3-feature-candidate` and explicitly marks it `FEATURE_BRANCH_VISUAL_QA_ONLY`.
 
-**Current decision:** browser-level bead gates must now judge the candidate; no public/main promotion is implied by this step.
+**Decision:** PROMOTE TO FEATURE BRANCH FOR BROWSER EVIDENCE ONLY.
+
+## Bead 5 — Browser recovery and lighting ownership
+
+The browser candidate was then realigned to the Interior3-authored `tour_stair_upper` → `tour_look_stair_upper` pair with the legacy client-side Upper Landing offset removed.
+
+The viewer also declares one browser-owned lighting engine. Any punctual lights encountered inside the loaded GLB are neutralized before the browser adds its restrained global rig and authored fixture-based local lights. This prevents a Blender-exported physical-light layer from silently stacking with the Three.js day/evening/night layer.
+
+The Evening profile was then sculpted toward local depth rather than global brightness:
+
+- exposure reduced;
+- ambient and hemisphere contribution reduced;
+- global sun/fill reduced;
+- local fixture contribution increased slightly.
+
+Focused Upper Landing Bead Gate run `35058524781` — **SUCCESS**.
+
+Browser evidence:
+
+- stop: `stair-upper`;
+- lighting: `Evening`;
+- finish mood: `warm-limestone`;
+- light engine: `runtime-only`;
+- runtime fixture lights: `10`;
+- walk graph: `ready`;
+- console errors: `0`;
+- page errors: `0`.
+
+### Visual result
+
+The browser frame now preserves the same causal repair seen in Blender: the giant near-solid white field is gone, the left glazing/stair edge is readable, the master-suite threshold and bedroom furniture are visible ahead, and the wall/floor/wood families no longer collapse into one blank plane.
+
+A large calm wall on the right still occupies meaningful frame area and the floor/ceiling remain intentionally bright. Those are now **composition and finish-polish questions**, not the original geometry failure.
+
+**Decision:** FREEZE THE ROOT-CAUSE REPAIR. Continue aesthetic iteration from this bead; do not return to exposure hacks or reintroduce the removed solid.
 
 ## Next transition
 
-Run against the newly promoted feature GLB:
+The next bead should improve luxury perception without destroying the recovered circulation logic:
 
-1. Upper Landing focused bead capture;
-2. First Person Tour QA;
-3. Floor Plan Visual Gate;
-4. fixed Dream Loop views;
-5. desktop + mobile visual review.
-
-If browser Upper Landing preserves the new spatial depth and route QA stays green, freeze this geometry bead. If not, continue from the new geometry state rather than returning to exposure hacks.
+1. keep the current Interior3 landing geometry and authored camera pair frozen;
+2. refine material micro-contrast / roughness so plaster, limestone, timber and glazing read at browser scale;
+3. evaluate whether the right wall needs a small camera yaw/position refinement or a deliberate architectural feature rather than simply darkening it;
+4. compare Floor 2 PLAN / DOLLHOUSE / WALK continuity with the same `YOU ARE HERE` state;
+5. rerun fixed Dream Loop views and desktop + mobile tour QA.
 
 ## Release condition
 
@@ -206,5 +238,7 @@ Upper Landing can pass only when all are true:
 5. stone, plaster and timber remain distinguishable;
 6. route graph and stair interpolation remain green;
 7. desktop and mobile captures preserve the same transition logic.
+
+The root-cause portion of this condition is now satisfied by the focused browser bead. Full release still requires the broader visual and mobile gates.
 
 This document records causal hypotheses and observed evidence. A green functional test alone is not a visual PASS.
