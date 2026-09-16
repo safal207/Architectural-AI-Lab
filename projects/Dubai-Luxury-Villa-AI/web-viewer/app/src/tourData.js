@@ -65,11 +65,12 @@ export const TOUR_STOPS = [
     title: 'Upper landing',
     floor: 2,
     nodeName: 'tour_stair_upper',
-    targetNodeName: 'tour_look_stair_upper',
+    targetNodeName: 'master_headboard_v04',
+    firstPersonFov: 60,
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'stairs',
-    description: 'Arrive at the repaired Interior3 landing eye point and look through the open master-suite threshold without any legacy client-side camera compensation.'
+    description: 'Keep the repaired Interior3 landing eye point fixed while drawing the composition through the open threshold toward the authored master headboard; no camera compensation is used.'
   },
   {
     id: 'master',
