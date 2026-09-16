@@ -8,7 +8,9 @@
     "material": "v0.3-m4 PASS / FROZEN",
     "light": "v0.3-l2 PASS / FROZEN",
     "life": "v0.3-life2 PASS / FROZEN",
-    "interior": "v0.4-interior3 root-cause repair preserved",
+    "interior": "v0.4-interior2 baseline",
+    "upper_landing_repair": "v0.4-interior3 gated candidate",
+    "master_composition": "v0.4-interior3 quiet-luxury r6 bedding layer",
     "pool_context": "v0.4 Pool Context v4 authored desert garden + guided hero camera",
     "web_light_boundary": "Three.js owns runtime lighting; Blender punctual lights stripped from GLB"
   },
@@ -51,6 +53,7 @@
     "explicit Guided and Explore modes",
     "bounded first-person route",
     "clear Upper Landing and open master-suite threshold",
+    "quiet-luxury master feature wall rug bench and layered bedding",
     "family-specific material response",
     "authored desert planting beyond infinity edge",
     "independent Pool Guided hero camera without moving tour_pool",
