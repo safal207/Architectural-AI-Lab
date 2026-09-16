@@ -37,8 +37,9 @@ function rootLocalOffsetToWorld(root, localOffset) {
  *
  * `cameraOffsetLocal` is legacy route-authoring data and intentionally remains
  * part of the navigation point for stops that already use it. New visual-only
- * composition offsets must use `presentationOffsetLocal` so a prettier camera
- * cannot silently move a walk-graph endpoint.
+ * composition offsets must use `presentationOffsetLocal` or an authored
+ * `presentationNodeName`, so a prettier guided camera cannot silently move a
+ * walk-graph endpoint.
  */
 export function resolveTourPosition(root, stop) {
   const node = findTourNode(root, stop);
@@ -52,6 +53,15 @@ export function resolveTourPosition(root, stop) {
 }
 
 function resolvePresentationPosition(root, stop) {
+  if (stop.presentationNodeName) {
+    const authoredPresentation = root.getObjectByName(stop.presentationNodeName);
+    if (authoredPresentation) {
+      const position = new THREE.Vector3();
+      authoredPresentation.getWorldPosition(position);
+      return position;
+    }
+  }
+
   const position = resolveTourPosition(root, stop);
   if (!position) return null;
   if (stop.presentationOffsetLocal) {
@@ -60,7 +70,28 @@ function resolvePresentationPosition(root, stop) {
   return position;
 }
 
-function resolveLookTarget(root, stop, position) {
+function resolveNamedTarget(root, nodeName, localOffset) {
+  if (!nodeName) return null;
+  const targetNode = root.getObjectByName(nodeName);
+  if (!targetNode) return null;
+  const target = new THREE.Vector3();
+  targetNode.getWorldPosition(target);
+  if (localOffset) target.add(rootLocalOffsetToWorld(root, localOffset));
+  return target;
+}
+
+function resolveLookTarget(root, stop, position, presentation = true) {
+  if (presentation && stop.presentationTargetNodeName) {
+    const presentationTarget = resolveNamedTarget(
+      root,
+      stop.presentationTargetNodeName,
+      stop.presentationTargetOffsetLocal
+    );
+    if (presentationTarget && presentationTarget.distanceTo(position) > 0.25) {
+      return presentationTarget;
+    }
+  }
+
   if (stop.lookAtStopId) {
     const targetStop = TOUR_STOPS.find((item) => item.id === stop.lookAtStopId);
     const targetStopPosition = targetStop ? resolveTourPosition(root, targetStop) : null;
@@ -70,15 +101,8 @@ function resolveLookTarget(root, stop, position) {
   }
 
   if (stop.targetNodeName) {
-    const targetNode = root.getObjectByName(stop.targetNodeName);
-    if (targetNode) {
-      const target = new THREE.Vector3();
-      targetNode.getWorldPosition(target);
-      if (stop.targetOffsetLocal) {
-        target.add(rootLocalOffsetToWorld(root, stop.targetOffsetLocal));
-      }
-      if (target.distanceTo(position) > 0.25) return target;
-    }
+    const target = resolveNamedTarget(root, stop.targetNodeName, stop.targetOffsetLocal);
+    if (target && target.distanceTo(position) > 0.25) return target;
   }
 
   const index = TOUR_STOPS.findIndex((item) => item.id === stop.id);
@@ -91,20 +115,31 @@ function resolveLookTarget(root, stop, position) {
   return null;
 }
 
-export function placeFirstPersonCamera(camera, root, activeStopId) {
+/**
+ * Place a tour camera without conflating a guided hero view with a walk anchor.
+ * Guided mode uses authored presentation nodes/offsets when available. Explore
+ * mode passes `{ presentation: false }`, which always starts on the real route.
+ */
+export function placeFirstPersonCamera(camera, root, activeStopId, options = {}) {
   const stop = TOUR_STOPS.find((item) => item.id === activeStopId);
   if (!stop) return false;
 
-  const position = resolvePresentationPosition(root, stop);
+  const presentation = options.presentation !== false;
+  const position = presentation
+    ? resolvePresentationPosition(root, stop)
+    : resolveTourPosition(root, stop);
   if (!position) return false;
 
-  if (stop.firstPersonFov) {
-    camera.fov = stop.firstPersonFov;
+  const requestedFov = presentation
+    ? (stop.presentationFov ?? stop.firstPersonFov)
+    : stop.firstPersonFov;
+  if (requestedFov) {
+    camera.fov = requestedFov;
     camera.updateProjectionMatrix();
   }
   camera.position.copy(position);
 
-  const target = resolveLookTarget(root, stop, position)
+  const target = resolveLookTarget(root, stop, position, presentation)
     ?? position.clone().add(new THREE.Vector3(0, 0, -4));
   target.y = Math.max(target.y, position.y - 0.55);
   camera.lookAt(target);
