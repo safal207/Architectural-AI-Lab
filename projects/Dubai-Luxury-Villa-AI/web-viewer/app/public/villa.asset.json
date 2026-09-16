@@ -1,21 +1,20 @@
 {
   "asset": "Dubai Luxury Villa AI",
   "viewer_asset": "villa.glb",
-  "version": "v0.4-interior3-feature-candidate",
+  "version": "v0.4-pool-context-v4-feature-candidate",
   "status": "FEATURE_BRANCH_VISUAL_QA_ONLY",
   "source_pipeline": {
     "form": "v0.3-r1.2 PASS / FROZEN",
     "material": "v0.3-m4 PASS / FROZEN",
     "light": "v0.3-l2 PASS / FROZEN",
     "life": "v0.3-life2 PASS / FROZEN",
-    "interior": "v0.4-interior2 baseline",
-    "upper_landing_repair": "v0.4-interior3 gated candidate",
-    "master_composition": "v0.4-interior3 quiet-luxury r6 bedding layer",
+    "interior": "v0.4-interior3 root-cause repair preserved",
+    "pool_context": "v0.4 Pool Context v4 authored desert garden + guided hero camera",
     "web_light_boundary": "Three.js owns runtime lighting; Blender punctual lights stripped from GLB"
   },
   "glb": {
-    "bytes": 7987360,
-    "sha256": "b16f7e648f0d551326253b34b4235922ab0ba50d2742a4eb296c44118e97692f",
+    "bytes": 8613156,
+    "sha256": "4f3e2868b532d1e3ea50e83aeb9a696e3c1f6484b38b2067db4973b57e66d115",
     "version": 2
   },
   "room_anchors": [
@@ -42,16 +41,22 @@
     "tour_look_master",
     "tour_look_pool"
   ],
+  "presentation_nodes": [
+    "tour_present_pool",
+    "tour_present_look_pool"
+  ],
+  "navigation_boundary": "GUIDED_PRESENTATION_SEPARATE_FROM_EXPLORE_ROUTE",
   "features": [
-    "first-person bounded route",
-    "clear upper landing circulation candidate",
-    "open master-suite threshold",
-    "quiet-luxury master feature wall rug bench and layered bedding",
-    "emissive cove without a browser point-light hotspot",
-    "family-specific finish moods",
+    "persistent single-load Three.js scene",
+    "explicit Guided and Explore modes",
+    "bounded first-person route",
+    "clear Upper Landing and open master-suite threshold",
+    "family-specific material response",
+    "authored desert planting beyond infinity edge",
+    "independent Pool Guided hero camera without moving tour_pool",
     "browser-owned Day Evening Night lighting without duplicated Blender punctual lights"
   ],
   "generator": "Native Blender 4.0.2 pipeline via GitHub Actions",
-  "promotion_scope": "feat/first-person-house-tour only; main is intentionally untouched",
-  "claim_boundary": "AI-assisted architectural visualization and virtual-tour prototype; not BIM, measured construction geometry, code-compliance evidence or as-built documentation."
+  "promotion_scope": "feat/pool-context-v4 only; main intentionally untouched",
+  "claim_boundary": "AI-assisted architectural visualization and virtual-tour prototype; not BIM, measured construction geometry, code-compliance evidence, landscape construction documentation or as-built documentation."
 }
