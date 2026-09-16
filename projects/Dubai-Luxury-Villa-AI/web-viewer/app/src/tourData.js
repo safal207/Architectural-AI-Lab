@@ -54,10 +54,13 @@ export const TOUR_STOPS = [
     title: 'Stair hall',
     floor: 1,
     nodeName: 'tour_stair_ground',
+    presentationOffsetLocal: [0, 0, 1.0],
+    lookAtStopId: 'stair-upper',
     targetNodeName: 'tour_look_stair_ground',
+    firstPersonFov: 60,
     roomId: null,
     feature: 'stairs',
-    description: 'Read the vertical connection and begin the transition upstairs.'
+    description: 'Review the full stair flight from a presentation eye point one metre behind the authored navigation anchor, still inside the route corridor, looking toward the real upper landing.'
   },
   {
     id: 'stair-upper',
