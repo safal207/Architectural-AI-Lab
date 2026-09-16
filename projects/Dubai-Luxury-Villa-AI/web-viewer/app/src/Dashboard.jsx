@@ -92,6 +92,8 @@ export default function Dashboard() {
             material={material}
             tourMode={tourMode}
             activeTourStopId={activeTourStopId}
+            onSelectTourStop={selectTourStop}
+            onExitTour={() => toggleTourMode(false)}
           />
         </article>
 
