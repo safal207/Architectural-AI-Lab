@@ -25,7 +25,7 @@ async function waitForModel(page) {
 
 async function captureClip(page, locator, path) {
   await locator.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(350);
   const box = await locator.boundingBox();
   check(box && box.width > 1 && box.height > 1, 'Upper Landing viewer has no usable bounding box');
   await page.screenshot({
@@ -45,6 +45,7 @@ const report = {
   status: 'RUNNING',
   stop: 'stair-upper',
   lighting: null,
+  lightingProfile: null,
   material: null,
   lightEngine: null,
   importedLights: 0,
@@ -78,6 +79,7 @@ try {
 
   const canvas = page.locator('.three-canvas');
   report.lighting = await canvas.getAttribute('data-lighting-mode');
+  report.lightingProfile = await canvas.getAttribute('data-lighting-profile');
   report.material = await canvas.getAttribute('data-material-mode');
   report.walkGraph = await canvas.getAttribute('data-walk-graph');
   report.lightEngine = await canvas.getAttribute('data-light-engine');
@@ -88,6 +90,7 @@ try {
 
   check(report.walkGraph === 'ready', `Walk graph is ${report.walkGraph}`);
   check(report.lightEngine === 'runtime-only', `Unexpected light engine: ${report.lightEngine}`);
+  check(report.lightingProfile === 'landing-adapted', `Unexpected lighting profile: ${report.lightingProfile}`);
   check(report.interiorLights >= 5, `Runtime interior light layer is incomplete: ${report.interiorLights}`);
   check(report.consoleErrors.length === 0, `Console errors: ${report.consoleErrors.join(' | ')}`);
   check(report.pageErrors.length === 0, `Page errors: ${report.pageErrors.join(' | ')}`);
