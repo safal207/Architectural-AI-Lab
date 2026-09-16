@@ -32,6 +32,7 @@ async function waitForModel(page) {
 async function waitForMasterState(page, lightingName) {
   await page.waitForFunction((expectedLighting) => {
     const dataset = document.querySelector('.three-canvas')?.dataset;
+    const canvas = document.querySelector('.three-canvas canvas');
     return dataset?.tourStop === 'master'
       && dataset?.viewMode === 'first-person'
       && dataset?.lightingMode === expectedLighting
@@ -39,26 +40,21 @@ async function waitForMasterState(page, lightingName) {
       && dataset?.materialResponseProfile === 'family-microcontrast-v1'
       && Number(dataset?.materialResponseCount ?? 0) >= 4
       && Number(dataset?.materialFamilyCount ?? 0) === 4
-      && dataset?.modelState === 'loaded';
+      && dataset?.modelState === 'loaded'
+      && canvas?.dataset.qaCapture === 'preserved';
   }, lightingName, { timeout: 120_000 });
 }
 
 async function captureViewer(page, path) {
-  const viewer = page.locator('.viewer-panel');
-  await viewer.waitFor({ state: 'visible', timeout: 60_000 });
-  await page.evaluate(() => {
-    const element = document.querySelector('.viewer-panel');
-    if (!element) return;
-    const top = element.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: Math.max(0, top - 80), behavior: 'instant' });
-  });
-  await page.waitForTimeout(500);
-  await page.screenshot({
-    path,
-    fullPage: false,
-    animations: 'disabled',
-    timeout: 60_000
-  });
+  await page.evaluate(() => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+  const dataUrl = await page.locator('.three-canvas canvas').evaluate((canvas) => canvas.toDataURL('image/png'));
+  check(dataUrl.startsWith('data:image/png;base64,'), 'WebGL canvas did not return PNG evidence');
+  const payload = dataUrl.slice('data:image/png;base64,'.length);
+  const bytes = Buffer.from(payload, 'base64');
+  check(bytes.length > 10_000, `WebGL evidence is unexpectedly small (${bytes.length} bytes)`);
+  await writeFile(path, bytes);
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -94,7 +90,9 @@ try {
     `Quiet-luxury master composition is not the promoted viewer asset: ${report.masterComposition}`
   );
 
-  await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
+  const captureUrl = new URL(baseUrl);
+  captureUrl.searchParams.set('qaCapture', '1');
+  await page.goto(captureUrl.toString(), { waitUntil: 'networkidle', timeout: 120_000 });
   await waitForModel(page);
 
   const tour = page.locator('.tour-experience');
