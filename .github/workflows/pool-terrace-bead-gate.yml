@@ -1,0 +1,65 @@
+name: Pool Terrace Bead Gate
+
+on:
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/tourData.js'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/walkthroughEngine.js'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/pool-terrace-bead.mjs'
+      - '.github/workflows/pool-terrace-bead-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pool-terrace-bead:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build viewer
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-pool-terrace.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/villa-pool-terrace.log
+          exit 1
+
+      - name: Capture Pool Terrace bead
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-pool-terrace-bead-output
+        run: node qa/pool-terrace-bead.mjs
+
+      - name: Upload Pool Terrace evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-pool-terrace-bead
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-pool-terrace-bead-output
+          if-no-files-found: warn
+          retention-days: 14

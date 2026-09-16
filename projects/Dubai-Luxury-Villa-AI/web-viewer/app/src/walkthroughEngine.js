@@ -57,6 +57,9 @@ function resolveLookTarget(root, stop, position) {
     if (targetNode) {
       const target = new THREE.Vector3();
       targetNode.getWorldPosition(target);
+      if (stop.targetOffsetLocal) {
+        target.add(rootLocalOffsetToWorld(root, stop.targetOffsetLocal));
+      }
       if (target.distanceTo(position) > 0.25) return target;
     }
   }
