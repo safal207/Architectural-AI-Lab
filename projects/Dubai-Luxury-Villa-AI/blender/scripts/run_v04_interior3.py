@@ -1,4 +1,5 @@
 import importlib.util
+import math
 from pathlib import Path
 
 import bpy
@@ -50,11 +51,8 @@ def open_upper_circulation():
         'V04_CharcoalMetal', (0.025, 0.030, 0.034), 0.28, metallic=0.72
     )
 
-    # Root-cause repair: this v0.3 exterior mass intersected the stair and camera.
     remove_named('upper_stone_spine')
 
-    # Keep a thin architectural boundary outside the walking envelope instead
-    # of a solid block through the circulation volume.
     interior1.cube(
         'upper_landing_side_wall_v04_r4',
         (0.16, 5.20, 2.56),
@@ -63,8 +61,6 @@ def open_upper_circulation():
         0.015,
     )
 
-    # The prior master door completely filled the opening. For a virtual tour,
-    # show it opened 90 degrees inward so the threshold actually reads as a path.
     remove_named('master_door_v04', 'master_door_handle_v04')
     interior1.cube(
         'master_door_open_v04_r4',
@@ -81,20 +77,16 @@ def open_upper_circulation():
         0.010,
     )
 
-    # Re-author the landing bead after the geometry repair. The eye point stays
-    # on the real stair/bridge zone and looks through the now-open threshold.
     interior2.set_tour_anchor('tour_stair_upper', LANDING_CAMERA)
     interior2.add_look_target('tour_look_stair_upper', LANDING_TARGET)
 
 
 def refine_master_suite_luxury():
-    """Add one restrained quiet-luxury composition pass to the master suite.
+    """Add a restrained quiet-luxury composition pass to the master suite.
 
-    The room shell and navigation are already valid. This bead deliberately
-    avoids moving walls, doors or the tour path; it only introduces a layered
-    headboard composition, an under-bed rug, a foot bench and one emissive cove
-    marker so the browser view reads as an authored interior instead of a sparse
-    whitebox.
+    Navigation and shell geometry stay frozen. The refinement layers the bed,
+    feature wall and foreground so the first-person browser frame reads as an
+    authored bedroom rather than a furnished whitebox.
     """
     limestone = bpy.data.materials.get('M4_OrganicWarmLimestone') or interior1.material(
         'V04_MasterLimestoneFallback', (0.58, 0.49, 0.39), 0.66
@@ -108,15 +100,20 @@ def refine_master_suite_luxury():
     rug = bpy.data.materials.get('V04_MasterRugTaupe') or interior1.material(
         'V04_MasterRugTaupe', (0.24, 0.205, 0.175), 0.94
     )
+    linen = bpy.data.materials.get('V04_MasterLinen') or interior1.material(
+        'V04_MasterLinen', (0.74, 0.70, 0.63), 0.96
+    )
+    throw = bpy.data.materials.get('V04_MasterThrow') or interior1.material(
+        'V04_MasterThrow', (0.22, 0.18, 0.16), 0.96
+    )
     warm_light = bpy.data.materials.get('V04_WarmEmissive') or interior1.material(
         'V04_MasterWarmEmissive',
         (0.92, 0.65, 0.35),
         0.30,
         emission=(1.0, 0.55, 0.20),
-        emission_strength=2.2,
+        emission_strength=2.0,
     )
 
-    # Remove only this refinement layer if the script is re-run in Blender.
     remove_named(
         'master_feature_stone_v04_r5',
         'master_feature_fin_left_v04_r5',
@@ -125,11 +122,12 @@ def refine_master_suite_luxury():
         'master_bench_base_v04_r5',
         'master_bench_cushion_v04_r5',
         'master_headboard_cove_v04_r5',
+        'master_pillow_left_v04_r6',
+        'master_pillow_right_v04_r6',
+        'master_lumbar_v04_r6',
+        'master_throw_v04_r6',
     )
 
-    # Central mineral panel behind the existing upholstered headboard, framed
-    # by two slim walnut fins. The panel is deliberately low-contrast: it should
-    # add depth through surface response rather than read like a TV backdrop.
     interior1.cube(
         'master_feature_stone_v04_r5',
         (3.55, 0.08, 1.82),
@@ -152,8 +150,6 @@ def refine_master_suite_luxury():
         0.018,
     )
 
-    # A broad, dark-taupe rug grounds the pale bed and creates a readable
-    # foreground/midground break without increasing geometry complexity much.
     interior1.cube(
         'master_rug_v04_r5',
         (3.85, 3.10, 0.035),
@@ -162,8 +158,6 @@ def refine_master_suite_luxury():
         0.035,
     )
 
-    # Small foot bench: enough furnishing to create perspective overlap and
-    # human scale, but intentionally simpler than the bed so it stays secondary.
     interior1.cube(
         'master_bench_base_v04_r5',
         (1.72, 0.46, 0.22),
@@ -179,8 +173,41 @@ def refine_master_suite_luxury():
         0.055,
     )
 
-    # Emissive line doubles as an authored runtime-light anchor in Three.js.
-    # It adds a warm layer behind the headboard without exporting Blender lights.
+    # Layered bedding is the smallest geometry change that removes the showroom-
+    # block feel from the bed while keeping the source lightweight for the web.
+    pillow_left = interior1.cube(
+        'master_pillow_left_v04_r6',
+        (0.84, 0.46, 0.18),
+        (1.24, -0.24, 4.48),
+        linen,
+        0.10,
+    )
+    pillow_left.rotation_euler.z = math.radians(5.0)
+    pillow_right = interior1.cube(
+        'master_pillow_right_v04_r6',
+        (0.84, 0.46, 0.18),
+        (2.26, -0.24, 4.48),
+        linen,
+        0.10,
+    )
+    pillow_right.rotation_euler.z = math.radians(-5.0)
+    interior1.cube(
+        'master_lumbar_v04_r6',
+        (1.18, 0.26, 0.16),
+        (1.75, 0.03, 4.51),
+        quiet_fabric,
+        0.08,
+    )
+    interior1.cube(
+        'master_throw_v04_r6',
+        (2.02, 0.58, 0.06),
+        (1.75, 0.98, 4.40),
+        throw,
+        0.035,
+    )
+
+    # The strip remains emissive as a visual line. Browser punctual illumination
+    # comes from the bedside fixtures only; this avoids a central point-light hotspot.
     interior1.cube(
         'master_headboard_cove_v04_r5',
         (3.08, 0.05, 0.055),
@@ -279,10 +306,6 @@ def save_outputs():
         export_yup=True,
         export_materials='EXPORT',
         export_extras=True,
-        # The browser owns Day / Evening / Night lighting. Blender's authored
-        # light rig uses Blender energy units that export to very large glTF
-        # punctual-light intensities and then stack on top of the Three.js rig.
-        # Keep emissive fixture meshes, but strip punctual lights at the engine boundary.
         export_lights=False,
     )
 
@@ -295,7 +318,7 @@ def main():
     print(f'Building {STAGE_ID}')
     build_scene()
     save_outputs()
-    print('Dubai Luxury Villa AI v0.4 Interior3 — clear upper circulation, open master threshold, quiet-luxury master composition and browser-safe lighting boundary generated')
+    print('Dubai Luxury Villa AI v0.4 Interior3 — clear circulation, open master threshold, layered quiet-luxury master composition and browser-safe lighting generated')
 
 
 if __name__ == '__main__':
