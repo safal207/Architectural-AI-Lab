@@ -12,12 +12,12 @@ export const lightingModes = {
   evening: {
     name: 'Evening',
     background: '#182630',
-    exposure: 0.65,
-    ambient: 0.45,
-    hemisphere: 0.28,
-    sun: 0.64,
-    fill: 0.13,
-    interior: 0.46
+    exposure: 0.58,
+    ambient: 0.28,
+    hemisphere: 0.18,
+    sun: 0.55,
+    fill: 0.08,
+    interior: 0.52
   },
   night: {
     name: 'Night',
