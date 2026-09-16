@@ -90,13 +90,13 @@ export const TOUR_STOPS = [
     title: 'Pool terrace',
     floor: 1,
     nodeName: 'tour_pool',
-    presentationOffsetLocal: [6.0, 1.1, 0],
-    targetNodeName: 'infinity_lip',
-    firstPersonFov: 62,
+    presentationOffsetLocal: [5.2, 0, -4.8],
+    targetNodeName: 'ground_front_header',
+    firstPersonFov: 60,
     roomId: 'pool-terrace',
     fallbackNodeName: 'pool_terrace',
     feature: 'outdoor',
-    description: 'Finish from a presentation eye point on the dry side deck looking diagonally across the pool toward the authored infinity edge while the navigation graph remains anchored to Blender tour_pool.'
+    description: 'Finish from the far dry corner beyond the infinity edge, looking back across the pool toward the villa facade so water, edge, terrace and architecture read in one depth sequence while navigation stays anchored to Blender tour_pool.'
   }
 ];
 
