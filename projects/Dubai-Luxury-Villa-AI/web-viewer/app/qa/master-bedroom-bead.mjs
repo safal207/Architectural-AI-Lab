@@ -65,6 +65,9 @@ const browser = await chromium.launch({ headless: true });
 const report = {
   status: 'RUNNING',
   stop: 'master',
+  assetVersion: null,
+  sourceArtifactId: null,
+  masterComposition: null,
   materialMode: null,
   materialResponseProfile: null,
   frames: [],
@@ -78,6 +81,18 @@ try {
     if (message.type() === 'error') report.consoleErrors.push(message.text());
   });
   page.on('pageerror', (error) => report.pageErrors.push(String(error)));
+
+  const manifestResponse = await page.request.get(new URL('villa.asset.json', baseUrl).toString());
+  check(manifestResponse.ok(), `villa.asset.json unavailable: HTTP ${manifestResponse.status()}`);
+  const manifest = await manifestResponse.json();
+  report.assetVersion = manifest.version ?? null;
+  report.masterComposition = manifest.source_pipeline?.master_composition ?? null;
+
+  check(report.assetVersion === 'v0.4-interior3-feature-candidate', `Unexpected asset version: ${report.assetVersion}`);
+  check(
+    report.masterComposition === 'v0.4-interior3 quiet-luxury r5 layer',
+    `Quiet-luxury master composition is not the promoted viewer asset: ${report.masterComposition}`
+  );
 
   await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
   await waitForModel(page);
@@ -118,7 +133,8 @@ try {
     check(frame.materialResponseProfile === 'family-microcontrast-v1', `${mode.name}: material response missing`);
     check(frame.materialResponseCount >= 4, `${mode.name}: too few tuned materials (${frame.materialResponseCount})`);
     check(frame.materialFamilyCount === 4, `${mode.name}: expected 4 material families, got ${frame.materialFamilyCount}`);
-    check(frame.interiorLights >= 5, `${mode.name}: runtime interior light layer incomplete (${frame.interiorLights})`);
+    check(frame.interiorLights >= 6, `${mode.name}: quiet-luxury runtime light layer incomplete (${frame.interiorLights})`);
+    check(frame.importedLights === 0, `${mode.name}: imported GLB punctual lights leaked into browser (${frame.importedLights})`);
 
     await captureViewer(page, `${outputDir}/${mode.file}`);
     report.frames.push(frame);
