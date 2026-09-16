@@ -1,30 +1,30 @@
 const FIXTURE_GROUPS = [
   {
     names: ['living_downlight_v04_00', 'living_downlight_v04_01', 'living_downlight_v04_02'],
-    color: 0xffd4a0,
-    intensity: 72,
-    distance: 5.5,
+    color: 0xffe0b6,
+    intensity: 54,
+    distance: 4.8,
     drop: 0.16
   },
   {
     names: ['dining_pendant_r6_00', 'dining_pendant_r6_01', 'dining_pendant_r6_02'],
-    color: 0xffc98a,
-    intensity: 58,
-    distance: 4.6,
+    color: 0xffd39a,
+    intensity: 46,
+    distance: 4.2,
     drop: 0.18
   },
   {
     names: ['master_bedside_lamp_v04_00', 'master_bedside_lamp_v04_01'],
-    color: 0xffbd78,
-    intensity: 42,
-    distance: 4.2,
+    color: 0xffd0a3,
+    intensity: 32,
+    distance: 3.8,
     drop: -0.06
   },
   {
     names: ['upper_linear_light_r6'],
-    color: 0xffd5a3,
-    intensity: 118,
-    distance: 7.2,
+    color: 0xffe1b9,
+    intensity: 88,
+    distance: 6.4,
     drop: 0.22
   }
 ];
@@ -85,7 +85,7 @@ export function createInteriorLights(THREE, scene, root, multiplier = 1) {
     const midpoint = a.clone().lerp(b, 0.58);
     midpoint.y += 0.95;
 
-    const fill = new THREE.PointLight(0xffddb3, 86 * multiplier, 6.2, 2);
+    const fill = new THREE.PointLight(0xffe4c5, 60 * multiplier, 5.4, 2);
     fill.name = 'runtime_upper_landing_transition_fill';
     fill.position.copy(midpoint);
     fill.castShadow = false;
