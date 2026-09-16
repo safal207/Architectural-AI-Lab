@@ -76,7 +76,7 @@ export default function MaterialSwitcher({ onChange }) {
         ))}
       </div>
       <p className="material-switcher__note">
-        Presentation mood control. Presets preserve separate stone, plaster, timber and deck families while retaining each material's original PBR maps and roughness.
+        Presentation mood control. Presets preserve source PBR maps while the viewer applies restrained family-specific roughness and normal response for stone, plaster, timber and deck.
       </p>
     </section>
   );
