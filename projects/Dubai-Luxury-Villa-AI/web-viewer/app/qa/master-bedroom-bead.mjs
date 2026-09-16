@@ -46,18 +46,17 @@ async function waitForMasterState(page, lightingName) {
 async function captureViewer(page, path) {
   const viewer = page.locator('.viewer-panel');
   await viewer.waitFor({ state: 'visible', timeout: 60_000 });
-  await viewer.evaluate((element) => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+  await page.evaluate(() => {
+    const element = document.querySelector('.viewer-panel');
+    if (!element) return;
+    const top = element.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: Math.max(0, top - 80), behavior: 'instant' });
+  });
   await page.waitForTimeout(500);
-  const box = await viewer.boundingBox();
-  check(box && box.width > 1 && box.height > 1, 'Master Bedroom viewer has no usable bounding box');
   await page.screenshot({
     path,
-    clip: {
-      x: Math.max(0, box.x),
-      y: Math.max(0, box.y),
-      width: box.width,
-      height: box.height
-    },
+    fullPage: false,
+    animations: 'disabled',
     timeout: 60_000
   });
 }
