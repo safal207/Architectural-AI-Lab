@@ -16,9 +16,17 @@ const FIXTURE_GROUPS = [
   {
     names: ['master_bedside_lamp_v04_00', 'master_bedside_lamp_v04_01'],
     color: 0xffd0a3,
-    intensity: 32,
+    intensity: 30,
     distance: 3.8,
-    drop: -0.06
+    drop: -0.06,
+    shadowNames: ['master_bedside_lamp_v04_00']
+  },
+  {
+    names: ['master_headboard_cove_v04_r5'],
+    color: 0xffd5ad,
+    intensity: 24,
+    distance: 4.6,
+    drop: 0.22
   },
   {
     names: ['upper_linear_light_r6'],
@@ -45,7 +53,17 @@ function addPointFromNode(THREE, group, root, definition, nodeName, multiplier) 
   );
   light.name = `runtime_${nodeName}`;
   light.position.copy(position);
-  light.castShadow = false;
+
+  const castShadow = definition.shadowNames?.includes(nodeName) ?? false;
+  light.castShadow = castShadow;
+  if (castShadow) {
+    light.shadow.mapSize.set(512, 512);
+    light.shadow.bias = -0.00035;
+    light.shadow.normalBias = 0.03;
+    light.shadow.camera.near = 0.12;
+    light.shadow.camera.far = definition.distance;
+  }
+
   group.add(light);
   return 1;
 }
