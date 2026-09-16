@@ -46,6 +46,8 @@ const report = {
   stop: 'stair-upper',
   lighting: null,
   material: null,
+  lightEngine: null,
+  importedLights: 0,
   interiorLights: 0,
   consoleErrors: [],
   pageErrors: []
@@ -78,11 +80,14 @@ try {
   report.lighting = await canvas.getAttribute('data-lighting-mode');
   report.material = await canvas.getAttribute('data-material-mode');
   report.walkGraph = await canvas.getAttribute('data-walk-graph');
+  report.lightEngine = await canvas.getAttribute('data-light-engine');
+  report.importedLights = Number(await canvas.getAttribute('data-imported-light-count') ?? 0);
   report.interiorLights = Number(await canvas.getAttribute('data-interior-light-count') ?? 0);
 
   await captureClip(page, page.locator('.viewer-panel'), `${outputDir}/upper-landing.png`);
 
   check(report.walkGraph === 'ready', `Walk graph is ${report.walkGraph}`);
+  check(report.lightEngine === 'runtime-only', `Unexpected light engine: ${report.lightEngine}`);
   check(report.interiorLights >= 5, `Runtime interior light layer is incomplete: ${report.interiorLights}`);
   check(report.consoleErrors.length === 0, `Console errors: ${report.consoleErrors.join(' | ')}`);
   check(report.pageErrors.length === 0, `Page errors: ${report.pageErrors.join(' | ')}`);
