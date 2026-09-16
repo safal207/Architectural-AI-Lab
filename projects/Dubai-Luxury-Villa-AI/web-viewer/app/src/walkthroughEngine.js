@@ -77,6 +77,11 @@ export function placeFirstPersonCamera(camera, root, activeStopId) {
 
   const position = resolveTourPosition(root, stop);
   if (!position) return false;
+
+  if (stop.firstPersonFov) {
+    camera.fov = stop.firstPersonFov;
+    camera.updateProjectionMatrix();
+  }
   camera.position.copy(position);
 
   const target = resolveLookTarget(root, stop, position)
