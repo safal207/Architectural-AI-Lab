@@ -97,14 +97,14 @@ export const TOUR_STOPS = [
     nodeName: 'tour_pool',
     presentationNodeName: 'tour_present_pool',
     presentationTargetNodeName: 'tour_present_look_pool',
-    presentationFov: 40,
+    presentationFov: 32,
     targetNodeName: 'infinity_lip',
     targetOffsetLocal: [-3.2, 0, 0],
     firstPersonFov: 62,
     roomId: 'pool-terrace',
     fallbackNodeName: 'pool_terrace',
     feature: 'outdoor',
-    description: 'Guided mode uses an authored hero camera beyond the infinity edge to frame planting, water and villa as one luxury composition. Explore still starts at the exact walkable tour_pool anchor.'
+    description: 'Guided mode uses an authored hero camera beyond the infinity edge with a browser FOV matched to the accepted Blender 36 mm hero framing. Explore still starts at the exact walkable tour_pool anchor.'
   }
 ];
 
