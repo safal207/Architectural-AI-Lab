@@ -57,6 +57,21 @@ async function assertPersistentRuntime(page, label) {
   );
 }
 
+async function captureViewportEvidence(page, path) {
+  const viewer = page.locator('.viewer-panel');
+  await viewer.scrollIntoViewIfNeeded();
+  await page.evaluate(() => document.fonts?.ready);
+  await page.evaluate(() => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+  await page.screenshot({
+    path,
+    fullPage: false,
+    animations: 'disabled',
+    timeout: 60_000
+  });
+}
+
 async function enterHouse(page) {
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
@@ -155,7 +170,7 @@ try {
     desktopModelRequests === 1,
     `Desktop requested villa.glb ${desktopModelRequests} times instead of once`
   );
-  await desktop.screenshot({ path: `${outputDir}/desktop-first-person.png`, fullPage: true });
+  await captureViewportEvidence(desktop, `${outputDir}/desktop-first-person.png`);
   report.desktop.entry = 'PASS';
   report.desktop.walkGraph = 'PASS';
   report.desktop.guidedMode = 'PASS';
@@ -242,7 +257,7 @@ try {
     `Mobile requested villa.glb ${mobileModelRequests} times instead of once`
   );
 
-  await mobile.screenshot({ path: `${outputDir}/mobile-first-person.png`, fullPage: true });
+  await captureViewportEvidence(mobile, `${outputDir}/mobile-first-person.png`);
   report.mobile.entry = 'PASS';
   report.mobile.guidedMode = 'PASS';
   report.mobile.exploreMode = 'PASS';
