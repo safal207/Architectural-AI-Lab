@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 env:
-  SOURCE_ARTIFACT_ID: '10421665060'
+  SOURCE_ARTIFACT_ID: '10440601862'
   TARGET_BRANCH: 'feat/first-person-house-tour'
 
 concurrency:
@@ -80,7 +80,11 @@ jobs:
               'upper_landing_side_wall_v04_r4',
               'master_door_open_v04_r4',
               'master_door_handle_open_v04_r4',
-              'stair_landing_v04', 'upper_corridor_bridge_v04_r3'
+              'stair_landing_v04', 'upper_corridor_bridge_v04_r3',
+              'master_feature_stone_v04_r5',
+              'master_feature_fin_left_v04_r5', 'master_feature_fin_right_v04_r5',
+              'master_rug_v04_r5', 'master_bench_base_v04_r5',
+              'master_bench_cushion_v04_r5', 'master_headboard_cove_v04_r5'
           }
           missing = sorted(required - nodes)
           if missing:
@@ -140,6 +144,7 @@ jobs:
                   'life': 'v0.3-life2 PASS / FROZEN',
                   'interior': 'v0.4-interior2 baseline',
                   'upper_landing_repair': 'v0.4-interior3 gated candidate',
+                  'master_composition': 'v0.4-interior3 quiet-luxury r5 layer',
                   'web_light_boundary': 'Three.js owns runtime lighting; Blender punctual lights stripped from GLB'
               },
               'glb': {'bytes': len(raw), 'sha256': digest, 'version': receipt['glb']['version']},
@@ -148,6 +153,7 @@ jobs:
                   'first-person bounded route',
                   'clear upper landing circulation candidate',
                   'open master-suite threshold',
+                  'quiet-luxury master feature wall rug bench and cove layer',
                   'family-specific finish moods',
                   'human-scale 64 degree first-person FOV',
                   'browser-owned Day Evening Night lighting without duplicated Blender punctual lights'
@@ -166,7 +172,7 @@ jobs:
               'sha256': digest,
               'scope': 'FEATURE_BRANCH_ONLY',
               'lighting_boundary': 'BLENDER_PUNCTUAL_LIGHTS_STRIPPED_BROWSER_OWNS_RUNTIME_LIGHTING',
-              'next_gate': 'Upper Landing Bead Gate + First Person Tour QA + visual review',
+              'next_gate': 'Upper Landing Bead Gate + Master Bedroom Bead Gate + First Person Tour QA + visual review',
               'main_untouched': True
           }
           (root / 'validation/v0.4-interior3-feature-promotion.json').write_text(
