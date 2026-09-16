@@ -30,20 +30,42 @@ Keep the source walnut diffuse texture as the source of the wood's dark grain/va
 
 The browser still changes mood, but it no longer paints an already-dark diffuse texture with a second near-black factor.
 
-## Visual acceptance
+## Evidence
 
-Inspect fresh Master Bedroom and material-microcontrast browser captures.
+Source code head: `e8947c1688533a28a94fb5f6f354020b81aedf48`
 
-PASS only if:
+Master Bedroom gate:
 
-1. the left Master Bedroom wardrobe reads as dark walnut rather than a featureless black slab;
-2. bed base / other walnut surfaces retain visible wood identity;
-3. timber is still clearly darker than pale plaster/stone;
-4. no plastic/glossy regression appears (roughness is intentionally unchanged in this bead);
-5. the Living Room does not become unnaturally pale where walnut appears;
-6. Day / Evening / Night hierarchy remains intact;
-7. console/page errors remain zero.
+- workflow run `35079240257`
+- artifact `10439701398`
+- automated result: **PASS**
+- Day / Evening / Night hierarchy remained intact
+- console errors: `0`
+- page errors: `0`
 
-## Next after PASS
+Material micro-contrast gate:
 
-If walnut is readable but still too flat, evaluate a small timber roughness response change as its own bead. Do not combine that decision with this colour-factor repair.
+- workflow run `35079240293`
+- artifact `10439572326`
+- automated result: **PASS**
+- Living / Upper Landing / Master all retained ready walk graph and all four material families
+
+## Visual review
+
+**PASS**
+
+- the Master Bedroom wardrobe now reads as textured dark walnut instead of a featureless black slab;
+- the bed base shows a clear wood grain/value structure;
+- the right-side timber threshold/door reads as wood rather than black geometry;
+- timber remains substantially darker than plaster and stone;
+- no glossy/plastic regression was introduced because roughness/normal response were intentionally left unchanged;
+- Living Room walnut became more readable without turning pale or orange;
+- Upper Landing retains the repaired geometry while the timber edge now contributes useful depth separation.
+
+The Master Bedroom canvas also keeps the corrected lighting ordering after the tint change: Day remains the brightest state, Evening the middle state and Night the darkest/readable state.
+
+## Status
+
+**VISUAL PASS — freeze the walnut colour-factor repair.**
+
+Do not change timber roughness yet. The next priority is the full authored-stop walkthrough review, where the largest remaining scene-level problem is expected to be local lighting/composition outside the Master Bedroom (especially the Living Room), not walnut colour.
