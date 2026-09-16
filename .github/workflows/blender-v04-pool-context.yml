@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: dubai-villa-v04-pool-context-${{ github.ref }}
@@ -132,3 +132,118 @@ jobs:
             projects/Dubai-Luxury-Villa-AI/validation/v0.4-pool-context-v4-receipt.json
           if-no-files-found: error
           retention-days: 14
+
+      - name: Promote verified asset to integration branch
+        env:
+          TARGET_BRANCH: feat/pool-context-v4
+        run: |
+          set -euxo pipefail
+          ROOT='projects/Dubai-Luxury-Villa-AI'
+          STAGE=/tmp/pool-v4-promotion
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+
+          cp "$ROOT/exports/villa-v0.4-pool-context-v4.glb" "$STAGE/villa.glb"
+          cp "$ROOT/renders/villa-v0.4-pool-context-v4.png" "$STAGE/villa-v0.4-pool-context-v4.png"
+          cp "$ROOT/validation/v0.4-pool-context-v4-receipt.json" "$STAGE/v0.4-pool-context-v4-receipt.json"
+          cp "$ROOT/blender/scripts/run_v04_pool_context.py" "$STAGE/run_v04_pool_context.py"
+          cp "$ROOT/blender/scripts/run_v04_pool_context_v4.py" "$STAGE/run_v04_pool_context_v4.py"
+
+          export GLB_SHA="$(sha256sum "$STAGE/villa.glb" | awk '{print $1}')"
+          export GLB_BYTES="$(stat -c%s "$STAGE/villa.glb")"
+          export SOURCE_RUN_ID="$GITHUB_RUN_ID"
+
+          git fetch origin "$TARGET_BRANCH"
+          git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
+
+          mkdir -p "$ROOT/web-viewer/app/public" "$ROOT/validation" "$ROOT/renders" "$ROOT/blender/scripts"
+          cp "$STAGE/villa.glb" "$ROOT/web-viewer/app/public/villa.glb"
+          cp "$STAGE/villa-v0.4-pool-context-v4.png" "$ROOT/renders/villa-v0.4-pool-context-v4.png"
+          cp "$STAGE/v0.4-pool-context-v4-receipt.json" "$ROOT/validation/v0.4-pool-context-v4-receipt.json"
+          cp "$STAGE/run_v04_pool_context.py" "$ROOT/blender/scripts/run_v04_pool_context.py"
+          cp "$STAGE/run_v04_pool_context_v4.py" "$ROOT/blender/scripts/run_v04_pool_context_v4.py"
+
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          digest = os.environ['GLB_SHA']
+          size = int(os.environ['GLB_BYTES'])
+          run_id = int(os.environ['SOURCE_RUN_ID'])
+
+          manifest = {
+              'asset': 'Dubai Luxury Villa AI',
+              'viewer_asset': 'villa.glb',
+              'version': 'v0.4-pool-context-v4-feature-candidate',
+              'status': 'FEATURE_BRANCH_VISUAL_QA_ONLY',
+              'source_pipeline': {
+                  'form': 'v0.3-r1.2 PASS / FROZEN',
+                  'material': 'v0.3-m4 PASS / FROZEN',
+                  'light': 'v0.3-l2 PASS / FROZEN',
+                  'life': 'v0.3-life2 PASS / FROZEN',
+                  'interior': 'v0.4-interior3 root-cause repair preserved',
+                  'pool_context': 'v0.4 Pool Context v4 authored desert garden + guided hero camera',
+                  'web_light_boundary': 'Three.js owns runtime lighting; Blender punctual lights stripped from GLB'
+              },
+              'glb': {'bytes': size, 'sha256': digest, 'version': 2},
+              'room_anchors': ['living_room', 'master_bedroom', 'pool_terrace'],
+              'tour_anchors': [
+                  'tour_graph_root', 'tour_entry', 'tour_living', 'tour_dining',
+                  'tour_stair_ground', 'tour_stair_upper', 'tour_master', 'tour_pool'
+              ],
+              'tour_look_targets': [
+                  'tour_look_entry', 'tour_look_living', 'tour_look_dining',
+                  'tour_look_stair_ground', 'tour_look_stair_upper',
+                  'tour_look_master', 'tour_look_pool'
+              ],
+              'presentation_nodes': ['tour_present_pool', 'tour_present_look_pool'],
+              'navigation_boundary': 'GUIDED_PRESENTATION_SEPARATE_FROM_EXPLORE_ROUTE',
+              'features': [
+                  'persistent single-load Three.js scene',
+                  'explicit Guided and Explore modes',
+                  'bounded first-person route',
+                  'clear Upper Landing and open master-suite threshold',
+                  'family-specific material response',
+                  'authored desert planting beyond infinity edge',
+                  'independent Pool Guided hero camera without moving tour_pool',
+                  'browser-owned Day Evening Night lighting without duplicated Blender punctual lights'
+              ],
+              'generator': 'Native Blender 4.0.2 pipeline via GitHub Actions',
+              'promotion_scope': 'feat/pool-context-v4 only; main intentionally untouched',
+              'claim_boundary': 'AI-assisted architectural visualization and virtual-tour prototype; not BIM, measured construction geometry, code-compliance evidence, landscape construction documentation or as-built documentation.'
+          }
+          (root / 'web-viewer/app/public/villa.asset.json').write_text(
+              json.dumps(manifest, indent=2) + '\n', encoding='utf-8'
+          )
+
+          promotion = {
+              'version': 'v0.4-pool-context-v4-feature-promotion',
+              'source_workflow_run': run_id,
+              'viewer_asset': 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.glb',
+              'bytes': size,
+              'sha256': digest,
+              'scope': 'FEATURE_BRANCH_ONLY',
+              'lighting_boundary': 'BLENDER_PUNCTUAL_LIGHTS_STRIPPED_BROWSER_OWNS_RUNTIME_LIGHTING',
+              'navigation_boundary': 'GUIDED_PRESENTATION_SEPARATE_FROM_EXPLORE_ROUTE',
+              'visual_review': 'POOL_V4_GUIDED_HERO_PASS',
+              'next_gate': 'Viewer Build + First Person Tour QA + Pool Terrace Bead Gate + Full Walkthrough Visual Gate',
+              'main_untouched': True
+          }
+          (root / 'validation/v0.4-pool-context-v4-feature-promotion.json').write_text(
+              json.dumps(promotion, indent=2) + '\n', encoding='utf-8'
+          )
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            "$ROOT/web-viewer/app/public/villa.glb" \
+            "$ROOT/web-viewer/app/public/villa.asset.json" \
+            "$ROOT/validation/v0.4-pool-context-v4-feature-promotion.json" \
+            "$ROOT/validation/v0.4-pool-context-v4-receipt.json" \
+            "$ROOT/renders/villa-v0.4-pool-context-v4.png" \
+            "$ROOT/blender/scripts/run_v04_pool_context.py" \
+            "$ROOT/blender/scripts/run_v04_pool_context_v4.py"
+          git commit -m 'Promote Pool Context v4 feature asset'
+          git push origin HEAD:"$TARGET_BRANCH"
