@@ -81,8 +81,8 @@ try {
   report.masterComposition = manifest.source_pipeline?.master_composition ?? null;
   check(report.assetVersion === 'v0.4-interior3-feature-candidate', `Unexpected asset version: ${report.assetVersion}`);
   check(
-    report.masterComposition === 'v0.4-interior3 quiet-luxury r5 layer',
-    `Quiet-luxury master composition is not the promoted viewer asset: ${report.masterComposition}`
+    report.masterComposition === 'v0.4-interior3 quiet-luxury r6 bedding layer',
+    `Final master composition is not the promoted viewer asset: ${report.masterComposition}`
   );
 
   for (const mode of MODES) {
@@ -127,7 +127,7 @@ try {
     check(frame.materialResponseProfile === 'family-microcontrast-v1', `${mode.name}: material response missing`);
     check(frame.materialResponseCount >= 4, `${mode.name}: too few tuned materials (${frame.materialResponseCount})`);
     check(frame.materialFamilyCount === 4, `${mode.name}: expected 4 material families, got ${frame.materialFamilyCount}`);
-    check(frame.interiorLights >= 6, `${mode.name}: quiet-luxury runtime light layer incomplete (${frame.interiorLights})`);
+    check(frame.interiorLights >= 6, `${mode.name}: runtime light layer incomplete (${frame.interiorLights})`);
     check(frame.importedLights === 0, `${mode.name}: imported GLB punctual lights leaked into browser (${frame.importedLights})`);
 
     frame.evidenceBytes = await captureCanvas(page, `${outputDir}/${mode.file}`);
