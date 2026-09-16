@@ -54,13 +54,14 @@ export const TOUR_STOPS = [
     title: 'Stair hall',
     floor: 1,
     nodeName: 'tour_stair_ground',
-    presentationOffsetLocal: [0, 0, 1.0],
+    presentationOffsetLocal: [0.55, 0, 0.15],
+    presentationTargetNodeName: 'tour_look_stair_ground',
     lookAtStopId: 'stair-upper',
     targetNodeName: 'tour_look_stair_ground',
-    firstPersonFov: 60,
+    firstPersonFov: 58,
     roomId: null,
     feature: 'stairs',
-    description: 'Review the full stair flight from a presentation eye point one metre behind the authored navigation anchor, still inside the route corridor, looking toward the real upper landing.'
+    description: 'Guided mode shifts only sideways toward the stair centre and aims at the authored mid-flight target. Explore still starts on the exact tour_stair_ground route anchor, so presentation polish cannot distort navigation.'
   },
   {
     id: 'stair-upper',
