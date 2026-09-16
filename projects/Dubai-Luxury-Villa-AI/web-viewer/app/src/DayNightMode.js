@@ -2,31 +2,31 @@ export const lightingModes = {
   day: {
     name: 'Day',
     background: '#bfd0d7',
-    exposure: 0.78,
-    ambient: 0.72,
-    hemisphere: 0.45,
-    sun: 1.45,
-    fill: 0.17,
-    interior: 0.10
+    exposure: 0.82,
+    ambient: 0.78,
+    hemisphere: 0.50,
+    sun: 1.55,
+    fill: 0.18,
+    interior: 0.08
   },
   evening: {
     name: 'Evening',
     background: '#182630',
-    exposure: 0.58,
-    ambient: 0.27,
-    hemisphere: 0.16,
-    sun: 0.30,
-    fill: 0.07,
-    interior: 0.26
+    exposure: 0.52,
+    ambient: 0.22,
+    hemisphere: 0.13,
+    sun: 0.24,
+    fill: 0.055,
+    interior: 0.19
   },
   night: {
     name: 'Night',
     background: '#071018',
-    exposure: 0.42,
-    ambient: 0.11,
-    hemisphere: 0.06,
-    sun: 0.04,
-    fill: 0.03,
-    interior: 0.24
+    exposure: 0.40,
+    ambient: 0.08,
+    hemisphere: 0.045,
+    sun: 0.02,
+    fill: 0.02,
+    interior: 0.18
   }
 };
