@@ -28,8 +28,58 @@ const MATERIAL_FAMILY_BY_NAME = {
   M4_OrganicWarmLimestone: 'stone',
   M3_IvoryPlaster: 'plaster',
   M2_WalnutTimber: 'timber',
-  M3_DeckStone: 'deck'
+  M3_DeckStone: 'deck',
+  M1_Limestone: 'stone',
+  M1_MineralPlaster: 'plaster',
+  M1_WalnutTimber: 'timber',
+  M1_DeckStone: 'deck',
+  WarmTravertine: 'stone',
+  CreamStonePBR_R8: 'stone',
+  MineralFacadePBR_R5: 'stone',
+  NaturalTimber: 'timber',
+  TimberCladdingPBR_R5: 'timber'
 };
+
+const INTERIOR_TOUR_STOPS = new Set([
+  'entry',
+  'living',
+  'dining',
+  'stair-ground',
+  'stair-upper',
+  'master'
+]);
+
+function inferMaterialFamily(name = '') {
+  if (MATERIAL_FAMILY_BY_NAME[name]) return MATERIAL_FAMILY_BY_NAME[name];
+  const lower = name.toLowerCase();
+  if (/(limestone|travertine|stone|mineralfacade|creamstone)/.test(lower)) return 'stone';
+  if (/(plaster|stucco)/.test(lower)) return 'plaster';
+  if (/(walnut|timber|wood)/.test(lower)) return 'timber';
+  if (/(deck|terrace)/.test(lower)) return 'deck';
+  return null;
+}
+
+function resolveRuntimeLighting(lightingMode, activeTourStopId, isFirstPerson) {
+  const interior = isFirstPerson && INTERIOR_TOUR_STOPS.has(activeTourStopId);
+  const landing = interior && activeTourStopId === 'stair-upper';
+
+  const exposureScale = landing ? 0.80 : interior ? 0.90 : 1;
+  const ambientScale = landing ? 0.82 : interior ? 0.90 : 1;
+  const hemisphereScale = landing ? 0.78 : interior ? 0.88 : 1;
+  const sunScale = landing ? 0.72 : interior ? 0.82 : 1;
+  const fillScale = landing ? 0.82 : interior ? 0.90 : 1;
+  const interiorScale = landing ? 1.15 : interior ? 1.08 : 1;
+
+  return {
+    profile: landing ? 'landing-adapted' : interior ? 'interior-adapted' : 'global',
+    exposure: (lightingMode?.exposure ?? 0.72) * exposureScale,
+    ambient: (lightingMode?.ambient ?? 0.62) * ambientScale,
+    hemisphere: (lightingMode?.hemisphere ?? 0.42) * hemisphereScale,
+    sun: (lightingMode?.sun ?? 1.65) * sunScale,
+    fill: (lightingMode?.fill ?? 0.18) * fillScale,
+    interior: (lightingMode?.interior ?? 1) * interiorScale
+  };
+}
 
 function buildFallbackMassing(scene, accentColor) {
   const group = new THREE.Group();
@@ -72,7 +122,7 @@ function applyMaterialConcept(root, selectedMaterial) {
     if (!object.isMesh || !object.material) return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     const nextMaterials = materials.map((source) => {
-      const family = MATERIAL_FAMILY_BY_NAME[source.name];
+      const family = inferMaterialFamily(source.name);
       const familyColor = family ? selectedMaterial.familyColors[family] : null;
       if (!familyColor) return source;
 
@@ -144,6 +194,7 @@ export default function VillaViewer({
     const touchLook = { active: false, pointerId: null, x: 0, y: 0 };
     const isTouchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     const isFirstPerson = tourMode && activeTourStopId !== 'overview';
+    const runtimeLighting = resolveRuntimeLighting(lightingMode, activeTourStopId, isFirstPerson);
 
     setModelState('loading');
     setFirstPersonReady(false);
@@ -162,15 +213,15 @@ export default function VillaViewer({
 
     const renderer = createRenderer(THREE, container);
     renderer.shadowMap.enabled = true;
-    renderer.toneMappingExposure = lightingMode?.exposure ?? 0.72;
+    renderer.toneMappingExposure = runtimeLighting.exposure;
     renderer.setClearColor(scene.background);
     renderer.domElement.style.touchAction = 'none';
 
     const { ambient, hemisphere, sun, fill } = createLights(THREE, scene);
-    ambient.intensity = lightingMode?.ambient ?? 0.62;
-    hemisphere.intensity = lightingMode?.hemisphere ?? 0.42;
-    sun.intensity = lightingMode?.sun ?? 1.65;
-    fill.intensity = lightingMode?.fill ?? 0.18;
+    ambient.intensity = runtimeLighting.ambient;
+    hemisphere.intensity = runtimeLighting.hemisphere;
+    sun.intensity = runtimeLighting.sun;
+    fill.intensity = runtimeLighting.fill;
 
     if (isFirstPerson && !isTouchDevice) {
       pointerLockControls = new PointerLockControls(camera, renderer.domElement);
@@ -211,7 +262,7 @@ export default function VillaViewer({
           THREE,
           scene,
           villaRoot,
-          lightingMode?.interior ?? 1
+          runtimeLighting.interior
         );
         setInteriorLightCount(interiorLightGroup.userData.fixtureCount ?? 0);
 
@@ -399,6 +450,7 @@ export default function VillaViewer({
 
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
   const isFirstPerson = tourMode && activeTourStopId !== 'overview';
+  const runtimeLightingProfile = resolveRuntimeLighting(lightingMode, activeTourStopId, isFirstPerson).profile;
 
   const setMobileMotion = (axis, value) => {
     mobileMotionRef.current = { ...mobileMotionRef.current, [axis]: value };
@@ -429,6 +481,7 @@ export default function VillaViewer({
           data-interior-light-count={interiorLightCount}
           data-imported-light-count={importedLightCount}
           data-light-engine="runtime-only"
+          data-lighting-profile={runtimeLightingProfile}
           data-lighting-mode={lightingMode?.name ?? 'Day'}
           data-material-mode={material?.id ?? 'default'}
           aria-label="Interactive Dubai luxury villa virtual tour prototype"
