@@ -32,6 +32,14 @@ function rootLocalOffsetToWorld(root, localOffset) {
   return offset.applyQuaternion(quaternion);
 }
 
+/**
+ * Resolve the navigation position for a tour stop.
+ *
+ * `cameraOffsetLocal` is legacy route-authoring data and intentionally remains
+ * part of the navigation point for stops that already use it. New visual-only
+ * composition offsets must use `presentationOffsetLocal` so a prettier camera
+ * cannot silently move a walk-graph endpoint.
+ */
 export function resolveTourPosition(root, stop) {
   const node = findTourNode(root, stop);
   if (!node) return null;
@@ -39,6 +47,15 @@ export function resolveTourPosition(root, stop) {
   node.getWorldPosition(position);
   if (stop.cameraOffsetLocal) {
     position.add(rootLocalOffsetToWorld(root, stop.cameraOffsetLocal));
+  }
+  return position;
+}
+
+function resolvePresentationPosition(root, stop) {
+  const position = resolveTourPosition(root, stop);
+  if (!position) return null;
+  if (stop.presentationOffsetLocal) {
+    position.add(rootLocalOffsetToWorld(root, stop.presentationOffsetLocal));
   }
   return position;
 }
@@ -78,7 +95,7 @@ export function placeFirstPersonCamera(camera, root, activeStopId) {
   const stop = TOUR_STOPS.find((item) => item.id === activeStopId);
   if (!stop) return false;
 
-  const position = resolveTourPosition(root, stop);
+  const position = resolvePresentationPosition(root, stop);
   if (!position) return false;
 
   if (stop.firstPersonFov) {
