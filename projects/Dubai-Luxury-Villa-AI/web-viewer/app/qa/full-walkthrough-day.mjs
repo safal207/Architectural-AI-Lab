@@ -36,6 +36,7 @@ async function waitForModel(page) {
 async function waitForStop(page, stop) {
   await page.waitForFunction((expected) => {
     const dataset = document.querySelector('.three-canvas')?.dataset;
+    const canvas = document.querySelector('.three-canvas canvas');
     return dataset?.tourStop === expected.id
       && dataset?.viewMode === 'first-person'
       && dataset?.lightingMode === 'Day'
@@ -45,26 +46,21 @@ async function waitForStop(page, stop) {
       && Number(dataset?.materialFamilyCount ?? 0) === 4
       && dataset?.walkGraph === 'ready'
       && dataset?.lightEngine === 'runtime-only'
-      && dataset?.modelState === 'loaded';
+      && dataset?.modelState === 'loaded'
+      && canvas?.dataset.qaCapture === 'preserved';
   }, stop, { timeout: 120_000 });
 }
 
-async function captureViewer(page, path) {
-  const viewer = page.locator('.viewer-panel');
-  await viewer.scrollIntoViewIfNeeded();
-  await page.waitForTimeout(450);
-  const box = await viewer.boundingBox();
-  check(box && box.width > 1 && box.height > 1, 'Viewer has no usable bounding box');
-  await page.screenshot({
-    path,
-    clip: {
-      x: Math.max(0, box.x),
-      y: Math.max(0, box.y),
-      width: box.width,
-      height: box.height
-    },
-    timeout: 60_000
-  });
+async function captureCanvas(page, path) {
+  await page.evaluate(() => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+  const dataUrl = await page.locator('.three-canvas canvas').evaluate((canvas) => canvas.toDataURL('image/png'));
+  check(dataUrl.startsWith('data:image/png;base64,'), 'Walkthrough canvas did not return PNG evidence');
+  const bytes = Buffer.from(dataUrl.slice('data:image/png;base64,'.length), 'base64');
+  check(bytes.length > 10_000, `Walkthrough evidence is unexpectedly small (${bytes.length} bytes)`);
+  await writeFile(path, bytes);
+  return bytes.length;
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -85,11 +81,10 @@ try {
   });
   page.on('pageerror', (error) => report.pageErrors.push(String(error)));
 
-  await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
-  await waitForModel(page);
-
-  await fastClick(page.getByRole('button', { name: 'Day', exact: true }));
-  await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.lightingMode === 'Day');
+  const captureUrl = new URL(baseUrl);
+  captureUrl.searchParams.set('qaCapture', '1');
+  captureUrl.searchParams.set('lighting', 'day');
+  await page.goto(captureUrl.toString(), { waitUntil: 'networkidle', timeout: 120_000 });
   await waitForModel(page);
 
   const tour = page.locator('.tour-experience');
@@ -115,7 +110,8 @@ try {
       interiorLights: Number(await canvas.getAttribute('data-interior-light-count') ?? 0),
       importedLights: Number(await canvas.getAttribute('data-imported-light-count') ?? 0),
       lightEngine: await canvas.getAttribute('data-light-engine'),
-      walkGraph: await canvas.getAttribute('data-walk-graph')
+      walkGraph: await canvas.getAttribute('data-walk-graph'),
+      evidenceBytes: 0
     };
 
     check(frame.lightingProfile === stop.lightingProfile, `${stop.id}: expected ${stop.lightingProfile}, got ${frame.lightingProfile}`);
@@ -124,8 +120,9 @@ try {
     check(frame.materialFamilyCount === 4, `${stop.id}: expected 4 material families, got ${frame.materialFamilyCount}`);
     check(frame.walkGraph === 'ready', `${stop.id}: walk graph is ${frame.walkGraph}`);
     check(frame.lightEngine === 'runtime-only', `${stop.id}: unexpected light engine ${frame.lightEngine}`);
+    check(frame.importedLights === 0, `${stop.id}: imported GLB lights leaked into browser (${frame.importedLights})`);
 
-    await captureViewer(page, `${outputDir}/${stop.file}`);
+    frame.evidenceBytes = await captureCanvas(page, `${outputDir}/${stop.file}`);
     report.frames.push(frame);
   }
 
