@@ -1,9 +1,9 @@
 {
   "version": "v0.4-interior3-feature-promotion",
-  "source_artifact_id": 10440601862,
+  "source_artifact_id": 10441748957,
   "viewer_asset": "projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.glb",
-  "bytes": 7933312,
-  "sha256": "15c8868e0a8c007209a034ee49b9c0b0ae4f322c71af2409aa194965aa6d37ae",
+  "bytes": 7987360,
+  "sha256": "b16f7e648f0d551326253b34b4235922ab0ba50d2742a4eb296c44118e97692f",
   "scope": "FEATURE_BRANCH_ONLY",
   "lighting_boundary": "BLENDER_PUNCTUAL_LIGHTS_STRIPPED_BROWSER_OWNS_RUNTIME_LIGHTING",
   "next_gate": "Upper Landing Bead Gate + Master Bedroom Bead Gate + First Person Tour QA + visual review",

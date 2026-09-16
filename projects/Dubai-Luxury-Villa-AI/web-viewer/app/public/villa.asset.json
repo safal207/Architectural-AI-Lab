@@ -10,12 +10,12 @@
     "life": "v0.3-life2 PASS / FROZEN",
     "interior": "v0.4-interior2 baseline",
     "upper_landing_repair": "v0.4-interior3 gated candidate",
-    "master_composition": "v0.4-interior3 quiet-luxury r5 layer",
+    "master_composition": "v0.4-interior3 quiet-luxury r6 bedding layer",
     "web_light_boundary": "Three.js owns runtime lighting; Blender punctual lights stripped from GLB"
   },
   "glb": {
-    "bytes": 7933312,
-    "sha256": "15c8868e0a8c007209a034ee49b9c0b0ae4f322c71af2409aa194965aa6d37ae",
+    "bytes": 7987360,
+    "sha256": "b16f7e648f0d551326253b34b4235922ab0ba50d2742a4eb296c44118e97692f",
     "version": 2
   },
   "room_anchors": [
@@ -46,9 +46,9 @@
     "first-person bounded route",
     "clear upper landing circulation candidate",
     "open master-suite threshold",
-    "quiet-luxury master feature wall rug bench and cove layer",
+    "quiet-luxury master feature wall rug bench and layered bedding",
+    "emissive cove without a browser point-light hotspot",
     "family-specific finish moods",
-    "human-scale 64 degree first-person FOV",
     "browser-owned Day Evening Night lighting without duplicated Blender punctual lights"
   ],
   "generator": "Native Blender 4.0.2 pipeline via GitHub Actions",

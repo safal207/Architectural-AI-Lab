@@ -13,19 +13,19 @@
     "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-interior3-upper-landing.png",
     "width": 1600,
     "height": 900,
-    "bytes": 1572815,
-    "sha256": "d011de2e44796806df179c8581d0422dd102c6af20111e3b8465dd593bb93c44"
+    "bytes": 1576278,
+    "sha256": "b4da4f55dc00c859f46bbdb58f5c27327a989dc567ba67ba50f677a5d484420b"
   },
   "glb": {
     "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior3.glb",
     "version": 2,
-    "bytes": 7933312,
-    "sha256": "15c8868e0a8c007209a034ee49b9c0b0ae4f322c71af2409aa194965aa6d37ae"
+    "bytes": 7987360,
+    "sha256": "b16f7e648f0d551326253b34b4235922ab0ba50d2742a4eb296c44118e97692f"
   },
   "blend": {
     "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior3.blend",
-    "bytes": 7726784,
-    "sha256": "0d2fa6314e0673ad407235b2d5e5253f16843f75d5ce5d12f99d948657e76a19"
+    "bytes": 7793632,
+    "sha256": "940d14b70432c78024176388c134d395ccb5a3d28ba13d25fad4ce9c3d426c06"
   },
   "claim_boundary": "Visual-tour root-cause repair only; not BIM, construction geometry or code-compliance evidence."
 }
