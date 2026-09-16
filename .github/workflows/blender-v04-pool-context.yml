@@ -1,0 +1,164 @@
+name: Blender v0.4 Pool Context Gate
+
+on:
+  push:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_pool_context.py'
+      - '.github/workflows/blender-v04-pool-context.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dubai-villa-v04-pool-context-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Blender and software rendering stack
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3-numpy libegl1 libgl1-mesa-dri libglx-mesa0 xvfb
+          blender --version | head -n 1
+
+      - name: Fetch CC0 Poly Haven maps used by frozen material baseline
+        run: |
+          set -euxo pipefail
+          A='projects/Dubai-Luxury-Villa-AI/assets/third-party/polyhaven'
+          mkdir -p "$A"
+          d(){ curl -L --fail --retry 3 --retry-delay 2 -o "$A/$1" "$2"; }
+          d toposcope_sunset_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/toposcope_sunset_2k.exr
+          d qwantani_dusk_2_puresky_2k.exr https://dl.polyhaven.org/file/ph-assets/HDRIs/exr/2k/qwantani_dusk_2_puresky_2k.exr
+          d synthetic_wood_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_diff_1k.jpg
+          d synthetic_wood_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_nor_gl_1k.jpg
+          d synthetic_wood_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/synthetic_wood/synthetic_wood_rough_1k.jpg
+          d beige_wall_001_diff_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg
+          d beige_wall_001_nor_gl_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_nor_gl_1k.jpg
+          d beige_wall_001_rough_1k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_rough_1k.jpg
+          d marble_01_diff_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_diff_2k.jpg
+          d marble_01_nor_gl_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_nor_gl_2k.jpg
+          d marble_01_rough_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_rough_2k.jpg
+
+      - name: Generate Pool Context v2 asset
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          xvfb-run -a -s '-screen 0 1600x900x24' \
+            blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_pool_context.py
+
+      - name: Validate visual-context artifact and frozen route boundary
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+          import struct
+
+          root = Path('projects/Dubai-Luxury-Villa-AI')
+          png = root / 'renders/villa-v0.4-pool-context.png'
+          glb = root / 'exports/villa-v0.4-pool-context.glb'
+          blend = root / 'exports/villa-v0.4-pool-context.blend'
+          for path in (png, glb, blend):
+              if not path.is_file() or path.stat().st_size == 0:
+                  raise SystemExit(f'missing Pool Context output: {path}')
+
+          raw_png = png.read_bytes()
+          width, height = struct.unpack('>II', raw_png[16:24])
+          if (width, height) != (1600, 900):
+              raise SystemExit(f'unexpected Pool Context render size: {width}x{height}')
+
+          raw = glb.read_bytes()
+          magic, version, length = struct.unpack_from('<4sII', raw, 0)
+          if magic != b'glTF' or version != 2 or length != len(raw):
+              raise SystemExit('invalid Pool Context GLB container')
+          json_length, json_type = struct.unpack_from('<II', raw, 12)
+          if json_type != 0x4E4F534A:
+              raise SystemExit('first Pool Context GLB chunk is not JSON')
+          doc = json.loads(raw[20:20 + json_length].decode('utf-8').rstrip('\x00 '))
+          nodes = {node.get('name') for node in doc.get('nodes', []) if node.get('name')}
+
+          stable_required = {
+              'tour_pool', 'infinity_lip',
+              'tour_stair_upper', 'upper_landing_side_wall_v04_r4',
+              'master_door_open_v04_r4', 'upper_corridor_bridge_v04_r3',
+              'master_bench_base_v04_r5', 'master_headboard_v04'
+          }
+          context_required = {
+              'pool_context_ground_v2',
+              'pool_context_planter_edge_v2',
+              'pool_context_soil_band_v2',
+              'pool_context_shrub_v2_00',
+              'pool_context_tree_v2_left_trunk',
+              'pool_context_tree_v2_right_trunk',
+              'pool_context_dune_v2_mid',
+              'pool_context_distant_v2_00'
+          }
+          missing = sorted((stable_required | context_required) - nodes)
+          if missing:
+              raise SystemExit(f'missing Pool Context nodes: {missing}')
+          if 'upper_stone_spine' in nodes:
+              raise SystemExit('stable Interior3 blocker upper_stone_spine regressed')
+          if 'master_door_v04' in nodes:
+              raise SystemExit('closed master door regressed')
+
+          context_nodes = sorted(name for name in nodes if name.startswith('pool_context_'))
+          if len(context_nodes) < 35:
+              raise SystemExit(f'Pool Context v2 unexpectedly sparse: {len(context_nodes)} nodes')
+
+          used = set(doc.get('extensionsUsed') or [])
+          top_extensions = doc.get('extensions') or {}
+          node_light_refs = [
+              node.get('name')
+              for node in doc.get('nodes', [])
+              if 'KHR_lights_punctual' in (node.get('extensions') or {})
+          ]
+          if 'KHR_lights_punctual' in used or 'KHR_lights_punctual' in top_extensions or node_light_refs:
+              raise SystemExit(f'punctual lights leaked into Pool Context web GLB: {node_light_refs}')
+
+          report = {
+              'version': 'v0.4-pool-context-v2',
+              'status': 'RENDERED_NOT_YET_PROMOTED',
+              'source': 'stable v0.4 Interior3 + isolated context layer',
+              'route_boundary': 'tour_pool frozen; context begins beyond infinity-edge envelope',
+              'context_node_count': len(context_nodes),
+              'render': {
+                  'file': str(png),
+                  'width': width,
+                  'height': height,
+                  'bytes': len(raw_png),
+                  'sha256': hashlib.sha256(raw_png).hexdigest(),
+              },
+              'glb': {
+                  'file': str(glb),
+                  'version': version,
+                  'bytes': len(raw),
+                  'sha256': hashlib.sha256(raw).hexdigest(),
+              },
+              'blend': {
+                  'file': str(blend),
+                  'bytes': blend.stat().st_size,
+                  'sha256': hashlib.sha256(blend.read_bytes()).hexdigest(),
+              },
+              'claim_boundary': 'Portfolio visualization/context proof only; not BIM, construction, landscaping or code-compliance documentation.'
+          }
+          receipt = root / 'validation/v0.4-pool-context-receipt.json'
+          receipt.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(report, indent=2))
+          PY
+
+      - name: Upload Pool Context v2 review packet
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-v0.4-pool-context-gate
+          path: |
+            projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-pool-context.png
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-pool-context.glb
+            projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-pool-context.blend
+            projects/Dubai-Luxury-Villa-AI/validation/v0.4-pool-context-receipt.json
+          if-no-files-found: error
+          retention-days: 14
