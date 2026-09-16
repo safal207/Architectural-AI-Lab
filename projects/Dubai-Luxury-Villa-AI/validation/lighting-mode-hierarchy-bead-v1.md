@@ -10,21 +10,9 @@ The issue was not the camera. The old browser presets increased the runtime inte
 
 Lighting-only rebalance. No camera, geometry, material-family, walk-graph or fixture-position changes in this bead.
 
-## First tuning pass result
-
-The first rebalance successfully made Night darker and readable, but fresh browser evidence still showed Evening slightly brighter than Day across the Master Bedroom canvas. That was not accepted as the final hierarchy.
-
-This second pass increases the natural/global Day separation and reduces the Evening/Night local-light contribution further.
-
-## Current candidate mode intent
+## Final mode hierarchy
 
 ### Day
-
-- strongest natural/global illumination;
-- local fixtures are supportive, not dominant;
-- pale materials retain structure instead of washing out.
-
-Preset:
 
 - exposure `0.82`
 - ambient `0.78`
@@ -35,12 +23,6 @@ Preset:
 
 ### Evening
 
-- clearly darker than Day;
-- warmer local fixtures remain visible;
-- enough ambient structure remains to read architecture.
-
-Preset:
-
 - exposure `0.52`
 - ambient `0.22`
 - hemisphere `0.13`
@@ -50,12 +32,6 @@ Preset:
 
 ### Night
 
-- darkest global state;
-- local fixtures remain visible without making the whole room brighter than Evening;
-- walls, bed and circulation route stay readable.
-
-Preset:
-
 - exposure `0.40`
 - ambient `0.08`
 - hemisphere `0.045`
@@ -63,22 +39,41 @@ Preset:
 - fill `0.02`
 - interior `0.18`
 
-## Visual acceptance
+## Evidence
 
-Use the frozen Master Bedroom camera composition (`tour_master` position, `master_headboard_v04` target, FOV `56`) and inspect fresh browser evidence for all three modes.
+Source head: `4a7fca490df27b8d00f28c425883d497cb5ad083`
 
-PASS only if:
+Master Bedroom workflow run: `35078325360`
+Artifact: `10439626242`
+Automated result: **PASS**
 
-1. Day is perceptually the brightest/natural state.
-2. Evening is visibly darker than Day but retains a warm residential atmosphere.
-3. Night is visibly darker than Evening and does not look like a brighter duplicate.
-4. Bed/headboard remains readable in all modes.
-5. No mode clips large pale surfaces into featureless white.
-6. Night does not crush the room into black.
-7. Walk graph, material-response pipeline and browser runtime remain clean.
+The fixed camera composition remained `tour_master` -> `master_headboard_v04`, FOV `56`, so the three lighting frames are directly comparable.
 
-The review may use image statistics as supporting evidence, but the final call is visual: a local lamp hotspot must not be mistaken for the whole mode being correctly exposed.
+Supporting canvas luminance statistics from the fresh browser captures:
 
-## Next after PASS
+| Mode | Mean luminance | Median | Near-black pixels |
+| --- | ---: | ---: | ---: |
+| Day | `87.5` | `98` | `20.4%` |
+| Evening | `74.3` | `75` | `23.0%` |
+| Night | `57.6` | `55` | `31.7%` |
 
-Isolate textured walnut. `M2_WalnutTimber` already contains a diffuse map; the browser currently applies a dark family tint on top of it. If the wardrobe remains near-black after lighting hierarchy is corrected, fix that as a separate material bead rather than brightening the whole room.
+These statistics are supporting evidence only; the visual frames were also inspected.
+
+## Visual review
+
+**PASS**
+
+- Day is now the brightest/natural state without large white clipping;
+- Evening is clearly darker while retaining warm local light;
+- Night is darker than Evening but still preserves the bed, wall planes and route;
+- the three modes no longer look like progressively brighter duplicates;
+- material response, walk graph and browser runtime remain stable;
+- console/page errors remain zero.
+
+The later walnut colour-factor repair also retained this ordering, so the lighting hierarchy is considered stable.
+
+## Status
+
+**VISUAL PASS — freeze the Day / Evening / Night hierarchy.**
+
+Do not use global exposure changes to solve future local room defects. The next scene-level review should adjust local fixture hierarchy or composition only where fresh walkthrough evidence justifies it.
