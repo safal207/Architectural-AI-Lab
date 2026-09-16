@@ -84,6 +84,22 @@ function applyMaterialConcept(root, selectedMaterial) {
   });
 }
 
+function neutralizeImportedLights(root) {
+  let count = 0;
+  root?.traverse((object) => {
+    if (!object.isLight) return;
+    count += 1;
+    object.intensity = 0;
+    object.visible = false;
+    object.castShadow = false;
+    object.userData = {
+      ...object.userData,
+      disabledForRuntimeLighting: true
+    };
+  });
+  return count;
+}
+
 function disposeObject(root) {
   root?.traverse((object) => {
     if (!object.isMesh) return;
@@ -106,6 +122,7 @@ export default function VillaViewer({
   const [firstPersonReady, setFirstPersonReady] = useState(false);
   const [walkGraphReady, setWalkGraphReady] = useState(false);
   const [interiorLightCount, setInteriorLightCount] = useState(0);
+  const [importedLightCount, setImportedLightCount] = useState(0);
   const [walkStatus, setWalkStatus] = useState({ label: 'Tour anchor', floor: null, edgeType: null });
 
   useEffect(() => {
@@ -132,6 +149,7 @@ export default function VillaViewer({
     setFirstPersonReady(false);
     setWalkGraphReady(false);
     setInteriorLightCount(0);
+    setImportedLightCount(0);
 
     const scene = createScene(THREE);
     scene.background = new THREE.Color(lightingMode?.background ?? '#bfd0d7');
@@ -181,6 +199,9 @@ export default function VillaViewer({
             object.receiveShadow = true;
           }
         });
+
+        const disabledImportedLights = neutralizeImportedLights(villaRoot);
+        setImportedLightCount(disabledImportedLights);
 
         applyMaterialConcept(villaRoot, material);
         scene.add(villaRoot);
@@ -406,6 +427,8 @@ export default function VillaViewer({
           data-tour-stop={activeTourStopId}
           data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
           data-interior-light-count={interiorLightCount}
+          data-imported-light-count={importedLightCount}
+          data-light-engine="runtime-only"
           data-lighting-mode={lightingMode?.name ?? 'Day'}
           data-material-mode={material?.id ?? 'default'}
           aria-label="Interactive Dubai luxury villa virtual tour prototype"
