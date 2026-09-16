@@ -10,11 +10,16 @@ import InvestorMode from './InvestorMode';
 import { lightingModes } from './DayNightMode';
 import { TOUR_STOPS } from './tourData';
 
+function initialLightingMode() {
+  const requested = new URLSearchParams(window.location.search).get('lighting');
+  return requested && lightingModes[requested] ? requested : 'evening';
+}
+
 export default function Dashboard() {
   const rooms = roomsData.rooms ?? [];
   const [selectedRoom, setSelectedRoom] = useState(rooms[0] ?? null);
   const [material, setMaterial] = useState(null);
-  const [lightingMode, setLightingMode] = useState('evening');
+  const [lightingMode, setLightingMode] = useState(initialLightingMode);
   const [tourMode, setTourMode] = useState(false);
   const [activeTourStopId, setActiveTourStopId] = useState('overview');
   const activeLighting = lightingModes[lightingMode] ?? lightingModes.day;
