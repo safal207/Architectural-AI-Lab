@@ -44,7 +44,7 @@ jobs:
           d marble_01_nor_gl_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_nor_gl_2k.jpg
           d marble_01_rough_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_rough_2k.jpg
 
-      - name: Generate Pool Context v2 asset
+      - name: Generate Pool Context v3 asset
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
@@ -89,14 +89,15 @@ jobs:
               'master_bench_base_v04_r5', 'master_headboard_v04'
           }
           context_required = {
-              'pool_context_ground_v2',
-              'pool_context_planter_edge_v2',
-              'pool_context_soil_band_v2',
-              'pool_context_shrub_v2_00',
-              'pool_context_tree_v2_left_trunk',
-              'pool_context_tree_v2_right_trunk',
-              'pool_context_dune_v2_mid',
-              'pool_context_distant_v2_00'
+              'pool_context_ground_v3',
+              'pool_context_planter_edge_v3',
+              'pool_context_soil_band_v3',
+              'pool_context_agaves_v3',
+              'pool_context_grasses_v3',
+              'pool_context_horizon_v3_left',
+              'pool_context_horizon_v3_right',
+              'pool_context_pavilion_v3_left',
+              'pool_context_pavilion_v3_right'
           }
           missing = sorted((stable_required | context_required) - nodes)
           if missing:
@@ -107,8 +108,10 @@ jobs:
               raise SystemExit('closed master door regressed')
 
           context_nodes = sorted(name for name in nodes if name.startswith('pool_context_'))
-          if len(context_nodes) < 35:
-              raise SystemExit(f'Pool Context v2 unexpectedly sparse: {len(context_nodes)} nodes')
+          if len(context_nodes) > 12:
+              raise SystemExit(f'Pool Context v3 exceeded joined-mesh budget: {len(context_nodes)} context nodes')
+          if len(context_nodes) < 9:
+              raise SystemExit(f'Pool Context v3 unexpectedly sparse: {len(context_nodes)} context nodes')
 
           used = set(doc.get('extensionsUsed') or [])
           top_extensions = doc.get('extensions') or {}
@@ -121,10 +124,11 @@ jobs:
               raise SystemExit(f'punctual lights leaked into Pool Context web GLB: {node_light_refs}')
 
           report = {
-              'version': 'v0.4-pool-context-v2',
+              'version': 'v0.4-pool-context-v3',
               'status': 'RENDERED_NOT_YET_PROMOTED',
-              'source': 'stable v0.4 Interior3 + isolated context layer',
-              'route_boundary': 'tour_pool frozen; context begins beyond infinity-edge envelope',
+              'source': 'stable v0.4 Interior3 + isolated authored desert-garden layer',
+              'route_boundary': 'tour_pool frozen; all visible context remains beyond infinity-edge envelope',
+              'runtime_budget': 'agave and ribbon-grass leaves joined into two mesh groups',
               'context_node_count': len(context_nodes),
               'render': {
                   'file': str(png),
@@ -151,7 +155,7 @@ jobs:
           print(json.dumps(report, indent=2))
           PY
 
-      - name: Upload Pool Context v2 review packet
+      - name: Upload Pool Context v3 review packet
         uses: actions/upload-artifact@v4
         with:
           name: dubai-villa-v0.4-pool-context-gate
