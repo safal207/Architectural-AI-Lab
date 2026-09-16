@@ -90,12 +90,13 @@ export const TOUR_STOPS = [
     title: 'Pool terrace',
     floor: 1,
     nodeName: 'tour_pool',
-    targetNodeName: 'infinity_lip',
-    targetOffsetLocal: [2.8, 0, 0],
+    cameraOffsetLocal: [7.0, 1.4, 0],
+    targetNodeName: 'ground_front_header',
+    firstPersonFov: 58,
     roomId: 'pool-terrace',
     fallbackNodeName: 'pool_terrace',
     feature: 'outdoor',
-    description: 'Finish the tour from the existing terrace eye point with an off-axis aim that stays on the authored infinity lip, creating perspective across the pool without moving the camera anchor.'
+    description: 'Finish from the dry side deck with the pool in the foreground and the villa facade as the architectural destination.'
   }
 ];
 
