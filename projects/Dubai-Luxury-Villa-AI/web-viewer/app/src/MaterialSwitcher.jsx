@@ -4,36 +4,36 @@ const MATERIALS = [
   {
     id: "warm-limestone",
     name: "Warm Limestone",
-    description: "Warm stone, muted ivory plaster and walnut stay visibly separate under interior lighting.",
+    description: "Warm stone, muted ivory plaster and source-textured walnut stay visibly separate under interior lighting.",
     swatch: "#b29b80",
     familyColors: {
       stone: "#9f896f",
       plaster: "#c6bdaf",
-      timber: "#523322",
+      timber: "#d7bda6",
       deck: "#7f7061"
     }
   },
   {
     id: "sandstone",
     name: "Sandstone Warmth",
-    description: "Travertine and sand tones with darker timber and quieter plaster for a calm residential presentation.",
+    description: "Travertine and sand tones with warm walnut texture and quieter plaster for a calm residential presentation.",
     swatch: "#a98461",
     familyColors: {
       stone: "#9f7958",
       plaster: "#b8a68f",
-      timber: "#583722",
+      timber: "#cfae90",
       deck: "#745f50"
     }
   },
   {
     id: "graphite-mineral",
     name: "Graphite Mineral",
-    description: "Restrained mineral contrast with warm charcoal stone while plaster and timber keep their own identity.",
+    description: "Restrained mineral contrast while the walnut diffuse texture keeps its own dark grain instead of receiving a second near-black tint.",
     swatch: "#5c5751",
     familyColors: {
       stone: "#4d4944",
       plaster: "#8f8a83",
-      timber: "#41291f",
+      timber: "#b69c8c",
       deck: "#55504b"
     }
   }
@@ -76,7 +76,7 @@ export default function MaterialSwitcher({ onChange }) {
         ))}
       </div>
       <p className="material-switcher__note">
-        Presentation mood control. Presets preserve source PBR maps while the viewer applies restrained family-specific roughness and normal response for stone, plaster, timber and deck.
+        Presentation mood control. Presets preserve source PBR maps while the viewer applies restrained family-specific roughness and normal response for stone, plaster, timber and deck. Textured walnut uses a light warm multiplier so the source grain supplies the dark value instead of being darkened twice.
       </p>
     </section>
   );
