@@ -44,14 +44,14 @@ jobs:
           d marble_01_nor_gl_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_nor_gl_2k.jpg
           d marble_01_rough_2k.jpg https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/marble_01/marble_01_rough_2k.jpg
 
-      - name: Generate v0.4 Interior3 upper circulation asset
+      - name: Generate v0.4 Interior3 + pool context asset
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           xvfb-run -a -s '-screen 0 1600x900x24' \
             blender --background --python projects/Dubai-Luxury-Villa-AI/blender/scripts/run_v04_interior3.py
 
-      - name: Validate Interior3 output and root-cause repair
+      - name: Validate Interior3 repair and pool-context boundary
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -60,17 +60,27 @@ jobs:
           import struct
 
           root = Path('projects/Dubai-Luxury-Villa-AI')
-          png = root / 'renders/villa-v0.4-interior3-upper-landing.png'
+          upper_png = root / 'renders/villa-v0.4-interior3-upper-landing.png'
+          pool_png = root / 'renders/villa-v0.4-interior3-pool-context.png'
           glb = root / 'exports/villa-v0.4-interior3.glb'
           blend = root / 'exports/villa-v0.4-interior3.blend'
-          for path in (png, glb, blend):
+          for path in (upper_png, pool_png, glb, blend):
               if not path.is_file() or path.stat().st_size == 0:
                   raise SystemExit(f'missing output: {path}')
 
-          raw_png = png.read_bytes()
-          width, height = struct.unpack('>II', raw_png[16:24])
-          if (width, height) != (1600, 900):
-              raise SystemExit(f'unexpected render size: {width}x{height}')
+          renders = {}
+          for label, path in (('upper_landing', upper_png), ('pool_context', pool_png)):
+              raw_png = path.read_bytes()
+              width, height = struct.unpack('>II', raw_png[16:24])
+              if (width, height) != (1600, 900):
+                  raise SystemExit(f'unexpected {label} render size: {width}x{height}')
+              renders[label] = {
+                  'file': str(path),
+                  'width': width,
+                  'height': height,
+                  'bytes': len(raw_png),
+                  'sha256': hashlib.sha256(raw_png).hexdigest(),
+              }
 
           raw = glb.read_bytes()
           magic, version, length = struct.unpack_from('<4sII', raw, 0)
@@ -86,31 +96,45 @@ jobs:
               'tour_stair_upper', 'tour_look_stair_upper',
               'upper_landing_side_wall_v04_r4',
               'master_door_open_v04_r4', 'master_door_handle_open_v04_r4',
-              'stair_landing_v04', 'upper_corridor_bridge_v04_r3'
+              'stair_landing_v04', 'upper_corridor_bridge_v04_r3',
+              'tour_pool', 'infinity_lip',
+              'pool_context_desert_ground_v04', 'pool_context_planter_v04',
+              'pool_context_shrub_00',
+              'pool_context_tree_left_trunk', 'pool_context_tree_right_trunk',
+              'pool_context_distant_00'
           }
           missing = sorted(required - nodes)
           if missing:
-              raise SystemExit(f'missing Interior3 nodes: {missing}')
+              raise SystemExit(f'missing Interior3/context nodes: {missing}')
           if 'upper_stone_spine' in nodes:
               raise SystemExit('root-cause blocker upper_stone_spine still exists')
           if 'master_door_v04' in nodes:
               raise SystemExit('closed master door still exists')
 
+          context_nodes = sorted(name for name in nodes if name.startswith('pool_context_'))
+          if len(context_nodes) < 15:
+              raise SystemExit(f'pool context unexpectedly sparse: {len(context_nodes)} nodes')
+
           report = {
-              'version': 'v0.4-interior3',
-              'stage': 'UPPER_CIRCULATION_ROOT_CAUSE_REPAIR',
+              'version': 'v0.4-interior3-pool-context-spike',
+              'stage': 'UPPER_CIRCULATION_AND_POOL_CONTEXT',
               'status': 'RENDERED_NOT_YET_PROMOTED',
               'repairs': [
                   'removed solid upper_stone_spine from stair/landing circulation volume',
                   'added thin side boundary outside walking envelope',
                   'opened master door 90 degrees inward',
-                  're-authored upper landing camera and look target',
-                  'asserted landing camera clearance before export'
+                  'asserted landing camera clearance before export',
+                  'kept tour_pool anchor frozen at authored walkable position',
+                  'added low-poly landscape only beyond the infinity-edge envelope',
+                  'added restrained distant massing for depth without turning the villa into a city scene'
               ],
-              'render': {
-                  'file': str(png), 'width': width, 'height': height,
-                  'bytes': len(raw_png), 'sha256': hashlib.sha256(raw_png).hexdigest()
+              'pool_context': {
+                  'node_count': len(context_nodes),
+                  'nodes': context_nodes,
+                  'navigation_anchor': 'tour_pool unchanged',
+                  'boundary': 'vertical context begins beyond y=11.72; infinity lip remains y=11.40'
               },
+              'renders': renders,
               'glb': {
                   'file': str(glb), 'version': version, 'bytes': len(raw),
                   'sha256': hashlib.sha256(raw).hexdigest()
@@ -119,19 +143,20 @@ jobs:
                   'file': str(blend), 'bytes': blend.stat().st_size,
                   'sha256': hashlib.sha256(blend.read_bytes()).hexdigest()
               },
-              'claim_boundary': 'Visual-tour root-cause repair only; not BIM, construction geometry or code-compliance evidence.'
+              'claim_boundary': 'Portfolio visualization/context proof only; not BIM, construction geometry, landscaping documentation or code-compliance evidence.'
           }
           out = root / 'validation/v0.4-interior3-receipt.json'
           out.write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
           print(json.dumps(report, indent=2))
           PY
 
-      - name: Upload Interior3 review packet
+      - name: Upload Interior3 + pool-context review packet
         uses: actions/upload-artifact@v4
         with:
           name: dubai-villa-v0.4-interior3-gate
           path: |
             projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-interior3-upper-landing.png
+            projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-interior3-pool-context.png
             projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior3.glb
             projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior3.blend
             projects/Dubai-Luxury-Villa-AI/validation/v0.4-interior3-receipt.json
