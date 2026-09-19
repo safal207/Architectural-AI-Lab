@@ -1,0 +1,71 @@
+name: Material Micro-Contrast Gate
+
+on:
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/VillaViewer.jsx'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/MaterialSwitcher.jsx'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/three/**'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/material-microcontrast-bead.mjs'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/material-microcontrast-bead-v1.md'
+      - '.github/workflows/material-microcontrast-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: material-microcontrast-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  material-microcontrast:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build viewer
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-material-microcontrast.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/villa-material-microcontrast.log
+          exit 1
+
+      - name: Capture material micro-contrast bead
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-material-microcontrast-output
+        run: node qa/material-microcontrast-bead.mjs
+
+      - name: Upload material micro-contrast evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-material-microcontrast-bead
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-material-microcontrast-output
+          if-no-files-found: warn
+          retention-days: 14

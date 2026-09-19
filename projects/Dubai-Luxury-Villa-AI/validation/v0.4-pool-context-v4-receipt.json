@@ -1,0 +1,27 @@
+{
+  "version": "v0.4-pool-context-v4",
+  "status": "RENDERED_NOT_YET_PROMOTED",
+  "route_boundary": "tour_pool remains Explore authority; tour_present_pool is Guided-only",
+  "presentation_nodes": [
+    "tour_present_pool",
+    "tour_present_look_pool"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-pool-context-v4.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1924144,
+    "sha256": "5f1d8dbc0f670e8927d8bb14634cbbe0a672dbdc241b6282526eb80be06b7123"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-pool-context-v4.glb",
+    "bytes": 8613156,
+    "sha256": "4f3e2868b532d1e3ea50e83aeb9a696e3c1f6484b38b2067db4973b57e66d115"
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-pool-context-v4.blend",
+    "bytes": 8110640,
+    "sha256": "96889d1b2e1ae89e8c701c3b5cd58feb5a8f88e94b6648003992d409f7cef781"
+  },
+  "claim_boundary": "Portfolio visualization only; not BIM/construction/landscape documentation."
+}

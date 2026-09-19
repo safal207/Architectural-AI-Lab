@@ -1,0 +1,64 @@
+name: Master Bedroom Bead Gate
+
+on:
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/master-bedroom-composition-bead-v1.md'
+      - '.github/workflows/master-bedroom-bead-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  master-bedroom-bead:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build viewer
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-master-bedroom.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/villa-master-bedroom.log
+          exit 1
+
+      - name: Capture Master Bedroom composition bead
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-master-bedroom-bead-output
+        run: node qa/master-bedroom-bead.mjs
+
+      - name: Upload Master Bedroom evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-master-bedroom-bead
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-master-bedroom-bead-output
+          if-no-files-found: warn
+          retention-days: 14

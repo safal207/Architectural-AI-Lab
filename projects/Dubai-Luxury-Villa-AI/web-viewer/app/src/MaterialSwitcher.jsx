@@ -1,28 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const MATERIALS = [
   {
-    id: "classic-marble",
-    name: "Classic Marble",
-    description: "Light stone palette for a premium interior presentation.",
-    swatch: "#e8e1d6"
+    id: "warm-limestone",
+    name: "Warm Limestone",
+    description: "Warm stone, muted ivory plaster and source-textured walnut stay visibly separate under interior lighting.",
+    swatch: "#b29b80",
+    familyColors: {
+      stone: "#9f896f",
+      plaster: "#c6bdaf",
+      timber: "#d7bda6",
+      deck: "#7f7061"
+    }
   },
   {
-    id: "warm-wood",
-    name: "Warm Wood",
-    description: "Natural timber accents for a softer residential atmosphere.",
-    swatch: "#a8784f"
+    id: "sandstone",
+    name: "Sandstone Warmth",
+    description: "Travertine and sand tones with warm walnut texture and quieter plaster for a calm residential presentation.",
+    swatch: "#a98461",
+    familyColors: {
+      stone: "#9f7958",
+      plaster: "#b8a68f",
+      timber: "#cfae90",
+      deck: "#745f50"
+    }
   },
   {
-    id: "dark-stone",
-    name: "Dark Stone",
-    description: "Graphite stone surfaces for an evening luxury concept.",
-    swatch: "#3d4147"
+    id: "graphite-mineral",
+    name: "Graphite Mineral",
+    description: "Restrained mineral contrast while the walnut diffuse texture keeps its own dark grain instead of receiving a second near-black tint.",
+    swatch: "#5c5751",
+    familyColors: {
+      stone: "#4d4944",
+      plaster: "#8f8a83",
+      timber: "#b69c8c",
+      deck: "#55504b"
+    }
   }
 ];
 
 export default function MaterialSwitcher({ onChange }) {
   const [activeId, setActiveId] = useState(MATERIALS[0].id);
+
+  useEffect(() => {
+    onChange?.(MATERIALS[0]);
+  }, [onChange]);
 
   function select(material) {
     setActiveId(material.id);
@@ -30,8 +52,8 @@ export default function MaterialSwitcher({ onChange }) {
   }
 
   return (
-    <section className="material-switcher" aria-label="Material variants">
-      <h2>Material Variants</h2>
+    <section className="material-switcher" aria-label="Material finish moods">
+      <h2>Finish Moods</h2>
       <div className="material-switcher__options">
         {MATERIALS.map((material) => (
           <button
@@ -54,7 +76,7 @@ export default function MaterialSwitcher({ onChange }) {
         ))}
       </div>
       <p className="material-switcher__note">
-        Presentation control: only the allow-listed v0.3 architectural finish materials are tinted. Glass, water, metal and Life-stage landscape materials remain protected.
+        Presentation mood control. Presets preserve source PBR maps while the viewer applies restrained family-specific roughness and normal response for stone, plaster, timber and deck. Textured walnut uses a light warm multiplier so the source grain supplies the dark value instead of being darkened twice.
       </p>
     </section>
   );

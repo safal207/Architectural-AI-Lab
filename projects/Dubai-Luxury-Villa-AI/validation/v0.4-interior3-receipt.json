@@ -1,0 +1,31 @@
+{
+  "version": "v0.4-interior3",
+  "stage": "UPPER_CIRCULATION_ROOT_CAUSE_REPAIR",
+  "status": "RENDERED_NOT_YET_PROMOTED",
+  "repairs": [
+    "removed solid upper_stone_spine from stair/landing circulation volume",
+    "added thin side boundary outside walking envelope",
+    "opened master door 90 degrees inward",
+    "re-authored upper landing camera and look target",
+    "asserted landing camera clearance before export"
+  ],
+  "render": {
+    "file": "projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-interior3-upper-landing.png",
+    "width": 1600,
+    "height": 900,
+    "bytes": 1576278,
+    "sha256": "b4da4f55dc00c859f46bbdb58f5c27327a989dc567ba67ba50f677a5d484420b"
+  },
+  "glb": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior3.glb",
+    "version": 2,
+    "bytes": 7987360,
+    "sha256": "b16f7e648f0d551326253b34b4235922ab0ba50d2742a4eb296c44118e97692f"
+  },
+  "blend": {
+    "file": "projects/Dubai-Luxury-Villa-AI/exports/villa-v0.4-interior3.blend",
+    "bytes": 7793632,
+    "sha256": "940d14b70432c78024176388c134d395ccb5a3d28ba13d25fad4ce9c3d426c06"
+  },
+  "claim_boundary": "Visual-tour root-cause repair only; not BIM, construction geometry or code-compliance evidence."
+}

@@ -1,0 +1,124 @@
+:root {
+  --bg-0: #071017;
+  --bg-1: #0d1a22;
+  --bg-2: #132631;
+  --line: #263945;
+  --line-soft: rgba(212, 180, 131, .18);
+  --text-muted: #9aadb7;
+  --accent: #d4b483;
+}
+
+body {
+  background:
+    radial-gradient(circle at 80% 0%, rgba(48, 83, 105, .14), transparent 28%),
+    linear-gradient(180deg, var(--bg-0) 0%, #0a141b 100%);
+}
+
+.sales-hero {
+  border-color: #21323d;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .22);
+}
+
+.case-story article,
+.panel,
+.lower-grid > section {
+  border-color: #21343f;
+  background: rgba(13, 26, 34, .84);
+}
+
+.viewer-panel {
+  border-color: #2d4350;
+  background:
+    radial-gradient(circle at 68% 28%, rgba(87, 116, 131, .17), transparent 42%),
+    #09141b;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .018);
+}
+
+.three-canvas {
+  border-color: #334c59;
+  background: #182630;
+  box-shadow: 0 18px 56px rgba(0, 0, 0, .22);
+}
+
+.viewer-heading > p,
+.viewer-note,
+.case-story article > p:last-child,
+.sales-hero__lead {
+  color: var(--text-muted);
+}
+
+button {
+  border-color: #2e4551;
+  background: #0f2029;
+}
+
+button:hover,
+button.is-active,
+button[aria-pressed="true"] {
+  border-color: rgba(212, 180, 131, .72);
+  background: #172a34;
+}
+
+.material-switcher__options button,
+.rooms-panel button {
+  border-color: #29404c;
+  background: #0d1b23;
+}
+
+.material-switcher__options button[aria-pressed="true"],
+.rooms-panel button:hover {
+  border-color: var(--accent);
+  background: #152832;
+}
+
+.tour-experience,
+.house-plan-card,
+.client-graph-card {
+  border-color: #263b47;
+}
+
+.walkthrough-feature {
+  border-color: #293f4b;
+  background: #0d1c24;
+}
+
+.client-graph li:not(.is-active) button {
+  background: #0b171f;
+}
+
+.client-graph li.is-active button {
+  border-color: var(--accent);
+  background: linear-gradient(90deg, rgba(212, 180, 131, .13), #13242c 68%);
+}
+
+.house-plan {
+  background:
+    linear-gradient(rgba(212,180,131,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212,180,131,.035) 1px, transparent 1px),
+    #09151c;
+  background-size: 30px 30px;
+}
+
+.house-plan__zone {
+  background: rgba(20, 39, 49, .88);
+}
+
+.house-plan__zone:hover,
+.house-plan__zone.is-active {
+  background: rgba(63, 53, 40, .82);
+}
+
+.first-person-hud {
+  border-color: rgba(212, 180, 131, .34);
+  background: rgba(5, 14, 19, .72);
+}
+
+@media (min-width: 1101px) {
+  .viewer-panel {
+    min-height: 600px;
+  }
+
+  .three-canvas {
+    height: 500px;
+  }
+}

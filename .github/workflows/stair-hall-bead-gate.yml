@@ -1,0 +1,69 @@
+name: Stair Hall Bead Gate
+
+on:
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/tourData.js'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/walkthroughEngine.js'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/stair-hall-bead.mjs'
+      - '.github/workflows/stair-hall-bead-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stair-hall-bead-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  stair-hall-bead:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build viewer
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-stair-hall.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/villa-stair-hall.log
+          exit 1
+
+      - name: Capture Stair Hall bead
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-stair-hall-bead-output
+        run: node qa/stair-hall-bead.mjs
+
+      - name: Upload Stair Hall evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-stair-hall-bead
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-stair-hall-bead-output
+          if-no-files-found: warn
+          retention-days: 14
