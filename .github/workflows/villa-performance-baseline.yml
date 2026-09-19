@@ -1,9 +1,7 @@
 name: Villa Performance Baseline
 
 on:
-  push:
-    branches:
-      - 'spike/villa-performance-v1'
+  pull_request:
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
       - '.github/workflows/villa-performance-baseline.yml'
