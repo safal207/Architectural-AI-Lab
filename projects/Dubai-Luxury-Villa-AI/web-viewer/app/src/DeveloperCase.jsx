@@ -3,7 +3,7 @@ const PILOT_URL = 'https://github.com/safal207/Architectural-AI-Lab/issues/new?t
 const PROOFS = [
   ['Blender-native', 'Headless generation'],
   ['GLB 2.0', 'SHA-256 verified'],
-  ['4 gates', 'Form → Material → Light → Life'],
+  ['Guided + Explore', 'Presentation + free walk'],
   ['Live QA', 'Desktop + mobile']
 ];
 

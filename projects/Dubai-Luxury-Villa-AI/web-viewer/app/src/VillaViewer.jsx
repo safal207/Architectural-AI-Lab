@@ -865,7 +865,7 @@ export default function VillaViewer({
       </div>
 
       <p className="viewer-note">
-        Guided mode may use a presentation camera that is independent from the route. Explore always starts on the authored walk anchor, so a stronger hero frame cannot introduce a navigation snap or hidden graph distortion.
+        Guided highlights the strongest presentation views. Explore lets you move through the same villa from reliable walk points without reloading the scene.
       </p>
     </section>
   );
