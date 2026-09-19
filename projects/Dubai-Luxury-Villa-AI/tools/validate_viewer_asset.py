@@ -28,6 +28,21 @@ V04_LOOK_TARGETS = {
     'tour_look_pool',
 }
 
+INTERIOR3_REQUIRED_NODES = {
+    'stair_step_v04_00',
+    'stair_landing_v04',
+    'stair_top_rail_v04_r2',
+    'stair_glass_guard_v04_r2',
+    'upper_landing_side_wall_v04_r4',
+    'upper_corridor_bridge_v04_r3',
+    'kitchen_island_v04',
+    'living_media_wall_v04',
+    'master_bed_base_v04',
+    'master_door_open_v04_r4',
+    'master_door_handle_open_v04_r4',
+    'private_door_v04',
+}
+
 VERSION_RULES = {
     'v0.3-life2': {
         'status': 'FORM_MATERIAL_LIGHT_LIFE_GATED',
@@ -62,19 +77,22 @@ VERSION_RULES = {
         'promotion': PROJECT_ROOT / 'validation' / 'v0.4-interior3-feature-promotion.json',
         'required_tour_anchors': V04_TOUR_ANCHORS,
         'required_look_targets': V04_LOOK_TARGETS,
-        'required_interior_nodes': {
-            'stair_step_v04_00',
-            'stair_landing_v04',
-            'stair_top_rail_v04_r2',
-            'stair_glass_guard_v04_r2',
-            'upper_landing_side_wall_v04_r4',
-            'upper_corridor_bridge_v04_r3',
-            'kitchen_island_v04',
-            'living_media_wall_v04',
-            'master_bed_base_v04',
-            'master_door_open_v04_r4',
-            'master_door_handle_open_v04_r4',
-            'private_door_v04',
+        'required_interior_nodes': INTERIOR3_REQUIRED_NODES,
+        'promotion_kind': 'feature-candidate',
+        'forbid_punctual_lights': True,
+    },
+    'v0.4-pool-context-v4-feature-candidate': {
+        'status': 'FEATURE_BRANCH_VISUAL_QA_ONLY',
+        'promotion': PROJECT_ROOT / 'validation' / 'v0.4-pool-context-v4-feature-promotion.json',
+        'required_tour_anchors': V04_TOUR_ANCHORS,
+        'required_look_targets': V04_LOOK_TARGETS,
+        'required_interior_nodes': INTERIOR3_REQUIRED_NODES | {
+            'tour_present_pool',
+            'tour_present_look_pool',
+            'pool_context_ground_v3',
+            'pool_context_planter_edge_v3',
+            'pool_context_agaves_v3',
+            'pool_context_grasses_v3',
         },
         'promotion_kind': 'feature-candidate',
         'forbid_punctual_lights': True,
@@ -125,11 +143,11 @@ def validate_promotion(version, rules, promotion, raw, digest):
 
     if rules['promotion_kind'] == 'feature-candidate':
         if promotion.get('scope') != 'FEATURE_BRANCH_ONLY':
-            fail(f"Interior3 feature scope mismatch: {promotion.get('scope')}")
+            fail(f"feature scope mismatch: {promotion.get('scope')}")
         if promotion.get('main_untouched') is not True:
-            fail('Interior3 feature receipt does not preserve main boundary')
+            fail('feature receipt does not preserve main boundary')
         if promotion.get('lighting_boundary') != 'BLENDER_PUNCTUAL_LIGHTS_STRIPPED_BROWSER_OWNS_RUNTIME_LIGHTING':
-            fail(f"Interior3 lighting boundary mismatch: {promotion.get('lighting_boundary')}")
+            fail(f"feature lighting boundary mismatch: {promotion.get('lighting_boundary')}")
         return
 
     fail(f'unknown promotion kind for {version}: {rules["promotion_kind"]}')
@@ -196,11 +214,11 @@ def main():
     if missing_interior:
         fail(f'missing interior-tour nodes: {missing_interior}')
 
-    if version == 'v0.4-interior3-feature-candidate':
+    if rules['promotion_kind'] == 'feature-candidate':
         if 'upper_stone_spine' in node_names:
-            fail('Interior3 viewer regressed: legacy upper_stone_spine is present')
+            fail('feature viewer regressed: legacy upper_stone_spine is present')
         if 'master_door_v04' in node_names:
-            fail('Interior3 viewer regressed: closed master_door_v04 is present')
+            fail('feature viewer regressed: closed master_door_v04 is present')
 
     if rules['forbid_punctual_lights']:
         used_extensions = set(document.get('extensionsUsed') or [])
@@ -215,7 +233,14 @@ def main():
             or 'KHR_lights_punctual' in top_extensions
             or node_light_refs
         ):
-            fail(f'Interior3 runtime-lighting boundary violated: {node_light_refs}')
+            fail(f'runtime-lighting boundary violated: {node_light_refs}')
+
+    if version == 'v0.4-pool-context-v4-feature-candidate':
+        presentation_nodes = set(manifest.get('presentation_nodes', []))
+        if presentation_nodes != {'tour_present_pool', 'tour_present_look_pool'}:
+            fail(f'Pool presentation nodes mismatch: {sorted(presentation_nodes)}')
+        if manifest.get('navigation_boundary') != 'GUIDED_PRESENTATION_SEPARATE_FROM_EXPLORE_ROUTE':
+            fail(f"Pool navigation boundary mismatch: {manifest.get('navigation_boundary')}")
 
     if version == 'v0.4-interior2':
         if promotion.get('vite_build') != 'PASS':

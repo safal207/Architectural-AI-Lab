@@ -1,0 +1,13 @@
+{
+  "version": "v0.4-pool-context-v4-feature-promotion",
+  "source_workflow_run": 35153498966,
+  "viewer_asset": "projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.glb",
+  "bytes": 8613156,
+  "sha256": "4f3e2868b532d1e3ea50e83aeb9a696e3c1f6484b38b2067db4973b57e66d115",
+  "scope": "FEATURE_BRANCH_ONLY",
+  "lighting_boundary": "BLENDER_PUNCTUAL_LIGHTS_STRIPPED_BROWSER_OWNS_RUNTIME_LIGHTING",
+  "navigation_boundary": "GUIDED_PRESENTATION_SEPARATE_FROM_EXPLORE_ROUTE",
+  "visual_review": "POOL_V4_GUIDED_HERO_PASS",
+  "next_gate": "Viewer Build + First Person Tour QA + Pool Terrace Bead Gate + Full Walkthrough Visual Gate",
+  "main_untouched": true
+}

@@ -95,13 +95,16 @@ export const TOUR_STOPS = [
     title: 'Pool terrace',
     floor: 1,
     nodeName: 'tour_pool',
+    presentationNodeName: 'tour_present_pool',
+    presentationTargetNodeName: 'tour_present_look_pool',
+    presentationFov: 32,
     targetNodeName: 'infinity_lip',
     targetOffsetLocal: [-3.2, 0, 0],
     firstPersonFov: 62,
     roomId: 'pool-terrace',
     fallbackNodeName: 'pool_terrace',
     feature: 'outdoor',
-    description: 'Finish from the authored walkable terrace eye point, looking diagonally across the pool toward the planted side of the infinity edge without moving the navigation anchor.'
+    description: 'Guided mode uses an authored hero camera beyond the infinity edge with a browser FOV matched to the accepted Blender 36 mm hero framing. Explore still starts at the exact walkable tour_pool anchor.'
   }
 ];
 

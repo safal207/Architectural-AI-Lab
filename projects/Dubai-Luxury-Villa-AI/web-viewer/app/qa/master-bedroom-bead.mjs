@@ -5,6 +5,11 @@ const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-master-bedroom-bead-output';
 await mkdir(outputDir, { recursive: true });
 
+const ALLOWED_ASSET_VERSIONS = new Set([
+  'v0.4-interior3-feature-candidate',
+  'v0.4-pool-context-v4-feature-candidate'
+]);
+
 const MODES = [
   { key: 'day', name: 'Day', file: 'master-day.png' },
   { key: 'evening', name: 'Evening', file: 'master-evening.png' },
@@ -79,7 +84,10 @@ try {
 
   report.assetVersion = manifest.version ?? null;
   report.masterComposition = manifest.source_pipeline?.master_composition ?? null;
-  check(report.assetVersion === 'v0.4-interior3-feature-candidate', `Unexpected asset version: ${report.assetVersion}`);
+  check(
+    ALLOWED_ASSET_VERSIONS.has(report.assetVersion),
+    `Unexpected asset version: ${report.assetVersion}`
+  );
   check(
     report.masterComposition === 'v0.4-interior3 quiet-luxury r6 bedding layer',
     `Final master composition is not the promoted viewer asset: ${report.masterComposition}`

@@ -78,6 +78,7 @@ async function enterHouse(page) {
 const browser = await chromium.launch({ headless: true });
 const report = {
   status: 'RUNNING',
+  evidenceMode: 'interaction-json-only',
   desktop: {},
   mobile: {},
   consoleErrors: [],
@@ -93,7 +94,7 @@ function observe(page) {
 
 try {
   let desktopModelRequests = 0;
-  const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  const desktop = await browser.newPage({ viewport: { width: 960, height: 700 } });
   observe(desktop);
   desktop.on('request', (request) => {
     if (new URL(request.url()).pathname.endsWith('/villa.glb')) desktopModelRequests += 1;
@@ -155,15 +156,17 @@ try {
     desktopModelRequests === 1,
     `Desktop requested villa.glb ${desktopModelRequests} times instead of once`
   );
-  await desktop.screenshot({ path: `${outputDir}/desktop-first-person.png`, fullPage: true });
   report.desktop.entry = 'PASS';
   report.desktop.walkGraph = 'PASS';
   report.desktop.guidedMode = 'PASS';
   report.desktop.exploreMode = 'PASS';
   report.desktop.modeReturn = 'PASS';
   report.desktop.stairTransition = 'PASS';
+  report.desktop.poolGuided = 'PASS';
   report.desktop.persistentScene = 'PASS';
   report.desktop.modelRequests = desktopModelRequests;
+
+  await desktop.close();
 
   let mobileModelRequests = 0;
   const mobile = await browser.newPage({
@@ -242,12 +245,17 @@ try {
     `Mobile requested villa.glb ${mobileModelRequests} times instead of once`
   );
 
-  await mobile.screenshot({ path: `${outputDir}/mobile-first-person.png`, fullPage: true });
   report.mobile.entry = 'PASS';
   report.mobile.guidedMode = 'PASS';
   report.mobile.exploreMode = 'PASS';
   report.mobile.touchControlsExploreOnly = 'PASS';
   report.mobile.noControlOverlap = 'PASS';
+  report.mobile.controlBoxes = {
+    guided: guidedBox,
+    guidedModeSwitch: guidedModeBox,
+    explorePad: padBox,
+    exploreModeSwitch: exploreModeBox
+  };
   report.mobile.persistentScene = 'PASS';
   report.mobile.modelRequests = mobileModelRequests;
 
