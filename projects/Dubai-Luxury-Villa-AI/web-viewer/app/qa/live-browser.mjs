@@ -76,7 +76,7 @@ async function verifyDesktopTour(page) {
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
   await tour.getByText('Client viewing graph', { exact: true }).waitFor();
-  await tour.getByText('Interactive house plan', { exact: true }).waitFor();
+  await tour.getByText('Interactive architectural map', { exact: true }).waitFor();
 
   const livingStop = tour.locator('.client-graph li').filter({ hasText: 'Living room' }).getByRole('button');
   await livingStop.click();
@@ -201,8 +201,8 @@ try {
   await waitForModel(desktop);
 
   const materialPanel = desktop.locator('.material-switcher');
-  await materialPanel.getByRole('button', { name: /Warm Wood/ }).click();
-  await desktop.getByText('Material: Warm Wood', { exact: true }).waitFor();
+  await materialPanel.getByRole('button', { name: /Graphite Mineral/ }).click();
+  await desktop.getByText('Material: Graphite Mineral', { exact: true }).waitFor();
   await waitForModel(desktop);
 
   const canvas = desktop.locator('.three-canvas canvas');
@@ -223,7 +223,12 @@ try {
   report.desktop.materialState = 'PASS';
   report.desktop.orbitZoomSmoke = 'PASS';
 
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+  const mobile = await browser.newPage({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+    isMobile: true,
+    hasTouch: true
+  });
   observe(mobile);
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
   await verifySalesCase(mobile);
