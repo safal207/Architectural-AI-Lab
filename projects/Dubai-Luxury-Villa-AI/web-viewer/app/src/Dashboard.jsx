@@ -59,10 +59,10 @@ export default function Dashboard() {
 
       <header className="viewer-toolbar" id="viewer">
         <div>
-          <p className="eyebrow">Interactive proof environment · protected walkthrough branch</p>
+          <p className="eyebrow">Interactive property experience · verified web walkthrough</p>
           <h2>Dubai Luxury Villa AI</h2>
           <p>
-            Explore the promoted interior model, two-floor room plan, furniture, doors, staircase, lighting, materials and bounded first-person walkthrough.
+            Explore the villa through an interactive room plan, curated views and a guided or free-walk experience with day, evening and night presentation modes.
           </p>
         </div>
         <nav aria-label="Lighting mode">
@@ -107,7 +107,7 @@ export default function Dashboard() {
                 <div><dt>Floor</dt><dd>{selectedRoom.floor}</dd></div>
               </dl>
               <p>
-                Portfolio metadata. Named room anchors connect the plan, client route and 3D viewer.
+                Room information stays linked to the plan, guided route and 3D view.
               </p>
             </div>
           ) : (
