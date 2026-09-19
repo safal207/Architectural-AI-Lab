@@ -236,6 +236,7 @@ export default function VillaViewer({
   const latestPropsRef = useRef(null);
 
   const [modelState, setModelState] = useState('loading');
+  const [modelProgress, setModelProgress] = useState(null);
   const [modelLoadCount, setModelLoadCount] = useState(0);
   const [firstPersonReady, setFirstPersonReady] = useState(false);
   const [walkGraphReady, setWalkGraphReady] = useState(false);
@@ -421,6 +422,7 @@ export default function VillaViewer({
     runtimeRef.current = runtime;
 
     setModelState('loading');
+    setModelProgress(null);
     setFirstPersonReady(false);
     setWalkGraphReady(false);
     setInteriorLightCount(0);
@@ -458,9 +460,14 @@ export default function VillaViewer({
         syncLighting();
         syncView();
         setModelLoadCount((count) => count + 1);
+        setModelProgress(100);
         setModelState('loaded');
       },
-      undefined,
+      (event) => {
+        if (runtime.disposed || !event.total) return;
+        const next = Math.min(99, Math.max(1, Math.round((event.loaded / event.total) * 100)));
+        setModelProgress((current) => current === next ? current : next);
+      },
       (error) => {
         if (runtime.disposed) return;
         console.warn('villa.glb failed to load; using fallback massing', error);
@@ -468,6 +475,7 @@ export default function VillaViewer({
           scene,
           latestPropsRef.current.material?.swatch ?? '#d8c8ad'
         );
+        setModelProgress(null);
         setModelState('fallback');
       }
     );
@@ -704,6 +712,7 @@ export default function VillaViewer({
           ref={mountRef}
           className="three-canvas"
           data-model-state={modelState}
+          data-model-progress={modelProgress ?? ''}
           data-model-load-count={modelLoadCount}
           data-viewer-runtime={VIEWER_RUNTIME_PROFILE}
           data-view-mode={isFirstPerson ? 'first-person' : 'orbit'}
@@ -725,7 +734,16 @@ export default function VillaViewer({
 
         {modelState === 'loading' && (
           <div className="viewer-loading" role="status" aria-live="polite">
-            <span /> Loading villa…
+            <span className="viewer-loading__pulse" aria-hidden="true" />
+            <div className="viewer-loading__copy">
+              <strong>
+                {modelProgress !== null ? `Loading villa · ${modelProgress}%` : 'Loading villa…'}
+              </strong>
+              <span>Preparing the 3D walkthrough</span>
+              <div className="viewer-loading__track" aria-hidden="true">
+                <i style={{ width: `${modelProgress ?? 8}%` }} />
+              </div>
+            </div>
           </div>
         )}
 
