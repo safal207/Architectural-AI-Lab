@@ -4,6 +4,12 @@ import { mkdir, writeFile } from 'node:fs/promises';
 
 const baseUrl = process.env.VILLA_URL ?? 'https://safal207.github.io/Architectural-AI-Lab/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-output';
+const ACCEPTED_ASSET_VERSIONS = new Set([
+  'v0.3-life2',
+  'v0.4-interior2',
+  'v0.4-interior3-feature-candidate',
+  'v0.4-pool-context-v4-feature-candidate'
+]);
 await mkdir(outputDir, { recursive: true });
 
 function check(condition, message) {
@@ -31,9 +37,25 @@ async function verifyPublishedAsset(page) {
 
   check(glb.length === manifest.glb.bytes, `GLB byte mismatch: ${glb.length} != ${manifest.glb.bytes}`);
   check(digest === manifest.glb.sha256, `GLB SHA-256 mismatch: ${digest} != ${manifest.glb.sha256}`);
-  check(['v0.3-life2', 'v0.4-interior2'].includes(manifest.version), `Unexpected viewer asset version: ${manifest.version}`);
+  check(ACCEPTED_ASSET_VERSIONS.has(manifest.version), `Unexpected viewer asset version: ${manifest.version}`);
 
-  return { version: manifest.version, bytes: glb.length, sha256: digest };
+  if (manifest.version === 'v0.4-pool-context-v4-feature-candidate') {
+    check(
+      manifest.navigation_boundary === 'GUIDED_PRESENTATION_SEPARATE_FROM_EXPLORE_ROUTE',
+      `Unexpected navigation boundary: ${manifest.navigation_boundary}`
+    );
+    const presentationNodes = new Set(manifest.presentation_nodes ?? []);
+    check(presentationNodes.has('tour_present_pool'), 'Pool Guided camera node missing from live manifest');
+    check(presentationNodes.has('tour_present_look_pool'), 'Pool Guided target node missing from live manifest');
+  }
+
+  return {
+    version: manifest.version,
+    bytes: glb.length,
+    sha256: digest,
+    navigationBoundary: manifest.navigation_boundary ?? null,
+    presentationNodes: manifest.presentation_nodes ?? []
+  };
 }
 
 async function verifySalesCase(page) {
@@ -60,21 +82,36 @@ async function verifyDesktopTour(page) {
   await livingStop.click();
   await waitForModel(page);
 
-  const toggle = tour.getByRole('button', { name: 'Start first-person tour', exact: true });
+  const toggle = tour.getByRole('button', { name: 'Enter the house', exact: true });
   await toggle.click();
   await page.waitForFunction(() => {
     const canvas = document.querySelector('.three-canvas');
-    return canvas?.dataset.viewMode === 'first-person' && canvas?.dataset.tourStop === 'living';
+    return canvas?.dataset.viewMode === 'first-person'
+      && canvas?.dataset.tourStop === 'living'
+      && canvas?.dataset.interactionMode === 'guided';
   });
   await waitForModel(page);
+
+  const canvas = page.locator('.three-canvas');
+  check(await canvas.getAttribute('data-viewer-runtime') === 'persistent-scene-v2', 'Live persistent viewer runtime missing');
+  check(Number(await canvas.getAttribute('data-model-load-count')) === 1, 'Live viewer loaded villa.glb more than once');
 
   const hud = page.locator('.first-person-hud');
   await hud.getByText(/Living room/i).waitFor();
 
-  const activeToggle = tour.getByRole('button', { name: 'First-person tour: ON', exact: true });
-  await activeToggle.click();
+  const modes = page.locator('.viewer-mode-switch');
+  await modes.getByRole('button', { name: 'Explore', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'explore');
+  await page.locator('.walkthrough-onboarding').waitFor({ state: 'visible' });
+  check(Number(await canvas.getAttribute('data-model-load-count')) === 1, 'Live Explore mode reloaded villa.glb');
+
+  await modes.getByRole('button', { name: 'Guided', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'guided');
+
+  await page.getByRole('button', { name: 'Exit walkthrough', exact: true }).click();
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.viewMode === 'orbit');
   await waitForModel(page);
+  check(Number(await canvas.getAttribute('data-model-load-count')) === 1, 'Exiting live walkthrough reloaded villa.glb');
 }
 
 async function verifyMobileTour(page) {
@@ -82,12 +119,37 @@ async function verifyMobileTour(page) {
   await tour.waitFor();
   const floorSwitch = tour.locator('.floor-switch');
   await floorSwitch.getByRole('button', { name: 'Floor 2', exact: true }).click();
-  await tour.getByRole('heading', { level: 3, name: 'Floor 2', exact: true }).waitFor();
+  await tour.getByRole('heading', { level: 3, name: /Floor 2/ }).waitFor();
 
   const masterZone = tour.locator('.house-plan__zone').filter({ hasText: 'Master Bedroom' });
   await masterZone.click();
   await page.locator('.room-details h3').filter({ hasText: 'Master Bedroom' }).waitFor();
   await waitForModel(page);
+
+  await tour.getByRole('button', { name: 'Enter the house', exact: true }).click();
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector('.three-canvas');
+    return canvas?.dataset.viewMode === 'first-person'
+      && canvas?.dataset.tourStop === 'master'
+      && canvas?.dataset.interactionMode === 'guided';
+  });
+
+  const canvas = page.locator('.three-canvas');
+  check(Number(await canvas.getAttribute('data-model-load-count')) === 1, 'Mobile live viewer loaded villa.glb more than once');
+
+  const modes = page.locator('.viewer-mode-switch');
+  await modes.getByRole('button', { name: 'Explore', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'explore');
+  const pad = page.locator('.touch-walk-pad');
+  await pad.waitFor({ state: 'visible' });
+  await pad.getByRole('button', { name: 'Walk forward', exact: true }).waitFor();
+
+  await modes.getByRole('button', { name: 'Guided', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'guided');
+  check(await pad.count() === 0, 'Mobile movement pad remained visible after returning to Guided');
+
+  await page.getByRole('button', { name: 'Exit walkthrough', exact: true }).click();
+  await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.viewMode === 'orbit');
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -125,6 +187,8 @@ try {
   report.desktop.housePlan = 'PASS';
   report.desktop.clientViewingGraph = 'PASS';
   report.desktop.firstPersonModeState = 'PASS';
+  report.desktop.guidedExploreBoundary = 'PASS';
+  report.desktop.persistentScene = 'PASS';
 
   const desktopRooms = desktop.locator('.rooms-panel');
   await desktopRooms.getByRole('button', { name: 'Master Bedroom — 52 sqm', exact: true }).click();
@@ -152,7 +216,7 @@ try {
   await desktop.waitForTimeout(500);
   check(await desktop.locator('.three-canvas').getAttribute('data-model-state') === 'loaded', 'Model stopped being loaded after orbit/zoom interaction');
 
-  await desktop.screenshot({ path: `${outputDir}/desktop.png`, fullPage: true });
+  await desktop.screenshot({ path: `${outputDir}/desktop.png`, fullPage: false, animations: 'disabled', timeout: 60_000 });
   report.desktop.salesCase = 'PASS';
   report.desktop.roomSelection = 'PASS';
   report.desktop.lighting = 'PASS';
@@ -167,6 +231,9 @@ try {
   await verifyMobileTour(mobile);
   report.mobile.housePlan = 'PASS';
   report.mobile.clientViewingGraph = 'PASS';
+  report.mobile.guidedExploreBoundary = 'PASS';
+  report.mobile.touchControls = 'PASS';
+  report.mobile.persistentScene = 'PASS';
 
   const mobileRooms = mobile.locator('.rooms-panel');
   await mobileRooms.getByRole('button', { name: 'Pool Terrace — 46 sqm', exact: true }).click();
@@ -181,7 +248,7 @@ try {
 
   const mobileCanvas = await mobile.locator('.three-canvas canvas').boundingBox();
   check(mobileCanvas && mobileCanvas.width >= 300 && mobileCanvas.height >= 180, 'Mobile WebGL canvas is unexpectedly small');
-  await mobile.screenshot({ path: `${outputDir}/mobile.png`, fullPage: true });
+  await mobile.screenshot({ path: `${outputDir}/mobile.png`, fullPage: false, animations: 'disabled', timeout: 60_000 });
   report.mobile.salesCase = 'PASS';
   report.mobile.roomSelection = 'PASS';
   report.mobile.noHorizontalOverflow = 'PASS';
