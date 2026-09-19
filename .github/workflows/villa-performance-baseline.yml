@@ -1,0 +1,68 @@
+name: Villa Performance Baseline
+
+on:
+  push:
+    branches:
+      - 'spike/villa-performance-v1'
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - '.github/workflows/villa-performance-baseline.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: villa-performance-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  performance-baseline:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build viewer
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-performance.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/villa-performance.log
+          exit 1
+
+      - name: Measure viewer performance baseline
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-performance-baseline-output
+        run: node qa/performance-baseline.mjs
+
+      - name: Upload performance baseline
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-performance-baseline
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-performance-baseline-output
+          if-no-files-found: warn
+          retention-days: 14
