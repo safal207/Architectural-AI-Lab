@@ -691,10 +691,15 @@
     overflow: hidden;
   }
   .client-graph--timeline {
+    display: flex;
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    overflow-x: auto;
     overscroll-behavior-inline: contain;
+  }
+  .client-graph--timeline li {
+    flex: 0 0 132px;
   }
   .client-graph-card__actions--timeline { grid-template-columns: 1fr 1fr; }
 }
