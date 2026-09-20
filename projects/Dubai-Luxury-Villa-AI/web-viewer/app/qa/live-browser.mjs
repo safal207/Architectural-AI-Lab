@@ -21,6 +21,41 @@ async function fastClick(locator) {
   await locator.evaluate((element) => element.click());
 }
 
+async function assertHeroContained(page, label) {
+  const metrics = await page.evaluate(() => {
+    const hero = document.querySelector('.sales-hero');
+    const copy = document.querySelector('.sales-hero__copy');
+    const heading = document.querySelector('.sales-hero h1');
+    const lead = document.querySelector('.sales-hero__lead');
+    if (!hero || !copy || !heading || !lead) return null;
+    return {
+      heroClientWidth: hero.clientWidth,
+      heroScrollWidth: hero.scrollWidth,
+      copyClientWidth: copy.clientWidth,
+      copyScrollWidth: copy.scrollWidth,
+      headingClientWidth: heading.clientWidth,
+      headingScrollWidth: heading.scrollWidth,
+      leadClientWidth: lead.clientWidth,
+      leadScrollWidth: lead.scrollWidth
+    };
+  });
+
+  check(metrics, `${label}: hero containment metrics unavailable`);
+  check(
+    metrics.copyScrollWidth <= metrics.copyClientWidth + 1,
+    `${label}: hero copy clips internally (${metrics.copyScrollWidth}px > ${metrics.copyClientWidth}px)`
+  );
+  check(
+    metrics.headingScrollWidth <= metrics.headingClientWidth + 1,
+    `${label}: hero heading clips internally (${metrics.headingScrollWidth}px > ${metrics.headingClientWidth}px)`
+  );
+  check(
+    metrics.leadScrollWidth <= metrics.leadClientWidth + 1,
+    `${label}: hero lead clips internally (${metrics.leadScrollWidth}px > ${metrics.leadClientWidth}px)`
+  );
+  return metrics;
+}
+
 async function waitForModel(page) {
   await page.locator('.three-canvas canvas').waitFor({ state: 'visible', timeout: 120_000 });
   await page.waitForFunction(
@@ -255,6 +290,23 @@ try {
     clientWidth: document.documentElement.clientWidth
   }));
   check(overflow.scrollWidth <= overflow.clientWidth + 1, `Mobile horizontal overflow: ${overflow.scrollWidth}px > ${overflow.clientWidth}px`);
+
+  report.mobile.heroContainment390 = await assertHeroContained(mobile, '390px mobile');
+
+  await mobile.setViewportSize({ width: 320, height: 800 });
+  await mobile.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  const narrowOverflow = await mobile.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth
+  }));
+  check(
+    narrowOverflow.scrollWidth <= narrowOverflow.clientWidth + 1,
+    `320px horizontal overflow: ${narrowOverflow.scrollWidth}px > ${narrowOverflow.clientWidth}px`
+  );
+  report.mobile.heroContainment320 = await assertHeroContained(mobile, '320px mobile');
+
+  await mobile.setViewportSize({ width: 390, height: 844 });
+  await mobile.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 
   const mobileCanvas = await mobile.locator('.three-canvas canvas').boundingBox();
   check(mobileCanvas && mobileCanvas.width >= 300 && mobileCanvas.height >= 180, 'Mobile WebGL canvas is unexpectedly small');
