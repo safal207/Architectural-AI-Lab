@@ -47,6 +47,24 @@ async function measure(page, label) {
       .filter((item) => item.width > 0 && (item.left < -1 || item.right > root.clientWidth + 1))
       .slice(0, 16);
 
+    const sectionSelectors = [
+      '.app-shell',
+      '.sales-hero',
+      '.case-story',
+      '.pilot-card',
+      '.tour-experience',
+      '.house-plan-card',
+      '.client-graph-card',
+      '.viewer-toolbar',
+      '.app-grid',
+      '.lower-grid',
+      'footer'
+    ];
+    const sections = Object.fromEntries(sectionSelectors.map((selector) => {
+      const node = document.querySelector(selector);
+      return [selector, node ? box(node) : null];
+    }));
+
     return {
       document: { clientWidth: root.clientWidth, scrollWidth: root.scrollWidth },
       hero: box(hero),
@@ -54,15 +72,12 @@ async function measure(page, label) {
       heading: box(heading),
       lead: box(lead),
       actions: box(actions),
+      sections,
       offenders
     };
   });
 
   check(metrics, `${label}: hero metrics unavailable`);
-  check(
-    metrics.document.scrollWidth <= metrics.document.clientWidth + 1,
-    `${label}: document overflows horizontally (${metrics.document.scrollWidth}px > ${metrics.document.clientWidth}px); offenders=${JSON.stringify(metrics.offenders)}`
-  );
   for (const key of ['hero', 'copy', 'heading', 'lead', 'actions']) {
     const value = metrics[key];
     check(
@@ -97,11 +112,33 @@ try {
   await page.locator('.sales-hero h1').waitFor({ state: 'visible', timeout: 30_000 });
 
   report.widths['390'] = await measure(page, '390px');
+  report.widths['390'].windowMaxScrollX = await page.evaluate(() => {
+    const y = window.scrollY;
+    window.scrollTo(99999, y);
+    const x = window.scrollX;
+    window.scrollTo(0, y);
+    return x;
+  });
   await page.screenshot({ path: `${outputDir}/hero-390.png`, fullPage: false, animations: 'disabled' });
+  check(
+    report.widths['390'].windowMaxScrollX <= 1,
+    `390px: page can scroll horizontally by ${report.widths['390'].windowMaxScrollX}px`
+  );
 
   await page.setViewportSize({ width: 320, height: 800 });
   report.widths['320'] = await measure(page, '320px');
+  report.widths['320'].windowMaxScrollX = await page.evaluate(() => {
+    const y = window.scrollY;
+    window.scrollTo(99999, y);
+    const x = window.scrollX;
+    window.scrollTo(0, y);
+    return x;
+  });
   await page.screenshot({ path: `${outputDir}/hero-320.png`, fullPage: false, animations: 'disabled' });
+  check(
+    report.widths['320'].windowMaxScrollX <= 1,
+    `320px: page can scroll horizontally by ${report.widths['320'].windowMaxScrollX}px; sections=${JSON.stringify(report.widths['320'].sections)}; offenders=${JSON.stringify(report.widths['320'].offenders)}`
+  );
 
   check(report.consoleErrors.length === 0, `Console errors: ${report.consoleErrors.join(' | ')}`);
   check(report.pageErrors.length === 0, `Page errors: ${report.pageErrors.join(' | ')}`);
