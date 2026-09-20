@@ -31,20 +31,37 @@ async function measure(page, label) {
       };
     };
 
+    const offenders = [...document.querySelectorAll('body *')]
+      .map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          tag: node.tagName,
+          className: typeof node.className === 'string' ? node.className : '',
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          width: Math.round(rect.width),
+          clientWidth: node.clientWidth,
+          scrollWidth: node.scrollWidth
+        };
+      })
+      .filter((item) => item.width > 0 && (item.left < -1 || item.right > root.clientWidth + 1))
+      .slice(0, 16);
+
     return {
       document: { clientWidth: root.clientWidth, scrollWidth: root.scrollWidth },
       hero: box(hero),
       copy: box(copy),
       heading: box(heading),
       lead: box(lead),
-      actions: box(actions)
+      actions: box(actions),
+      offenders
     };
   });
 
   check(metrics, `${label}: hero metrics unavailable`);
   check(
     metrics.document.scrollWidth <= metrics.document.clientWidth + 1,
-    `${label}: document overflows horizontally (${metrics.document.scrollWidth}px > ${metrics.document.clientWidth}px)`
+    `${label}: document overflows horizontally (${metrics.document.scrollWidth}px > ${metrics.document.clientWidth}px); offenders=${JSON.stringify(metrics.offenders)}`
   );
   for (const key of ['hero', 'copy', 'heading', 'lead', 'actions']) {
     const value = metrics[key];
