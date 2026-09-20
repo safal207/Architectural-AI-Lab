@@ -16,6 +16,11 @@ function check(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+async function fastClick(locator) {
+  await locator.waitFor({ state: 'visible' });
+  await locator.evaluate((element) => element.click());
+}
+
 async function waitForModel(page) {
   await page.locator('.three-canvas canvas').waitFor({ state: 'visible', timeout: 120_000 });
   await page.waitForFunction(
@@ -79,11 +84,11 @@ async function verifyDesktopTour(page) {
   await tour.getByText('Interactive architectural map', { exact: true }).waitFor();
 
   const livingStop = tour.locator('.client-graph li').filter({ hasText: 'Living room' }).getByRole('button');
-  await livingStop.click();
+  await fastClick(livingStop);
   await waitForModel(page);
 
   const toggle = tour.getByRole('button', { name: 'Enter the house', exact: true });
-  await toggle.click();
+  await fastClick(toggle);
   await page.waitForFunction(() => {
     const canvas = document.querySelector('.three-canvas');
     return canvas?.dataset.viewMode === 'first-person'
@@ -100,15 +105,15 @@ async function verifyDesktopTour(page) {
   await hud.getByText(/Living room/i).waitFor();
 
   const modes = page.locator('.viewer-mode-switch');
-  await modes.getByRole('button', { name: 'Explore', exact: true }).click();
+  await fastClick(modes.getByRole('button', { name: 'Explore', exact: true }));
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'explore');
   await page.locator('.walkthrough-onboarding').waitFor({ state: 'visible' });
   check(Number(await canvas.getAttribute('data-model-load-count')) === 1, 'Live Explore mode reloaded villa.glb');
 
-  await modes.getByRole('button', { name: 'Guided', exact: true }).click();
+  await fastClick(modes.getByRole('button', { name: 'Guided', exact: true }));
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'guided');
 
-  await page.getByRole('button', { name: 'Exit walkthrough', exact: true }).click();
+  await fastClick(page.getByRole('button', { name: 'Exit walkthrough', exact: true }));
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.viewMode === 'orbit');
   await waitForModel(page);
   check(Number(await canvas.getAttribute('data-model-load-count')) === 1, 'Exiting live walkthrough reloaded villa.glb');
@@ -118,15 +123,15 @@ async function verifyMobileTour(page) {
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
   const floorSwitch = tour.locator('.floor-switch');
-  await floorSwitch.getByRole('button', { name: 'Floor 2', exact: true }).click();
+  await fastClick(floorSwitch.getByRole('button', { name: 'Floor 2', exact: true }));
   await tour.getByRole('heading', { level: 3, name: /Floor 2/ }).waitFor();
 
   const masterZone = tour.locator('.house-plan__zone').filter({ hasText: 'Master Bedroom' });
-  await masterZone.click();
+  await fastClick(masterZone);
   await page.locator('.room-details h3').filter({ hasText: 'Master Bedroom' }).waitFor();
   await waitForModel(page);
 
-  await tour.getByRole('button', { name: 'Enter the house', exact: true }).click();
+  await fastClick(tour.getByRole('button', { name: 'Enter the house', exact: true }));
   await page.waitForFunction(() => {
     const canvas = document.querySelector('.three-canvas');
     return canvas?.dataset.viewMode === 'first-person'
@@ -138,17 +143,17 @@ async function verifyMobileTour(page) {
   check(Number(await canvas.getAttribute('data-model-load-count')) === 1, 'Mobile live viewer loaded villa.glb more than once');
 
   const modes = page.locator('.viewer-mode-switch');
-  await modes.getByRole('button', { name: 'Explore', exact: true }).click();
+  await fastClick(modes.getByRole('button', { name: 'Explore', exact: true }));
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'explore');
   const pad = page.locator('.touch-walk-pad');
   await pad.waitFor({ state: 'visible' });
   await pad.getByRole('button', { name: 'Walk forward', exact: true }).waitFor();
 
-  await modes.getByRole('button', { name: 'Guided', exact: true }).click();
+  await fastClick(modes.getByRole('button', { name: 'Guided', exact: true }));
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'guided');
   check(await pad.count() === 0, 'Mobile movement pad remained visible after returning to Guided');
 
-  await page.getByRole('button', { name: 'Exit walkthrough', exact: true }).click();
+  await fastClick(page.getByRole('button', { name: 'Exit walkthrough', exact: true }));
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.viewMode === 'orbit');
 }
 
@@ -191,17 +196,17 @@ try {
   report.desktop.persistentScene = 'PASS';
 
   const desktopRooms = desktop.locator('.rooms-panel');
-  await desktopRooms.getByRole('button', { name: 'Master Bedroom — 52 sqm', exact: true }).click();
+  await fastClick(desktopRooms.getByRole('button', { name: 'Master Bedroom — 52 sqm', exact: true }));
   await desktop.locator('.room-details h3').filter({ hasText: 'Master Bedroom' }).waitFor();
   await waitForModel(desktop);
 
   const lightingNav = desktop.locator('nav[aria-label="Lighting mode"]');
-  await lightingNav.getByRole('button', { name: 'Night', exact: true }).click();
+  await fastClick(lightingNav.getByRole('button', { name: 'Night', exact: true }));
   await desktop.getByText('Lighting: Night', { exact: true }).waitFor();
   await waitForModel(desktop);
 
   const materialPanel = desktop.locator('.material-switcher');
-  await materialPanel.getByRole('button', { name: /Graphite Mineral/ }).click();
+  await fastClick(materialPanel.getByRole('button', { name: /Graphite Mineral/ }));
   await desktop.getByText('Material: Graphite Mineral', { exact: true }).waitFor();
   await waitForModel(desktop);
 
@@ -241,7 +246,7 @@ try {
   report.mobile.persistentScene = 'PASS';
 
   const mobileRooms = mobile.locator('.rooms-panel');
-  await mobileRooms.getByRole('button', { name: 'Pool Terrace — 46 sqm', exact: true }).click();
+  await fastClick(mobileRooms.getByRole('button', { name: 'Pool Terrace — 46 sqm', exact: true }));
   await mobile.locator('.room-details h3').filter({ hasText: 'Pool Terrace' }).waitFor();
   await waitForModel(mobile);
 
