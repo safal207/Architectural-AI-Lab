@@ -686,6 +686,15 @@
   .house-plan__portal { transform: scale(.72); transform-origin: top left; }
   .house-plan-legend { gap: 9px; font-size: .62rem; padding-inline: 4px; }
   .house-plan-card__note { padding-inline: 4px; }
-  .client-graph-card--timeline { padding: 12px 8px; }
+  .client-graph-card--timeline {
+    padding: 12px 8px;
+    overflow: hidden;
+  }
+  .client-graph--timeline {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overscroll-behavior-inline: contain;
+  }
   .client-graph-card__actions--timeline { grid-template-columns: 1fr 1fr; }
 }
