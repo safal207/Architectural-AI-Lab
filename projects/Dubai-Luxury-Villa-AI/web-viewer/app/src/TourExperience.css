@@ -658,6 +658,23 @@
   .walkthrough-feature-grid { display: none; }
   .house-plan-card--hero { padding: 8px 6px; }
   .house-plan-card__header--hero { padding-inline: 4px; }
+  .house-plan-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    gap: 6px;
+  }
+  .plan-mode-switch,
+  .floor-switch {
+    width: 100%;
+    min-width: 0;
+  }
+  .plan-mode-switch button,
+  .floor-switch button {
+    min-width: 0;
+    padding-inline: 5px;
+    letter-spacing: .035em;
+  }
   .house-plan-stage { min-height: 410px; padding: 3px; border-radius: 12px; }
   .house-plan { min-height: 398px; }
   .house-plan--dollhouse { transform: perspective(900px) rotateX(46deg) rotateZ(-2deg) scale(.9); }
