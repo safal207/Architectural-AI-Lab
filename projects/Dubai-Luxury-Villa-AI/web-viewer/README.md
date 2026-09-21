@@ -10,17 +10,22 @@ The editorial redesign is a development preview for draft PR #9. The public demo
 
 ## Experience
 
+- Architectural intent, project facts and an original not-to-scale diagram with three explanations linked to 3D views.
+- Sticky navigation through Concept, Spaces, 3D studio, Plan and Brief on desktop and mobile.
 - A residence introduction and image stories for the kitchen/living area and pool terrace.
 - An image gallery with keyboard navigation, Escape to close and focus return.
 - Direct links from the image stories into the relevant 3D tour stops.
 - A full-house pool-side overview with responsive framing, followed by Guided and Explore modes.
 - Day, evening and night presentation with reflected environment light and interior fixtures.
-- Three material palettes: Warm Limestone, Sandstone Warmth and Graphite Mineral.
+- Three material palettes beside the desktop model and compactly above it on mobile: Warm Limestone, Sandstone Warmth and Graphite Mineral.
 - A two-floor navigation plan, eight tour viewpoints, room information and keyboard/touch controls.
-- A local project-brief download carrying the project type, notes, palette and atmosphere. No form submission or account is required.
+- A kitchen shortcut and an explicit “Open … in 3D” return from the plan to the selected view.
+- A local project-brief download with project type, location, approximate area, category-specific scope, priorities, notes, palette and atmosphere. Shared inputs persist between categories; area and scope are remembered separately. No form submission or account is required.
 - A fallback image and explanation when the 3D view fails, leaving the gallery and brief tools usable.
 
 The interface uses React, Three.js and Vite. A persistent scene avoids reloading the model when changing views. The browser owns runtime lighting, so web presentation differs from the native Blender renders.
+
+[Architecture benchmark and development notes, in Russian](../validation/global-architecture-benchmark-2026-09-21.md) explain the reference projects and the presentation changes. Model geometry is unchanged; concept diagrams and palette choices are not measured drawings or material specifications. Current-revision local verification results are included in that report.
 
 ## Images and model
 

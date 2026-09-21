@@ -7,8 +7,8 @@ export default function DeveloperCase({ onEnter }) {
       <div className="sales-hero__copy">
         <h1 id="sales-title">Desert,<br /><em>distilled.</em></h1>
         <div className="hero-aside">
-          <p className="sales-hero__lead">An exploration of light, material<br className="desktop-break" /> and the art of living slowly.</p>
-          <div className="sales-hero__actions"><a className="text-link" href="#spaces">Discover the residence <span aria-hidden="true">↘</span></a></div>
+          <p className="sales-hero__lead">Two levels. A sheltered terrace.<br className="desktop-break" /> Stone and timber, inside and out.</p>
+          <div className="sales-hero__actions"><a className="text-link" href="#design">Discover the residence <span aria-hidden="true">↘</span></a></div>
         </div>
       </div>
       <div className="hero-image">
@@ -19,7 +19,7 @@ export default function DeveloperCase({ onEnter }) {
         <div className="hero-image__caption"><span>01 / THE RESIDENCE</span><span>Stone. Shade. Stillness.</span></div>
         <button className="hero-enter" type="button" onClick={onEnter}><span className="hero-enter__icon" aria-hidden="true">↗</span><span>Enter the residence<small>Explore in 3D</small></span></button>
       </div>
-      <div className="hero-foot"><span>Architecture & interiors</span><span>A continuous dialogue between inside and out</span><a href="#spaces" aria-label="Scroll to the spaces">↓</a></div>
+      <div className="hero-foot"><span>Architecture & interiors</span><span>A continuous dialogue between inside and out</span><a href="#design" aria-label="Scroll to the design concept">↓</a></div>
     </section>
   );
 }

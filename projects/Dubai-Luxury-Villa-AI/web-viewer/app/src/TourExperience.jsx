@@ -66,7 +66,7 @@ function routePointsForFloor(floor) {
     .filter(Boolean);
 }
 
-export default function TourExperience({ activeStopId, onSelectStop, tourMode, onToggleTourMode }) {
+export default function TourExperience({ activeStopId, onSelectStop, tourMode, onToggleTourMode, onViewStop }) {
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeStopId) ?? TOUR_STOPS[0];
   const initialFloor = activeStop.floor === 2 ? 2 : 1;
   const [floor, setFloor] = useState(initialFloor);
@@ -114,7 +114,7 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
     <section className="tour-experience" id="journey" aria-label="Virtual house tour plan and client viewing graph">
       <div className="tour-experience__intro">
         <div>
-          <p className="eyebrow">Explore the layout</p>
+          <p className="eyebrow">04 / Explore the layout</p>
           <h2>Plan your journey.</h2>
           <p>Two floors. Eight viewpoints. Start wherever you like.</p>
         </div>
@@ -137,7 +137,8 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
           <div>
             <p className="eyebrow">Concept floor plan</p>
             <h3>Floor {floor} <span className="house-plan-card__current">· {activeStop.floor === floor ? activeStop.title : 'Explore this floor'}</span></h3>
-            <p className="house-plan-card__subtitle">Select a space to see its view above.</p>
+            <p className="house-plan-card__subtitle">Select a space, then open its view in the studio.</p>
+            {onViewStop && <button type="button" className="plan-open-view" onClick={() => onViewStop(activeStop.id)}>Open {activeStop.title.toLowerCase()} in 3D <span aria-hidden="true">↗</span></button>}
           </div>
 
           <div className="house-plan-controls">

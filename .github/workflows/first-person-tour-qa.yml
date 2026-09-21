@@ -87,3 +87,18 @@ jobs:
           path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-editorial-resilience-output
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Check design studio, responsive chapters and project brief fields
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-design-studio-output
+        run: node qa/design-studio.mjs
+
+      - name: Upload design studio evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-design-studio
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-design-studio-output
+          if-no-files-found: warn
+          retention-days: 14

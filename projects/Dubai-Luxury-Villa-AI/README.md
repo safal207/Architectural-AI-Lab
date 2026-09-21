@@ -49,17 +49,23 @@ At the reviewed `main` baseline `3dac25f`, build and deployment succeeded. [Live
 
 ## Presentation features
 
+- Architectural intent, project facts and an original not-to-scale diagram linked to three 3D views.
+- Sticky navigation through five project chapters, including on mobile.
 - Interactive room plan, tour route and room-linked metadata.
+- A direct kitchen shortcut and an explicit return from the plan to the selected 3D view.
 - Guided camera views, Explore movement, orbit and zoom.
 - Furnished interiors, kitchen, staircase, master suite and landscaped pool context.
 - Day, evening and night lighting; architectural material variants.
 - An editorial gallery of native exterior and interior concept renders.
-- Material palettes and a downloadable local brief for villa, kitchen or interior work.
+- Material palettes beside the desktop viewer and compactly above it on mobile.
+- A local brief for villa, kitchen or interior work with location, approximate area, category-specific scope, priorities, notes, palette and atmosphere.
 - Desktop/mobile browser checks with screenshot evidence.
 
 ## Project direction
 
 The editorial preview presents the villa as an architecture and interiors portfolio. Visitors can explore the kitchen and terrace studies, open images, walk the 3D residence, compare finishes and download a project brief containing their chosen palette and atmosphere. The brief stays on their device; no inquiry is submitted. This preview is being developed in draft PR #9 and is separate from the currently published site.
+
+The [architecture benchmark and development notes, in Russian](validation/global-architecture-benchmark-2026-09-21.md) compare the presentation with primary-source projects by John Pawson, Norm Architects and Studio MK27. The resulting additions clarify our existing concept and its controls; they do not change the GLB geometry or establish construction, climate or engineering performance.
 
 ## Boundaries
 

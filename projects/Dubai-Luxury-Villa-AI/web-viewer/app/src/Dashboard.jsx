@@ -1,6 +1,8 @@
 import { lazy, Suspense, useState } from 'react';
 import roomsData from '../data/rooms.json';
 import DeveloperCase from './DeveloperCase';
+import DesignIntent from './DesignIntent';
+import ProjectChapters from './ProjectChapters';
 import TourExperience from './TourExperience';
 import SceneBoundary from './SceneBoundary';
 import RoomSelector from './RoomSelector';
@@ -9,6 +11,7 @@ import SpaceStories from './SpaceStories';
 import ProjectBrief from './ProjectBrief';
 import { lightingModes } from './DayNightMode';
 import { TOUR_STOPS } from './tourData';
+import './ResidenceStudio.css';
 
 const VillaViewer = lazy(() => import('./VillaViewer'));
 
@@ -19,7 +22,7 @@ function initialLightingMode() {
 const roomStories = {
   'living-room': 'A generous gathering space, opening towards the pool through a glazed façade.',
   'master-bedroom': 'A quieter upper-level retreat with a private balcony and warm timber accents.',
-  'pool-terrace': 'An outdoor room framed by water, low planting and the deep shade of the villa.',
+  'pool-terrace': 'An outdoor room framed by water, low planting and the deep edges of the villa.',
 };
 
 export default function Dashboard() {
@@ -38,7 +41,6 @@ export default function Dashboard() {
     setSelectedRoom(rooms.find((item) => item.id === stop.roomId) ?? null);
   };
   const selectRoom = (room) => {
-    setSelectedRoom(room);
     const roomStops = { 'living-room': 'living', 'master-bedroom': 'master', 'pool-terrace': 'pool' };
     const stop = TOUR_STOPS.find((item) => item.id === roomStops[room?.id]);
     if (stop) selectTourStop(stop);
@@ -58,21 +60,40 @@ export default function Dashboard() {
       <a className="skip-link" href="#viewer">Skip to the interactive residence</a>
       <header className="site-header">
         <a className="brand" href="#top" aria-label="Architectural AI Lab home"><span className="brand-mark" aria-hidden="true">a<span> / </span>a</span><span>ARCHITECTURAL<br />AI LAB</span></a>
-        <nav aria-label="Main navigation"><a href="#residence">Residence</a><a href="#spaces">Spaces</a><a href="#viewer">Experience</a></nav>
+        <nav aria-label="Main navigation"><a href="#design">The concept</a><a href="#spaces">Spaces</a><a href="#viewer">Experience</a></nav>
         <a className="header-brief" href="#brief">Your project <span aria-hidden="true">↗</span></a>
       </header>
       <DeveloperCase onEnter={() => enterSpace()} />
+      <ProjectChapters />
+      <DesignIntent onEnterSpace={enterSpace} />
       <SpaceStories onEnter={enterSpace} />
       <section className="experience-section" id="viewer" aria-labelledby="experience-title">
         <header className="viewer-toolbar">
-          <div><p className="eyebrow">02 / The experience</p><h2 id="experience-title" tabIndex={-1}>Make yourself <em>at home.</em></h2><p>Choose a space. Follow the light. Find your own perspective.</p></div>
+          <div><p className="eyebrow">03 / The residence studio</p><h2 id="experience-title" tabIndex={-1}>Make yourself <em>at home.</em></h2><p>Move between rooms. Compare finishes. See the light change.</p></div>
           <div className="lighting-control"><span className="control-label">The time of day</span><nav aria-label="Lighting mode">
             {Object.entries(lightingModes).map(([key, mode]) => <button key={key} type="button" className={lightingMode === key ? 'is-active' : ''} aria-pressed={lightingMode === key} onClick={() => setLightingMode(key)}><span className={`light-symbol light-symbol--${key}`} aria-hidden="true" />{mode.name}</button>)}
           </nav></div>
         </header>
         <section className="app-grid">
-          <aside className="rooms-panel"><span className="control-label">Go directly to</span><RoomSelector onSelect={selectRoom} selectedId={detailRoom?.id} /><button className="overview-button" type="button" onClick={() => selectTourStop(TOUR_STOPS[0])}>Exterior overview <span aria-hidden="true">↗</span></button></aside>
-          <article className="viewer-panel"><SceneBoundary><Suspense fallback={<div className="scene-placeholder" role="status"><span className="eyebrow">Preparing your visit</span><p>Opening the residence…</p></div>}><VillaViewer selectedRoom={selectedRoom} lightingMode={activeLighting} material={material} tourMode={tourMode} activeTourStopId={activeTourStopId} onSelectTourStop={selectTourStop} onExitTour={() => toggleTourMode(false)} /></Suspense></SceneBoundary></article>
+          <aside className="rooms-panel">
+            <span className="control-label">Go directly to</span>
+            <RoomSelector onSelect={selectRoom} selectedId={detailRoom?.id} />
+            <button className="kitchen-shortcut" type="button" aria-pressed={tourMode && activeTourStopId === 'dining'} onClick={() => selectTourStop(TOUR_STOPS.find((stop) => stop.id === 'dining'))}>Kitchen + dining</button>
+            <button className="overview-button" type="button" onClick={() => selectTourStop(TOUR_STOPS[0])}>Exterior overview <span aria-hidden="true">↗</span></button>
+          </aside>
+          <div className="residence-workbench">
+            <article className="viewer-panel">
+              <SceneBoundary><Suspense fallback={<div className="scene-placeholder" role="status"><span className="eyebrow">Preparing your visit</span><p>Opening the residence…</p></div>}>
+                <VillaViewer selectedRoom={selectedRoom} lightingMode={activeLighting} material={material} tourMode={tourMode} activeTourStopId={activeTourStopId} onSelectTourStop={selectTourStop} onExitTour={() => toggleTourMode(false)} />
+              </Suspense></SceneBoundary>
+            </article>
+            <aside className="material-story material-study" aria-labelledby="material-title">
+              <div className="material-study__intro"><p className="eyebrow">Finish study</p><h3 id="material-title">One house.<br /><em>Three expressions.</em></h3><p>Choose a palette to see stone, plaster, timber and decking change together.</p></div>
+              <p className="material-study__mobile-title"><span>Finish palette</span><span>Changes the 3D view</span></p>
+              <MaterialSwitcher onChange={setMaterial} />
+              <a href="#brief" className="material-study__brief">Take this direction into your brief <span aria-hidden="true">↗</span></a>
+            </aside>
+          </div>
           <aside className="room-details" aria-live="polite">
             <div><span className="eyebrow">A closer look</span><h3>{detailRoom?.name ?? currentStop.title}</h3></div>
             <p>{detailRoom ? roomStories[detailRoom.id] : currentStop.description}</p>
@@ -81,11 +102,7 @@ export default function Dashboard() {
         </section>
         <div className="experience-status"><span>Lighting: {activeLighting.name}</span><span>Material: {material?.name ?? 'Original hero materials'}</span><a href="#journey">Explore the floor plan <span aria-hidden="true">↓</span></a></div>
       </section>
-      <section className="journey-section section-wrap" aria-label="Floor plan and route"><TourExperience activeStopId={activeTourStopId} onSelectStop={selectTourStop} tourMode={tourMode} onToggleTourMode={toggleTourMode} /></section>
-      <section className="material-story section-wrap" aria-labelledby="material-title">
-        <div className="material-story__intro"><p className="eyebrow">03 / The material language</p><h2 id="material-title">Quiet materials.<br /><em>Lasting character.</em></h2><p>Mineral surfaces, warm timber and crisp shadows. Explore three interpretations of the same residence.</p><a className="text-link" href="#viewer">See your palette in the villa <span aria-hidden="true">↗</span></a></div>
-        <MaterialSwitcher onChange={setMaterial} />
-      </section>
+      <section className="journey-section section-wrap" aria-label="Floor plan and route"><TourExperience activeStopId={activeTourStopId} onSelectStop={selectTourStop} tourMode={tourMode} onToggleTourMode={toggleTourMode} onViewStop={enterSpace} /></section>
       <ProjectBrief material={material} lighting={activeLighting.name} />
       <footer className="site-footer"><a className="footer-wordmark" href="#top">Architectural AI Lab <span aria-hidden="true">↗</span></a><div><span>Dubai residence · Concept portfolio</span><span>Architecture / Kitchens / Interiors</span></div><p>Architectural studies and interactive visualisations.<br />Concept plans and areas; not construction documentation.</p><a href="https://github.com/safal207/Architectural-AI-Lab" target="_blank" rel="noreferrer">Project archive ↗</a></footer>
     </main>

@@ -52,6 +52,8 @@ export default function MaterialSwitcher({ onChange }) {
     onChange?.(material);
   }
 
+  const active = MATERIALS.find((item) => item.id === activeId);
+
   return (
     <section className="material-switcher" id="materials" aria-label="Material finish moods">
       <div className="material-switcher__options">
@@ -78,8 +80,9 @@ export default function MaterialSwitcher({ onChange }) {
           </button>
         ))}
       </div>
+      <p className="material-switcher__current" aria-live="polite"><span>Selected direction</span>{active.description}</p>
       <p className="material-switcher__note">
-        Stone · Plaster · Timber · Decking — concept finishes, seen in the light you choose.
+        Swatches: stone · plaster · timber · decking. Concept colour studies; physical samples would follow.
       </p>
     </section>
   );
