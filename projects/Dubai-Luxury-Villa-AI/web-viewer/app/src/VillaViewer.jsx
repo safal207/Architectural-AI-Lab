@@ -715,6 +715,9 @@ export default function VillaViewer({
 
       if (runtime.needsRender) {
         renderer.render(scene, camera);
+        // Mark the mode of this rendered frame, not only React's requested mode.
+        // Browser QA must not sample the previous camera while a new frame is pending.
+        container.dataset.renderedInteractionMode = runtime.isDrone ? 'drone' : runtime.isFirstPerson ? (runtime.isExplore ? 'explore' : 'guided') : 'orbit';
         container.dataset.cameraPosition = camera.position.toArray().map((value) => value.toFixed(3)).join(',');
         container.dataset.cameraDirection = camera.getWorldDirection(new THREE.Vector3()).toArray().map((value) => value.toFixed(3)).join(',');
         runtime.needsRender = false;

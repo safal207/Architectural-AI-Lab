@@ -11,7 +11,10 @@ const position = async page => (await page.locator('.three-canvas').getAttribute
 const direction = async page => (await page.locator('.three-canvas').getAttribute('data-camera-direction')).split(',').map(Number);
 const distance = (a,b) => Math.hypot(...a.map((v,i)=>v-b[i]));
 const click = (page, name) => page.getByRole('button', { name, exact: true }).click();
-const mode = (page, expected) => page.waitForFunction(value => document.querySelector('.three-canvas')?.dataset.interactionMode === value, expected);
+const mode = (page, expected) => page.waitForFunction(value => {
+  const view = document.querySelector('.three-canvas');
+  return view?.dataset.interactionMode === value && view?.dataset.renderedInteractionMode === value;
+}, expected);
 async function waitMovement(page, before, min=.08) {
   await page.waitForFunction(({before,min}) => {
     const p=document.querySelector('.three-canvas')?.dataset.cameraPosition?.split(',').map(Number);
