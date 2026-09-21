@@ -66,6 +66,10 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
     if (activeStop.floor === 1 || activeStop.floor === 2) setFloor(activeStop.floor);
   }, [activeStop.floor]);
 
+  useEffect(() => {
+    if (!tourMode) setPlanMode((mode) => mode === 'walk' ? 'plan' : mode);
+  }, [tourMode]);
+
   const floorZones = useMemo(() => FLOOR_PLAN_ZONES[floor] ?? [], [floor]);
   const furniture = FLOOR_PLAN_FURNITURE[floor] ?? [];
   const portals = FLOOR_PLAN_PORTALS[floor] ?? [];
@@ -100,9 +104,9 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
     <section className="tour-experience" aria-label="Virtual house tour plan and client viewing graph">
       <div className="tour-experience__intro">
         <div>
-          <p className="eyebrow">Client viewing graph</p>
+          <p className="eyebrow">Your tour</p>
           <h2>Understand the house first. Then step inside it.</h2>
-          <p>Plan → room → threshold → stair → first-person walkthrough. The map now acts as the navigation controller, not a decorative diagram.</p>
+          <p>Choose a room on the plan, follow the guided tour or take a walk at your own pace.</p>
         </div>
         <button
           type="button"
@@ -130,7 +134,7 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
           <div>
             <p className="eyebrow">Interactive architectural map</p>
             <h3>Floor {floor} <span className="house-plan-card__current">· {activeStop.floor === floor ? activeStop.title : 'Explore this floor'}</span></h3>
-            <p className="house-plan-card__subtitle">Click any room to move the tour there. Furniture, windows, doors, light points, stairs and live position stay visible at a glance.</p>
+            <p className="house-plan-card__subtitle">Choose a room to open its view. The marker shows your selected tour stop.</p>
           </div>
 
           <div className="house-plan-controls">
@@ -223,10 +227,10 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
             ))}
 
             {marker && marker.floor === floor && (
-              <div className="house-plan__position" style={{ left: `${marker.x}%`, top: `${marker.y}%` }} aria-label={`You are here: ${activeStop.title}`}>
+              <div className="house-plan__position" style={{ left: `${marker.x}%`, top: `${marker.y}%` }} aria-label={`Selected stop: ${activeStop.title}`}>
                 <span className="house-plan__position-pulse" />
                 <span className="house-plan__heading" style={{ transform: `rotate(${marker.rotation}deg)` }} />
-                <strong>YOU ARE HERE</strong>
+                <strong>SELECTED STOP</strong>
               </div>
             )}
             <div className="house-plan__north" aria-hidden="true"><b>N</b><span>↑</span></div>
@@ -234,7 +238,7 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
         </div>
 
         <div className="house-plan-legend" aria-label="Plan legend">
-          <span><i className="legend-position" /> Position</span>
+          <span><i className="legend-position" /> Selected stop</span>
           <span><i className="legend-furniture" /> Furniture</span>
           <span><i className="legend-door" /> Door</span>
           <span><i className="legend-window" /> Window</span>

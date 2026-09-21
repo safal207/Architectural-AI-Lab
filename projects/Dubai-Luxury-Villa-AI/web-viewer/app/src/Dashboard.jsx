@@ -26,6 +26,7 @@ export default function Dashboard() {
 
   const selectTourStop = (stop) => {
     setActiveTourStopId(stop.id);
+    setTourMode(stop.id !== 'overview');
     if (stop.roomId) {
       const room = rooms.find((item) => item.id === stop.roomId);
       if (room) setSelectedRoom(room);
@@ -34,8 +35,9 @@ export default function Dashboard() {
 
   const selectRoom = (room) => {
     setSelectedRoom(room);
-    const matchingStop = TOUR_STOPS.find((stop) => stop.roomId === room?.id);
-    if (matchingStop) setActiveTourStopId(matchingStop.id);
+    const roomStops = { 'living-room': 'living', 'master-bedroom': 'master', 'pool-terrace': 'pool' };
+    const matchingStop = TOUR_STOPS.find((stop) => stop.id === roomStops[room?.id]);
+    if (matchingStop) selectTourStop(matchingStop);
   };
 
   const toggleTourMode = (enabled) => {
@@ -59,10 +61,10 @@ export default function Dashboard() {
 
       <header className="viewer-toolbar" id="viewer">
         <div>
-          <p className="eyebrow">Interactive property experience · verified web walkthrough</p>
+          <p className="eyebrow">Explore the residence</p>
           <h2>Dubai Luxury Villa AI</h2>
           <p>
-            Explore the villa through an interactive room plan, curated views and a guided or free-walk experience with day, evening and night presentation modes.
+            Step inside, choose a room and discover the villa in a different light.
           </p>
         </div>
         <nav aria-label="Lighting mode">
@@ -71,6 +73,7 @@ export default function Dashboard() {
               key={key}
               type="button"
               className={lightingMode === key ? 'is-active' : ''}
+              aria-pressed={lightingMode === key}
               onClick={() => setLightingMode(key)}
             >
               {mode.name}
@@ -107,7 +110,7 @@ export default function Dashboard() {
                 <div><dt>Floor</dt><dd>{selectedRoom.floor}</dd></div>
               </dl>
               <p>
-                Room information stays linked to the plan, guided route and 3D view.
+                Concept areas for the selected room. Explore the floor plan to see how the spaces connect.
               </p>
             </div>
           ) : (

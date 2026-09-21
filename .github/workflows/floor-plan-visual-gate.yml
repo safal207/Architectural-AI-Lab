@@ -3,10 +3,7 @@ name: Floor Plan Visual Gate
 on:
   pull_request:
     paths:
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/TourExperience.jsx'
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/TourExperience.css'
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/tourData.js'
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/floor-plan-visual-gate.mjs'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
       - '.github/workflows/floor-plan-visual-gate.yml'
   workflow_dispatch:
 

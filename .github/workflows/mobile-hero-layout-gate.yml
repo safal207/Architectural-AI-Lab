@@ -3,8 +3,7 @@ name: Mobile Hero Layout Gate
 on:
   pull_request:
     paths:
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/styles.css'
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/DeveloperCase.jsx'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/**'
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/mobile-hero-layout.mjs'
       - '.github/workflows/mobile-hero-layout-gate.yml'
   workflow_dispatch:

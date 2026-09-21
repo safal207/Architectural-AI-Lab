@@ -61,7 +61,7 @@ export const TOUR_STOPS = [
     firstPersonFov: 58,
     roomId: null,
     feature: 'stairs',
-    description: 'Guided mode shifts only sideways toward the stair centre and aims at the authored mid-flight target. Explore still starts on the exact tour_stair_ground route anchor, so presentation polish cannot distort navigation.'
+    description: 'Follow the timber stair toward the upper floor and private suite.'
   },
   {
     id: 'stair-upper',
@@ -74,7 +74,7 @@ export const TOUR_STOPS = [
     roomId: 'master-bedroom',
     fallbackNodeName: 'master_bedroom',
     feature: 'stairs',
-    description: 'Keep the repaired Interior3 landing eye point fixed while drawing the composition through the actual open threshold toward the visible master bench; no camera compensation is used.'
+    description: 'Pause on the upper landing and look through the open doorway into the master suite.'
   },
   {
     id: 'master',
@@ -98,13 +98,14 @@ export const TOUR_STOPS = [
     presentationNodeName: 'tour_present_pool',
     presentationTargetNodeName: 'tour_present_look_pool',
     presentationFov: 32,
+    presentationAspect: 16 / 9,
     targetNodeName: 'infinity_lip',
     targetOffsetLocal: [-3.2, 0, 0],
     firstPersonFov: 62,
     roomId: 'pool-terrace',
     fallbackNodeName: 'pool_terrace',
     feature: 'outdoor',
-    description: 'Guided mode uses an authored hero camera beyond the infinity edge with a browser FOV matched to the accepted Blender 36 mm hero framing. Explore still starts at the exact walkable tour_pool anchor.'
+    description: 'Take in the infinity pool, planted terrace and villa. Switch to Explore to walk along the terrace.'
   }
 ];
 

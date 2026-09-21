@@ -13,9 +13,11 @@ export function createRenderer(THREE, container) {
   });
 
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  // CSS owns the display size; resizing only updates the drawing buffer.
   renderer.setSize(
     container.clientWidth,
-    container.clientHeight
+    container.clientHeight,
+    false
   );
 
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -23,6 +25,9 @@ export function createRenderer(THREE, container) {
   renderer.toneMappingExposure = 0.70;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // Geometry and fixture positions stay fixed while touring; reuse their shadows.
+  renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.needsUpdate = true;
 
   renderer.domElement.dataset.qaCapture = qaCapture ? 'preserved' : 'off';
   container.appendChild(renderer.domElement);

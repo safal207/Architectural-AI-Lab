@@ -29,6 +29,9 @@ jobs:
       - name: Validate navigation graph and stair interpolation
         run: node qa/walkthrough-graph.mjs
 
+      - name: Validate walkthrough input lifecycle
+        run: node qa/walkthrough-input.mjs
+
       - name: Build viewer
         run: npm run build
 
@@ -54,6 +57,12 @@ jobs:
           VILLA_URL: http://127.0.0.1:4173/
           QA_OUTPUT: qa-first-person-output
         run: node qa/first-person-ui.mjs
+
+      - name: Check room selection, tour exit and narrow mobile layout
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-first-person-output/full-viewer
+        run: node qa/live-browser.mjs
 
       - name: Upload walkthrough QA evidence
         if: always()

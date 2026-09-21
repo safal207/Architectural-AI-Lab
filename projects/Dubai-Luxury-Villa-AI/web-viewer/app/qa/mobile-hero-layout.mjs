@@ -57,6 +57,8 @@ async function measure(page, label) {
       '.client-graph-card',
       '.viewer-toolbar',
       '.app-grid',
+      '.viewer-panel',
+      '.three-canvas',
       '.lower-grid',
       'footer'
     ];
@@ -93,6 +95,24 @@ async function measure(page, label) {
   return metrics;
 }
 
+function assertPageContained(metrics, label) {
+  check(
+    metrics.document.scrollWidth <= metrics.document.clientWidth + 1,
+    `${label}: horizontal overflow (${metrics.document.scrollWidth}px > ${metrics.document.clientWidth}px); sections=${JSON.stringify(metrics.sections)}; offenders=${JSON.stringify(metrics.offenders)}`
+  );
+  for (const [selector, section] of Object.entries(metrics.sections)) {
+    check(section, `${label}: missing section ${selector}`);
+    check(
+      section.left >= -1 && section.right <= metrics.document.clientWidth + 1,
+      `${label}: ${selector} extends outside the viewport (${section.left}px–${section.right}px)`
+    );
+    check(
+      section.scrollWidth <= section.clientWidth + 1,
+      `${label}: ${selector} overflows internally (${section.scrollWidth}px > ${section.clientWidth}px)`
+    );
+  }
+}
+
 const browser = await chromium.launch({ headless: true });
 const report = {
   status: 'RUNNING',
@@ -111,34 +131,22 @@ try {
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.locator('.sales-hero h1').waitFor({ state: 'visible', timeout: 30_000 });
 
-  report.widths['390'] = await measure(page, '390px');
-  report.widths['390'].windowMaxScrollX = await page.evaluate(() => {
-    const y = window.scrollY;
-    window.scrollTo(99999, y);
-    const x = window.scrollX;
-    window.scrollTo(0, y);
-    return x;
-  });
-  await page.screenshot({ path: `${outputDir}/hero-390.png`, fullPage: false, animations: 'disabled' });
-  check(
-    report.widths['390'].windowMaxScrollX <= 1,
-    `390px: page can scroll horizontally by ${report.widths['390'].windowMaxScrollX}px`
-  );
-
-  await page.setViewportSize({ width: 320, height: 800 });
-  report.widths['320'] = await measure(page, '320px');
-  report.widths['320'].windowMaxScrollX = await page.evaluate(() => {
-    const y = window.scrollY;
-    window.scrollTo(99999, y);
-    const x = window.scrollX;
-    window.scrollTo(0, y);
-    return x;
-  });
-  await page.screenshot({ path: `${outputDir}/hero-320.png`, fullPage: false, animations: 'disabled' });
-  check(
-    report.widths['320'].windowMaxScrollX <= 1,
-    `320px: page can scroll horizontally by ${report.widths['320'].windowMaxScrollX}px; sections=${JSON.stringify(report.widths['320'].sections)}; offenders=${JSON.stringify(report.widths['320'].offenders)}`
-  );
+  for (const [label, width] of [['390', 390], ['320', 320], ['390-return', 390]]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 800 });
+    const metrics = await measure(page, label);
+    report.widths[label] = metrics;
+    metrics.windowMaxScrollX = await page.evaluate(() => {
+      const y = window.scrollY;
+      // Override the page's smooth scrolling so the result is read after the move.
+      window.scrollTo({ left: 99999, top: y, behavior: 'instant' });
+      const x = window.scrollX;
+      window.scrollTo({ left: 0, top: y, behavior: 'instant' });
+      return x;
+    });
+    await page.screenshot({ path: `${outputDir}/hero-${label}.png`, fullPage: false, animations: 'disabled' });
+    assertPageContained(metrics, label);
+    check(metrics.windowMaxScrollX <= 1, `${label}: page can scroll horizontally by ${metrics.windowMaxScrollX}px`);
+  }
 
   check(report.consoleErrors.length === 0, `Console errors: ${report.consoleErrors.join(' | ')}`);
   check(report.pageErrors.length === 0, `Page errors: ${report.pageErrors.join(' | ')}`);

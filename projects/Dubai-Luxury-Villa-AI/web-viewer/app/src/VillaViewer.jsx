@@ -10,11 +10,13 @@ import { createLights } from './three/lights';
 import { createInteriorLights } from './three/interiorLights';
 import { TOUR_STOPS } from './tourData';
 import { WALKTHROUGH_PLAYER } from './navigationData';
+import { bindWalkthroughKeyboard, resetWalkthroughInput } from './walkthroughInput';
 import {
   buildWalkGraph,
   constrainToWalkGraph,
   nearestTourStop,
-  placeFirstPersonCamera
+  placeFirstPersonCamera,
+  updateTourCameraProjection
 } from './walkthroughEngine';
 import './Walkthrough.css';
 
@@ -251,6 +253,7 @@ export default function VillaViewer({
     familyCount: 0
   });
   const [walkStatus, setWalkStatus] = useState({
+    stopId: null,
     label: 'Tour anchor',
     floor: null,
     edgeType: null
@@ -268,11 +271,14 @@ export default function VillaViewer({
   const syncLighting = () => {
     const runtime = runtimeRef.current;
     if (!runtime) return;
+    runtime.needsRender = true;
     const current = latestPropsRef.current;
     const isFirstPerson = current.tourMode && current.activeTourStopId !== 'overview';
     const lighting = resolveRuntimeLighting(
       current.lightingMode,
-      current.activeTourStopId,
+      current.interactionMode === 'explore' && runtime.isExplore
+        ? (runtime.lightingStopId ?? current.activeTourStopId)
+        : current.activeTourStopId,
       isFirstPerson
     );
 
@@ -289,6 +295,7 @@ export default function VillaViewer({
   const syncMaterial = () => {
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
+    runtime.needsRender = true;
     const report = applyMaterialConcept(runtime.villaRoot, latestPropsRef.current.material);
     setMaterialResponse(report);
   };
@@ -296,6 +303,7 @@ export default function VillaViewer({
   const syncView = () => {
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
+    runtime.needsRender = true;
 
     const current = latestPropsRef.current;
     const isFirstPerson = current.tourMode && current.activeTourStopId !== 'overview';
@@ -306,7 +314,8 @@ export default function VillaViewer({
     runtime.isExplore = isExplore;
     runtime.currentWalkEdgeId = null;
     runtime.firstPersonAvailable = false;
-    mobileMotionRef.current = { forward: 0, right: 0 };
+    runtime.lightingStopId = current.activeTourStopId;
+    resetWalkthroughInput(runtime, mobileMotionRef, runtime.renderer.domElement);
 
     if (runtime.orbitControls) runtime.orbitControls.enabled = !isFirstPerson;
 
@@ -330,6 +339,7 @@ export default function VillaViewer({
       const activeStop = TOUR_STOPS.find((stop) => stop.id === current.activeTourStopId);
       if (!isExplore && activeStop) {
         setWalkStatus({
+          stopId: activeStop.id,
           label: activeStop.title,
           floor: activeStop.floor,
           edgeType: null
@@ -337,10 +347,12 @@ export default function VillaViewer({
       } else {
         const nearest = nearestTourStop(runtime.walkGraph, runtime.camera.position);
         if (nearest) {
-          setWalkStatus({ label: nearest.title, floor: nearest.floor, edgeType: null });
+          runtime.lightingStopId = nearest.id;
+          setWalkStatus({ stopId: nearest.id, label: nearest.title, floor: nearest.floor, edgeType: null });
         }
       }
 
+      syncLighting();
       if (!wasFirstPerson || !isExplore) setHasInteracted(false);
       return;
     }
@@ -380,6 +392,7 @@ export default function VillaViewer({
     const renderer = createRenderer(THREE, container);
     renderer.shadowMap.enabled = true;
     renderer.domElement.style.touchAction = 'none';
+    renderer.domElement.tabIndex = 0;
 
     const { ambient, hemisphere, sun, fill } = createLights(THREE, scene);
     const orbitControls = new OrbitControls(camera, renderer.domElement);
@@ -412,6 +425,7 @@ export default function VillaViewer({
       interiorLightGroup: null,
       walkGraph: null,
       currentWalkEdgeId: null,
+      lightingStopId: null,
       firstPersonAvailable: false,
       keys: new Set(),
       touchLook: { active: false, pointerId: null, x: 0, y: 0 },
@@ -419,6 +433,17 @@ export default function VillaViewer({
       lastFrameTime: performance.now(),
       frameId: null
     };
+    runtime.needsRender = true;
+    const requestRender = () => { runtime.needsRender = true; };
+    const contextRestored = () => {
+      // Three rebuilds GPU resources, so both cached shadows and the idle
+      // presentation frame must be drawn again after context recovery.
+      renderer.shadowMap.needsUpdate = true;
+      requestRender();
+    };
+    renderer.domElement.addEventListener('webglcontextrestored', contextRestored);
+    orbitControls.addEventListener('change', requestRender);
+    pointerLockControls?.addEventListener('change', requestRender);
     runtimeRef.current = runtime;
 
     setModelState('loading');
@@ -452,6 +477,7 @@ export default function VillaViewer({
 
         runtime.interiorLightGroup = createInteriorLights(THREE, scene, runtime.villaRoot, 1);
         setInteriorLightCount(runtime.interiorLightGroup.userData.fixtureCount ?? 0);
+        renderer.shadowMap.needsUpdate = true;
 
         runtime.walkGraph = buildWalkGraph(runtime.villaRoot);
         setWalkGraphReady(runtime.walkGraph.edges.length >= 4);
@@ -476,26 +502,33 @@ export default function VillaViewer({
           latestPropsRef.current.material?.swatch ?? '#d8c8ad'
         );
         setModelProgress(null);
+        renderer.shadowMap.needsUpdate = true;
+        requestRender();
         setModelState('fallback');
       }
     );
 
-    const keyDown = (event) => {
-      if (!runtime.isExplore) return;
-      runtime.keys.add(event.code);
-      if (/^(Key[WASD]|Arrow|Shift)/.test(event.code)) setHasInteracted(true);
-    };
-    const keyUp = (event) => runtime.keys.delete(event.code);
+    const disposeKeyboard = bindWalkthroughKeyboard({
+      runtime,
+      mobileMotionRef,
+      element: renderer.domElement,
+      windowTarget: window,
+      documentTarget: document,
+      onInteract: () => setHasInteracted(true)
+    });
 
     const lockFirstPerson = () => {
-      if (!runtime.isExplore || !runtime.pointerLockControls || !runtime.villaRoot) return;
+      if (!runtime.isExplore || !runtime.firstPersonAvailable || !runtime.pointerLockControls) return;
       setHasInteracted(true);
+      renderer.domElement.focus({ preventScroll: true });
       runtime.pointerLockControls.lock();
     };
 
     const pointerDown = (event) => {
-      if (!runtime.isTouchDevice || !runtime.isExplore) return;
+      if (!runtime.isTouchDevice || !runtime.isExplore || !runtime.firstPersonAvailable
+        || runtime.touchLook.active || event.button !== 0) return;
       setHasInteracted(true);
+      renderer.domElement.focus({ preventScroll: true });
       runtime.touchLook.active = true;
       runtime.touchLook.pointerId = event.pointerId;
       runtime.touchLook.x = event.clientX;
@@ -505,7 +538,8 @@ export default function VillaViewer({
 
     const pointerMove = (event) => {
       const touchLook = runtime.touchLook;
-      if (!touchLook.active || touchLook.pointerId !== event.pointerId) return;
+      if (!runtime.isExplore || !runtime.firstPersonAvailable
+        || !touchLook.active || touchLook.pointerId !== event.pointerId) return;
       const dx = event.clientX - touchLook.x;
       const dy = event.clientY - touchLook.y;
       touchLook.x = event.clientX;
@@ -516,6 +550,7 @@ export default function VillaViewer({
         -Math.PI * 0.42,
         Math.PI * 0.42
       );
+      requestRender();
     };
 
     const pointerUp = (event) => {
@@ -524,20 +559,25 @@ export default function VillaViewer({
       runtime.touchLook.pointerId = null;
     };
 
-    window.addEventListener('keydown', keyDown);
-    window.addEventListener('keyup', keyUp);
     renderer.domElement.addEventListener('click', lockFirstPerson);
     renderer.domElement.addEventListener('pointerdown', pointerDown);
     renderer.domElement.addEventListener('pointermove', pointerMove);
     renderer.domElement.addEventListener('pointerup', pointerUp);
     renderer.domElement.addEventListener('pointercancel', pointerUp);
+    renderer.domElement.addEventListener('lostpointercapture', pointerUp);
 
     const resize = () => {
       const width = container.clientWidth;
       const height = Math.max(container.clientHeight, 1);
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
-      camera.updateProjectionMatrix();
+      if (runtime.isFirstPerson) {
+        const stop = TOUR_STOPS.find((item) => item.id === latestPropsRef.current.activeTourStopId);
+        updateTourCameraProjection(camera, stop, { presentation: !runtime.isExplore });
+      } else {
+        camera.updateProjectionMatrix();
+      }
+      requestRender();
     };
     window.addEventListener('resize', resize);
     resize();
@@ -549,7 +589,8 @@ export default function VillaViewer({
 
       if (runtime.orbitControls?.enabled) runtime.orbitControls.update();
 
-      const desktopCanWalk = runtime.isExplore && Boolean(runtime.pointerLockControls?.isLocked);
+      const desktopCanWalk = runtime.isExplore && runtime.firstPersonAvailable
+        && Boolean(runtime.pointerLockControls?.isLocked);
       const touchCanWalk = Boolean(
         runtime.isTouchDevice && runtime.isExplore && runtime.firstPersonAvailable
       );
@@ -591,6 +632,7 @@ export default function VillaViewer({
             runtime.currentWalkEdgeId
           );
           camera.position.copy(constrained.position);
+          requestRender();
           runtime.currentWalkEdgeId = constrained.edge?.id ?? runtime.currentWalkEdgeId;
         }
 
@@ -602,13 +644,19 @@ export default function VillaViewer({
             (edge) => edge.id === runtime.currentWalkEdgeId
           ) ?? null;
           if (nearest) {
+            if (runtime.lightingStopId !== nearest.id) {
+              runtime.lightingStopId = nearest.id;
+              syncLighting();
+            }
             setWalkStatus((previous) => {
               const next = {
+                stopId: nearest.id,
                 label: nearest.title,
                 floor: nearest.floor,
                 edgeType: currentEdge?.type ?? null
               };
-              return previous.label === next.label
+              return previous.stopId === next.stopId
+                && previous.label === next.label
                 && previous.floor === next.floor
                 && previous.edgeType === next.edgeType
                 ? previous
@@ -618,7 +666,10 @@ export default function VillaViewer({
         }
       }
 
-      renderer.render(scene, camera);
+      if (runtime.needsRender) {
+        renderer.render(scene, camera);
+        runtime.needsRender = false;
+      }
     };
     animate();
 
@@ -626,13 +677,16 @@ export default function VillaViewer({
       runtime.disposed = true;
       if (runtime.frameId) cancelAnimationFrame(runtime.frameId);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('keydown', keyDown);
-      window.removeEventListener('keyup', keyUp);
+      disposeKeyboard();
+      renderer.domElement.removeEventListener('webglcontextrestored', contextRestored);
       renderer.domElement.removeEventListener('click', lockFirstPerson);
       renderer.domElement.removeEventListener('pointerdown', pointerDown);
       renderer.domElement.removeEventListener('pointermove', pointerMove);
       renderer.domElement.removeEventListener('pointerup', pointerUp);
       renderer.domElement.removeEventListener('pointercancel', pointerUp);
+      renderer.domElement.removeEventListener('lostpointercapture', pointerUp);
+      runtime.orbitControls?.removeEventListener('change', requestRender);
+      runtime.pointerLockControls?.removeEventListener('change', requestRender);
       runtime.orbitControls?.dispose();
       runtime.pointerLockControls?.unlock();
       runtime.pointerLockControls?.dispose();
@@ -670,7 +724,7 @@ export default function VillaViewer({
   const isExplore = isFirstPerson && interactionMode === 'explore';
   const runtimeLightingProfile = resolveRuntimeLighting(
     lightingMode,
-    activeTourStopId,
+    isExplore ? (walkStatus.stopId ?? activeTourStopId) : activeTourStopId,
     isFirstPerson
   ).profile;
 
@@ -701,8 +755,8 @@ export default function VillaViewer({
         <p>
           {isFirstPerson
             ? isExplore
-              ? 'Explore freely on the authored walk route. Return to Guided at any time without reloading the villa.'
-              : 'Guided presents the strongest authored view. Use the arrows to continue or switch to Explore to walk yourself.'
+              ? 'Look around and walk through the rooms. Switch to Guided to return to the tour.'
+              : 'Use the arrows to continue the tour or switch to Explore to walk yourself.'
             : 'Drag to orbit · scroll to zoom · choose a room or enter the guided walkthrough.'}
         </p>
       </div>
@@ -865,7 +919,7 @@ export default function VillaViewer({
       </div>
 
       <p className="viewer-note">
-        Guided highlights the strongest presentation views. Explore lets you move through the same villa from reliable walk points without reloading the scene.
+        Guided shows each space from a selected viewpoint. Explore starts from the walking area of the selected stop.
       </p>
     </section>
   );

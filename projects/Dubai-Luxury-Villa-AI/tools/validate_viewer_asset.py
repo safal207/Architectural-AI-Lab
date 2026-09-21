@@ -1,5 +1,6 @@
 import hashlib
 import json
+import math
 import struct
 from pathlib import Path
 
@@ -82,7 +83,9 @@ VERSION_RULES = {
         'forbid_punctual_lights': True,
     },
     'v0.4-pool-context-v4-feature-candidate': {
-        'status': 'FEATURE_BRANCH_VISUAL_QA_ONLY',
+        # Keep the asset identity and source receipt frozen while recording its
+        # current use in the main-branch portfolio viewer.
+        'status': 'MAIN_PORTFOLIO_PROTOTYPE',
         'promotion': PROJECT_ROOT / 'validation' / 'v0.4-pool-context-v4-feature-promotion.json',
         'required_tour_anchors': V04_TOUR_ANCHORS,
         'required_look_targets': V04_LOOK_TARGETS,
@@ -151,6 +154,84 @@ def validate_promotion(version, rules, promotion, raw, digest):
         return
 
     fail(f'unknown promotion kind for {version}: {rules["promotion_kind"]}')
+
+
+def validate_pool_v4(document, manifest, promotion, raw, digest):
+    """Bind the promoted asset to its source evidence and navigation contract."""
+    presentation_names = {'tour_present_pool', 'tour_present_look_pool'}
+    boundary = 'GUIDED_PRESENTATION_SEPARATE_FROM_EXPLORE_ROUTE'
+    if set(manifest.get('presentation_nodes', [])) != presentation_names:
+        fail('Pool presentation nodes mismatch')
+    if manifest.get('navigation_boundary') != boundary or promotion.get('navigation_boundary') != boundary:
+        fail('Pool navigation boundary mismatch')
+    if promotion.get('version') != 'v0.4-pool-context-v4-feature-promotion':
+        fail('Pool promotion version mismatch')
+    if type(promotion.get('source_workflow_run')) is not int or promotion['source_workflow_run'] <= 0:
+        fail('Pool promotion source workflow run is missing or invalid')
+    if promotion.get('viewer_asset') != 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.glb':
+        fail('Pool promotion viewer asset path mismatch')
+
+    receipt_path = PROJECT_ROOT / 'validation' / 'v0.4-pool-context-v4-receipt.json'
+    if not receipt_path.is_file():
+        fail('missing Pool source receipt')
+    receipt = json.loads(receipt_path.read_text(encoding='utf-8'))
+    if receipt.get('version') != 'v0.4-pool-context-v4' or receipt.get('status') != 'RENDERED_NOT_YET_PROMOTED':
+        fail('Pool source receipt version/status mismatch')
+    if receipt.get('glb', {}).get('bytes') != len(raw) or receipt.get('glb', {}).get('sha256') != digest:
+        fail('Pool source receipt does not match committed GLB')
+    if set(receipt.get('presentation_nodes', [])) != presentation_names:
+        fail('Pool source receipt presentation nodes mismatch')
+
+    render_path = PROJECT_ROOT / 'renders' / 'villa-v0.4-pool-context-v4.png'
+    if not render_path.is_file():
+        fail('missing Pool source render')
+    render = render_path.read_bytes()
+    evidence = receipt.get('render', {})
+    if len(render) < 24 or render[:8] != b'\x89PNG\r\n\x1a\n':
+        fail('invalid Pool source render PNG')
+    dimensions = struct.unpack_from('>II', render, 16)
+    if dimensions != (1600, 900) or dimensions != (evidence.get('width'), evidence.get('height')):
+        fail('Pool source render dimensions mismatch')
+    if evidence.get('bytes') != len(render) or evidence.get('sha256') != hashlib.sha256(render).hexdigest():
+        fail('Pool source receipt does not match committed render')
+
+    # Blender exports these empties directly into the default scene. Require
+    # that same structure: an orphan or transformed parent must not silently
+    # change the coordinates used by the browser's navigation authority.
+    nodes = document.get('nodes', [])
+    scenes = document.get('scenes', [])
+    scene_index = document.get('scene', 0)
+    if type(scene_index) is not int or not 0 <= scene_index < len(scenes):
+        fail('Pool GLB has no valid default scene')
+    roots = set(scenes[scene_index].get('nodes', []))
+    child_nodes = {child for node in nodes for child in node.get('children', [])}
+    anchors = {}
+    for name in presentation_names | {'tour_pool'}:
+        matches = [(index, node) for index, node in enumerate(nodes) if node.get('name') == name]
+        if len(matches) != 1:
+            fail(f'Pool anchor must be unique: {name}')
+        index, node = matches[0]
+        if index not in roots or index in child_nodes:
+            fail(f'Pool anchor must be a root of the default scene: {name}')
+        # Matrix-form anchors need explicit review, rather than interpreting
+        # their translation field as their actual position.
+        position = node.get('translation', [0, 0, 0])
+        if 'matrix' in node or len(position) != 3 or any(type(value) not in (int, float) or not math.isfinite(value) for value in position):
+            fail(f'invalid Pool anchor transform: {name}')
+        anchors[name] = position
+        if name in presentation_names:
+            extras = node.get('extras', {})
+            role = 'guided-camera' if name == 'tour_present_pool' else 'guided-look-target'
+            if extras.get('navigation_authority') is not False or extras.get('tour_stop') != 'pool' or extras.get('presentation_role') != role:
+                fail(f'Pool presentation metadata mismatch: {name}')
+
+    # Frozen POOL_CAMERA in run_v04_pool_context.py, converted to glTF Y-up.
+    if any(abs(actual - expected) > 0.015 for actual, expected in zip(anchors['tour_pool'], (-0.55, 1.65, -7.05))):
+        fail('Pool Explore anchor moved from its frozen route position')
+    if math.dist(anchors['tour_pool'], anchors['tour_present_pool']) < 3.0:
+        fail('Pool Guided camera is not separated from the Explore route')
+    if math.dist(anchors['tour_present_pool'], anchors['tour_present_look_pool']) < 0.1:
+        fail('Pool Guided camera and look target coincide')
 
 
 def main():
@@ -236,11 +317,7 @@ def main():
             fail(f'runtime-lighting boundary violated: {node_light_refs}')
 
     if version == 'v0.4-pool-context-v4-feature-candidate':
-        presentation_nodes = set(manifest.get('presentation_nodes', []))
-        if presentation_nodes != {'tour_present_pool', 'tour_present_look_pool'}:
-            fail(f'Pool presentation nodes mismatch: {sorted(presentation_nodes)}')
-        if manifest.get('navigation_boundary') != 'GUIDED_PRESENTATION_SEPARATE_FROM_EXPLORE_ROUTE':
-            fail(f"Pool navigation boundary mismatch: {manifest.get('navigation_boundary')}")
+        validate_pool_v4(document, manifest, promotion, raw, digest)
 
     if version == 'v0.4-interior2':
         if promotion.get('vite_build') != 'PASS':

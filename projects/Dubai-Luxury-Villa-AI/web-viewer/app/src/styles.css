@@ -388,8 +388,9 @@ footer {
   .sales-hero,
   .case-story,
   .pilot-card,
-  .app-grid,
   .lower-grid { grid-template-columns: 1fr; }
+  /* Let the viewer shrink below the canvas's previous drawing-buffer width. */
+  .app-grid { grid-template-columns: minmax(0, 1fr); }
   .sales-hero__copy { min-height: auto; }
   .pilot-card__scope { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .viewer-panel { min-height: 420px; }
