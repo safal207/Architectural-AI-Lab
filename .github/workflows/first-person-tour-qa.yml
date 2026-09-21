@@ -37,6 +37,7 @@ jobs:
           node qa/stair-presentation.mjs
           node qa/pool-presentation.mjs
           node qa/drone-controls.mjs
+          node qa/design-study.mjs
 
       - name: Build viewer
         run: npm run build

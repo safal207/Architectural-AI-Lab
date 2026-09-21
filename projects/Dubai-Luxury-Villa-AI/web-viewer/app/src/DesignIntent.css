@@ -13,35 +13,12 @@
 .design-intent__facts dd { margin: 0; font-size: 12px; line-height: 1.5; }
 .design-intent__study { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(250px, .8fr); gap: clamp(30px, 6vw, 95px); align-items: center; }
 .design-intent__figure { min-width: 0; }
-.design-intent__diagram { width: 100%; height: auto; max-height: 350px; display: block; overflow: visible; }
-.design-intent__diagram path { vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-.design-intent__site-lines { fill: none; stroke: #d4cebf; stroke-width: .8; }
-.design-intent__building { stroke: var(--intent-line); stroke-width: .95; fill: none; }
-.design-intent__front { fill: #f1ece2; }
-.design-intent__side { fill: #e5dfd2; }
-.design-intent__glass { fill: #dfe5e0; stroke: #a7b5ac; }
-.design-intent__mullions { stroke: #afb9af; stroke-width: .8; }
-.design-intent__plane { fill: #e2daca; transition: fill .2s ease, stroke .2s ease; }
-.design-intent__plane-edge { fill: #d7cbb6; }
-.design-intent__balcony { stroke: #b0b0a0; stroke-width: .85; }
-.design-intent__facade-timber { stroke: #b29c7c; stroke-width: 3.5; }
-.design-intent__interior-timber { fill: #ddd0bb; stroke: #b29c7c; }
-.design-intent__joinery-lines { stroke: #b29c7c; stroke-width: .7; }
-.design-intent__pool { fill: #e0e6e0; stroke: #a8b8ad; transition: fill .2s ease, stroke .2s ease; }
-.design-intent__pool-line { stroke: #b5c2b8; stroke-width: .7; }
-.design-intent__diagram--edges .design-intent__plane { fill: #c7b28f; stroke: var(--intent-highlight); }
-.design-intent__diagram--edges .design-intent__plane-edge { fill: #b8a079; stroke: var(--intent-highlight); }
-.design-intent__diagram--thresholds .design-intent__glass,
-.design-intent__diagram--thresholds .design-intent__pool { fill: #b7cbbc; stroke: #648673; }
-.design-intent__diagram--timber .design-intent__facade-timber { stroke: #8c6943; stroke-width: 4.8; }
-.design-intent__diagram--timber .design-intent__interior-timber { fill: #b69b76; stroke: #8c6943; }
-.design-intent__diagram--timber .design-intent__joinery-lines { stroke: #8c6943; }
-.design-intent__annotation { opacity: 0; fill: none; stroke: var(--intent-highlight); stroke-width: 1; transition: opacity .2s ease; }
+.design-intent__diagram { width: 100%; height: auto; max-height: 380px; display: block; overflow: visible; }
+.design-intent__annotation { fill: none; stroke: var(--intent-highlight); stroke-width: 1; }
+.design-intent__annotation path { vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .design-intent__annotation circle { fill: var(--paper, #f5f2eb); vector-effect: non-scaling-stroke; }
+.design-intent__annotation .design-intent__anchor { fill: var(--intent-highlight); stroke: none; }
 .design-intent__annotation text { fill: #765c3d; stroke: none; text-anchor: middle; font-family: "Segoe UI", Arial, sans-serif; font-size: 13px; letter-spacing: .02em; }
-.design-intent__diagram--edges .design-intent__annotation--edges,
-.design-intent__diagram--thresholds .design-intent__annotation--thresholds,
-.design-intent__diagram--timber .design-intent__annotation--timber { opacity: 1; }
 .design-intent__figure figcaption { display: flex; justify-content: space-between; gap: 16px; padding-top: 4px; color: var(--muted, #706d62); font-size: 9px; line-height: 1.5; }
 .design-intent__figure figcaption span:first-child { text-transform: uppercase; letter-spacing: .09em; }
 .design-intent__reader { min-width: 0; }

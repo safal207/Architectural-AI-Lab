@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from 'react';
 import './DesignIntent.css';
+import study from '../data/design-study.json';
 
 const GESTURES = [
   {
@@ -30,63 +31,41 @@ const GESTURES = [
     description: 'Vertical timber elements on the façade find an echo in the kitchen island and interior joinery. Warm wood brings a shared character to the two levels.',
     stop: 'dining',
     action: 'See the kitchen in 3D',
-    diagram: 'Vertical façade elements and interior timber joinery are highlighted across the two levels.'
+    diagram: 'The timber fins and soffit are highlighted at their actual positions on the upper façade. Interior joinery can be viewed in the kitchen tour.'
   }
 ];
 
 function ConceptDiagram({ active, id }) {
+  const anchor = study.landmarks[active.id].svg;
+  const label = { edges: [645, 100], thresholds: [678, 424], timber: [75, 225] }[active.id];
+  const elbow = active.id === 'thresholds' ? study.landmarks.pool.svg : [anchor[0], label[1]];
+  const endX = label[0] + (label[0] < anchor[0] ? 18 : -18);
   return (
     <figure className="design-intent__figure">
       <svg
         className={`design-intent__diagram design-intent__diagram--${active.id}`}
-        viewBox="0 0 720 430"
+        viewBox={study.viewBox.join(' ')}
         role="img"
         aria-labelledby={`${id}-diagram-title`}
         aria-describedby={`${id}-diagram-description`}
+        data-source-model-sha={study.sources['public/villa.glb']}
+        data-projection={study.projection}
       >
-        <title id={`${id}-diagram-title`}>The residence: a conceptual axonometric study</title>
-        <desc id={`${id}-diagram-description`}>{active.diagram} This simplified diagram is not a measured drawing.</desc>
-
-        <g className="design-intent__site-lines">
-          <path d="M47 307H472L658 199M91 363H528L678 276" />
-          <path d="M88 288L254 192M585 249L645 214" />
-        </g>
-        <g className="design-intent__building">
-          <path className="design-intent__side" d="M468 198L580 132V225L468 291Z" />
-          <path className="design-intent__front" d="M145 198H468V291H145Z" />
-          <path className="design-intent__glass" d="M227 205H456V283H227Z" />
-          <path className="design-intent__mullions" d="M284 205V283M342 205V283M399 205V283" />
-          <path className="design-intent__interior-timber" d="M317 253H414V275H317Z" />
-          <path className="design-intent__joinery-lines" d="M329 255V272M342 255V272M355 255V272M368 255V272M381 255V272M394 255V272M407 255V272" />
-
-          <path className="design-intent__plane" d="M126 191H478L600 120H248Z" />
-          <path className="design-intent__plane-edge" d="M126 191V198H478L600 127V120M478 191V198" />
-          <path className="design-intent__side" d="M460 101L550 49V135L460 187Z" />
-          <path className="design-intent__front" d="M210 101H460V187H210Z" />
-          <path className="design-intent__glass" d="M288 111H449V178H288Z" />
-          <path className="design-intent__mullions" d="M341 111V178M395 111V178" />
-          <path className="design-intent__balcony" d="M276 160H463L509 133M276 160V187M463 160V187M509 133V159" />
-          <path className="design-intent__facade-timber" d="M214 103V187M225 103V187M236 103V187M247 103V187M258 103V187M269 103V187" />
-          <path className="design-intent__plane" d="M194 94H467L569 35H296Z" />
-          <path className="design-intent__plane-edge" d="M194 94V101H467L569 42V35M467 94V101" />
-          <path className="design-intent__pool" d="M195 357H490L586 302H291Z" />
-          <path className="design-intent__pool-line" d="M218 347H487L563 311" />
-        </g>
-
-        <g className="design-intent__annotation design-intent__annotation--edges" aria-hidden="true">
-          <path d="M521 71L592 71L616 47" />
-          <circle cx="628" cy="35" r="17" /><text x="628" y="40">01</text>
-        </g>
-        <g className="design-intent__annotation design-intent__annotation--thresholds" aria-hidden="true">
-          <path d="M343 267L379 326L615 326" />
-          <circle cx="635" cy="326" r="17" /><text x="635" y="331">02</text>
-        </g>
-        <g className="design-intent__annotation design-intent__annotation--timber" aria-hidden="true">
-          <path d="M239 143H127L100 117" />
-          <circle cx="86" cy="103" r="17" /><text x="86" y="108">03</text>
+        <title id={`${id}-diagram-title`}>The residence: an axonometric view of the current model</title>
+        <desc id={`${id}-diagram-description`}>{active.diagram} Exterior geometry and proportions come from the current 3D model. Furniture and planting are omitted for clarity.</desc>
+        <image
+          href={`${import.meta.env.BASE_URL}${study.images[active.id].path}`}
+          width="720" height="480"
+          aria-hidden="true"
+        />
+        <g className="design-intent__annotation" aria-hidden="true">
+          <path d={`M${anchor.join(' ')} L${elbow.join(' ')} L${endX} ${label[1]}`} />
+          <circle className="design-intent__anchor" cx={anchor[0]} cy={anchor[1]} r="3" />
+          <circle cx={label[0]} cy={label[1]} r="17" />
+          <text x={label[0]} y={label[1] + 4.5}>{active.number}</text>
         </g>
       </svg>
-      <figcaption><span>Design intent / {active.number}</span><span>Concept diagram · Not to scale</span></figcaption>
+      <figcaption><span>Design intent / {active.number}</span><span>From the current 3D model</span></figcaption>
     </figure>
   );
 }

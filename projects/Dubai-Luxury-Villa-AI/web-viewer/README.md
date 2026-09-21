@@ -10,7 +10,7 @@ The editorial redesign is a development preview for draft PR #9. The public demo
 
 ## Experience
 
-- Architectural intent, project facts and an original not-to-scale diagram with three explanations linked to 3D views.
+- Architectural intent, project facts and an axonometric study exported from the current repaired model, with three explanations linked to 3D views.
 - Sticky navigation through Concept, Spaces, 3D studio, Plan and Brief on desktop and mobile.
 - A residence introduction and image stories for the kitchen/living area and pool terrace.
 - An image gallery with keyboard navigation, Escape to close and focus return.
@@ -96,3 +96,11 @@ The [earlier local repair report](../validation/portfolio-reconciliation-2026-09
 ## Concept limits
 
 The plan is a navigation schematic with indicative areas. Walk bounds are interaction aids, not measured construction geometry or a complete collision simulation. Drone flight is free movement within scene bounds and can pass through surfaces. This portfolio and its downloaded brief are not BIM, specifications, engineering, construction documentation or representations of an existing property.
+
+## Model-derived design study
+
+The design diagram uses three static orthographic views of the production GLB after the same stair and pool repairs as the live viewer. Geometry is not repositioned. The illustration omits furniture, planting and distant context; glass is opaque for readability. Callouts project named mesh positions through the export camera, so they stay attached to actual features.
+
+Regenerate from `app` with `node scripts/generate-design-study.mjs` (requires the existing Playwright QA tooling and installed Chromium). This writes three small WebP files and `data/design-study.json`. Run `node qa/design-study.mjs` to verify source hashes, exported image receipts and callout positions against the GLB. The source hashes normalize text line endings across Windows and Linux. Changing the GLB, runtime geometry repairs or exporter requires regenerating the study; CI rejects stale assets.
+
+[Diagram correction and verification](../validation/model-derived-design-study-2026-09-21.md).

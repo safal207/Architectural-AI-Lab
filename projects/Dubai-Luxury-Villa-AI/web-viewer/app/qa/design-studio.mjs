@@ -23,6 +23,15 @@ try {
   await page.goto(process.env.VILLA_URL ?? 'http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.modelState === 'loaded', undefined, { timeout: 120_000 });
   const tabs = page.getByRole('tablist', { name: 'Architectural gestures' });
+  check(await page.locator('.design-intent__diagram').getAttribute('data-projection') === 'orthographic', 'Study must use the current model projection');
+  for (const [title, asset] of [['Deep edges', 'edges'], ['Open thresholds', 'thresholds'], ['A timber thread', 'timber']]) {
+    await tabs.getByRole('tab', { name: title }).click();
+    const href = await page.locator('.design-intent__diagram image').getAttribute('href');
+    check(href.endsWith('/' + asset + '.webp'), 'Study highlight image does not match selected gesture');
+    await page.evaluate(async src => { const image = new Image(); image.src = src; await image.decode(); if (image.naturalWidth !== 1440 || image.naturalHeight !== 960) throw new Error('Invalid study image dimensions'); }, href);
+  }
+  report.checks.push('All three model-derived studies load at full resolution and track their selected gesture');
+  await tabs.getByRole('tab', { name: 'Deep edges' }).click();
   await tabs.getByRole('tab', { name: 'Deep edges' }).focus();
   await page.keyboard.press('ArrowDown');
   check(await tabs.getByRole('tab', { name: 'Open thresholds' }).getAttribute('aria-selected') === 'true', 'ArrowDown did not select second design gesture');
@@ -77,7 +86,7 @@ try {
   await page.locator('#brief').screenshot({ path: `${output}/brief-desktop.png` });
 
   report.widths = [];
-  for (const width of [1024, 768, 390, 320]) {
+  for (const width of [1024, 796, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     await page.locator('.material-switcher').scrollIntoViewIfNeeded();
     const layout = await page.evaluate(() => ({ width: document.documentElement.clientWidth, content: document.documentElement.scrollWidth, links: [...document.querySelectorAll('.project-chapters > div a')].map(a => { const b = a.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, height: b.height }; }) }));
@@ -86,6 +95,10 @@ try {
     await page.getByRole('navigation', { name: 'Project chapters' }).getByRole('link', { name: 'Plan', exact: true }).click();
     await page.waitForFunction(() => document.querySelector('.project-chapters a[href="#journey"]')?.getAttribute('aria-current') === 'location');
     report.widths.push({ width, overflow: layout.content - layout.width });
+    if (width === 796) {
+      await tabs.getByRole('tab', { name: 'Open thresholds' }).click();
+      await page.locator('#design').screenshot({ style: '.project-chapters { visibility: hidden !important; }', path: `${output}/design-796.png` });
+    }
     if (width === 390) {
       await page.locator('.kitchen-shortcut').click();
       await waitStop('dining');

@@ -51,7 +51,7 @@ At the reviewed `main` baseline `3dac25f`, build and deployment succeeded. [Live
 
 ## Presentation features
 
-- Architectural intent, project facts and an original not-to-scale diagram linked to three 3D views.
+- Architectural intent, project facts and an axonometric study exported from the current repaired model, linked to three 3D views.
 - Sticky navigation through five project chapters, including on mobile.
 - Interactive room plan, tour route and room-linked metadata.
 - A direct kitchen shortcut and an explicit return from the plan to the selected 3D view.

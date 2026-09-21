@@ -1,0 +1,301 @@
+{
+  "version": 1,
+  "sources": {
+    "public/villa.glb": "4f3e2868b532d1e3ea50e83aeb9a696e3c1f6484b38b2067db4973b57e66d115",
+    "src/three/stairPresentation.js": "9fda0e6e00296546addde83fa4d6cebc96ae8db03895355c20f717b4a532df35",
+    "src/three/poolPresentation.js": "6944b7963c533d66582db3bde1f198102fbf04ad13979d0d40a05ff76b3a529e",
+    "scripts/design-study-renderer.js": "91306d956ef4b8f6f6996e1b1c0404a7ae941a7f2382b8c7c922d2d3c69848b3",
+    "scripts/generate-design-study.mjs": "4bf8129b9a81f6537493a017485019908f79e66be895a13ca19994039b2d5fff"
+  },
+  "images": {
+    "edges": {
+      "path": "media/design-study/edges.webp",
+      "sha256": "e36474db64235ae67ed9d1dc49ce5c6e1b5e063770b5c0195366a4aade8acf14",
+      "bytes": 49694
+    },
+    "thresholds": {
+      "path": "media/design-study/thresholds.webp",
+      "sha256": "40cf94fc03ec9254f679138f8f433e2d9349fe0f111d14e4e61179049c586b63",
+      "bytes": 47106
+    },
+    "timber": {
+      "path": "media/design-study/timber.webp",
+      "sha256": "844993c7b4a1173f131d2299491b95391047750fc5dc51260437b94d532f5b3d",
+      "bytes": 45156
+    }
+  },
+  "width": 1440,
+  "height": 960,
+  "viewBox": [
+    0,
+    0,
+    720,
+    480
+  ],
+  "projection": "orthographic",
+  "viewerRotationY": 3.141592653589793,
+  "includedMeshes": [
+    "arrival_canopy_v03",
+    "balcony_glass_r6_00",
+    "balcony_glass_r6_01",
+    "balcony_glass_r6_02",
+    "balcony_soffit_r6",
+    "balcony_top_rail_r6",
+    "entry_door",
+    "entry_portal_left",
+    "entry_portal_right",
+    "entry_portal_top",
+    "ground_back_wall",
+    "ground_floor_slab",
+    "ground_front_header",
+    "ground_front_reveal",
+    "ground_left_stone_core",
+    "ground_right_private_core",
+    "infinity_lip",
+    "left_core_joint_00",
+    "left_core_joint_01",
+    "left_core_joint_02",
+    "left_core_vertical_gap_r6_00",
+    "left_core_vertical_gap_r6_01",
+    "left_core_vertical_gap_r6_02",
+    "left_planter",
+    "left_planter_soil",
+    "living_ceiling_warm",
+    "living_column_+50",
+    "living_column_-48",
+    "living_glass_01",
+    "living_glass_02",
+    "living_glass_03",
+    "living_glass_04",
+    "living_glass_05",
+    "living_glass_06",
+    "living_mullion_01",
+    "living_mullion_02",
+    "living_mullion_03",
+    "living_mullion_04",
+    "living_mullion_05",
+    "living_mullion_06",
+    "living_shadow_datum_v03",
+    "master_ceiling_v04_r3",
+    "master_door_handle_open_v04_r4",
+    "master_door_open_v04_r4",
+    "master_floor_v04_r3",
+    "master_frame_bottom",
+    "master_frame_top",
+    "master_glass_01",
+    "master_glass_02",
+    "master_glass_03",
+    "master_glass_04",
+    "master_left_wall_front_v04_r3",
+    "master_left_wall_rear_v04_r3",
+    "master_mullion_01",
+    "master_mullion_02",
+    "master_mullion_03",
+    "master_mullion_04",
+    "master_rear_wall_v04_r3",
+    "master_right_wall_v04_r3",
+    "master_side_frame_left_r6",
+    "master_side_frame_right_r6",
+    "pool_basin",
+    "pool_coping_left",
+    "pool_coping_near",
+    "pool_coping_right",
+    "pool_floor_r3",
+    "pool_shallow_shelf",
+    "pool_water",
+    "private_door_handle_v04",
+    "private_door_v04",
+    "right_planter",
+    "right_planter_soil",
+    "roof_dark_edge",
+    "roof_plane",
+    "screen_left_core_recess_glass_v0312",
+    "screen_left_core_recess_header_v0312",
+    "signature_cantilever",
+    "signature_dark_edge",
+    "signature_timber_soffit",
+    "stair_end_post_v04_r2_lower",
+    "stair_end_post_v04_r2_upper",
+    "stair_glass_guard_v04_r2",
+    "stair_landing_v04",
+    "stair_step_v04_00",
+    "stair_step_v04_01",
+    "stair_step_v04_02",
+    "stair_step_v04_03",
+    "stair_step_v04_04",
+    "stair_step_v04_05",
+    "stair_step_v04_06",
+    "stair_step_v04_07",
+    "stair_step_v04_08",
+    "stair_step_v04_09",
+    "stair_step_v04_10",
+    "stair_step_v04_11",
+    "stair_step_v04_12",
+    "stair_step_v04_13",
+    "stair_top_rail_v04_r2",
+    "stone_spine_front_blade_r9",
+    "terrace_deck",
+    "timber_fin_00",
+    "timber_fin_01",
+    "timber_fin_02",
+    "timber_fin_03",
+    "timber_fin_04",
+    "timber_fin_05",
+    "timber_fin_06",
+    "timber_fin_07",
+    "upper_corridor_bridge_v04_r3",
+    "upper_floor_slab",
+    "upper_interior_ceiling",
+    "upper_interior_floor",
+    "upper_landing_side_wall_v04_r4"
+  ],
+  "highlightedMeshes": {
+    "edges": [
+      "upper_floor_slab",
+      "signature_cantilever",
+      "roof_plane"
+    ],
+    "thresholds": [
+      "living_glass_01",
+      "living_glass_02",
+      "living_glass_03",
+      "living_glass_04",
+      "living_glass_05",
+      "living_glass_06",
+      "master_glass_01",
+      "master_glass_02",
+      "master_glass_03",
+      "master_glass_04",
+      "pool_water",
+      "screen_left_core_recess_glass_v0312"
+    ],
+    "timber": [
+      "timber_fin_00",
+      "timber_fin_01",
+      "timber_fin_02",
+      "timber_fin_03",
+      "timber_fin_04",
+      "timber_fin_05",
+      "timber_fin_06",
+      "timber_fin_07",
+      "signature_timber_soffit"
+    ]
+  },
+  "landmarks": {
+    "edges": {
+      "mesh": "roof_plane",
+      "world": [
+        -1.5499999523162837,
+        6.729999847710133,
+        3.924999903887511
+      ],
+      "svg": [
+        355.60404195357995,
+        183.31273695880984
+      ],
+      "bounds": {
+        "min": [
+          -8.850000143051147,
+          6.589999847114086,
+          -4.024999905377627
+        ],
+        "max": [
+          5.75000023841858,
+          6.729999847710133,
+          3.924999903887511
+        ]
+      }
+    },
+    "thresholds": {
+      "mesh": "living_glass_03",
+      "world": [
+        0.8100000023841853,
+        1.6799999475479126,
+        4.03000020980835
+      ],
+      "svg": [
+        401.932667350245,
+        277.06560573051866
+      ],
+      "bounds": {
+        "min": [
+          0.07999998331069902,
+          0.28999996185302734,
+          3.995000209659338
+        ],
+        "max": [
+          1.5400000214576717,
+          3.069999933242798,
+          4.065000209957361
+        ]
+      }
+    },
+    "timber": {
+      "mesh": "timber_fin_04",
+      "world": [
+        -6.480000019073487,
+        5.03000020980835,
+        3.700000047683715
+      ],
+      "svg": [
+        258.750257047433,
+        244.31359281896616
+      ],
+      "bounds": {
+        "min": [
+          -6.525000020861627,
+          3.7550002336502075,
+          3.3100000619888297
+        ],
+        "max": [
+          -6.435000017285348,
+          6.305000185966492,
+          4.0900000333786
+        ]
+      }
+    },
+    "pool": {
+      "mesh": "pool_water",
+      "world": [
+        0.5500000119209281,
+        0.1899999976158142,
+        9.25
+      ],
+      "svg": [
+        465.339125563266,
+        351.5608966902102
+      ],
+      "bounds": {
+        "min": [
+          -6.160000026226045,
+          0.15999999828636646,
+          7.3200000524520865
+        ],
+        "max": [
+          7.260000050067901,
+          0.21999999694526196,
+          11.179999947547913
+        ]
+      }
+    }
+  },
+  "camera": {
+    "position": [
+      -22.574999570846558,
+      21.357499903067946,
+      34.84249987825751
+    ],
+    "quaternion": [
+      -0.205632030721198,
+      -0.2896549967265852,
+      -0.06386721202337017,
+      0.9325966062779556
+    ],
+    "left": -15.573975076566489,
+    "right": 15.573975076566489,
+    "top": 10.382650051044322,
+    "bottom": -10.38265005104433,
+    "near": 0.1,
+    "far": 200
+  }
+}
