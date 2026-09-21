@@ -1,28 +1,34 @@
 # Architectural-AI-Lab
 
-AI-assisted architectural visualization: villa concepts, interior presentation and interactive 3D tours built from native Blender geometry.
+AI-assisted architectural visualization for villas, kitchens and home interiors: native Blender studies, material exploration and interactive 3D tours.
 
-## Featured project — Dubai Luxury Villa AI
+## Featured project — Dubai residence
 
-**[Open the interactive villa](https://safal207.github.io/Architectural-AI-Lab/)**
+**Desert, distilled.** A contemporary home explored through warm stone, timber, sheltered interiors and a pool-side landscape.
 
-![Pool Context v4 — native Blender concept render](projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-pool-context-v4.png)
+![Pool Context v4 — native Blender exterior study](projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/editorial/residence-1600.webp)
 
-A contemporary villa concept with a furnished living and dining area, kitchen, master suite, staircase and pool terrace. **Pool Context v4**, the asset now included on `main`, adds a planted desert garden and a dedicated pool presentation view to the interior-tour model.
+[Public villa demo](https://safal207.github.io/Architectural-AI-Lab/) · [Editorial redesign — draft PR #9](https://github.com/safal207/Architectural-AI-Lab/pull/9)
 
-The viewer offers:
+The editorial redesign is a preview change for draft PR #9. **The public demo has not yet been updated with this redesign.** The experience described below is the current development version.
 
-- a two-floor navigation plan and linked room selection;
-- **Guided** views composed for presenting each space;
-- **Explore** mode with keyboard and touch movement along a bounded route;
-- day, evening and night lighting, plus material concept variants;
-- a persistent 3D scene so changing tour stops does not reload the model.
+## Explore the residence
 
-The image above is a native Blender render. The browser uses its own lighting and material presentation, so its appearance differs.
+The portfolio brings together kitchen and living-space studies, outdoor architecture and a working 3D villa. Large images open into a keyboard-accessible gallery, while room links take visitors directly into the corresponding tour view.
+
+- **View the whole house:** revised pool-side framing and responsive camera projection keep the residence readable across screen sizes.
+- **Follow the light:** day, evening and night settings combine browser lighting, reflected environment light and interior fixtures.
+- **Choose a direction:** Warm Limestone, Sandstone Warmth and Graphite Mineral palettes update the model's material presentation.
+- **Plan a journey:** a two-floor concept plan links eight viewpoints; Guided views and Explore movement share a persistent scene.
+- **Start a project brief:** select villa architecture, kitchen design or home interiors, add notes and download a text brief with the chosen palette and lighting. The brief is generated on the device; nothing is submitted.
+
+If the 3D view cannot open, the page retains the image studies, gallery, material selector and brief form.
+
+The images are responsive derivatives of repository Blender renders. The exterior uses Pool Context v4; the kitchen/living image is an earlier Interior2 concept study. They are presentation studies, not photographs or pixel-identical previews of the current browser scene. [Image sources](projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/editorial/README.md)
 
 ## Model and evidence
 
-The pipeline is **Blender → GLB → React / Three.js → GitHub Pages**. Asset checks verify the binary digest, room and tour anchors, material families, source-render evidence and the separation of Guided views from the Explore route.
+The model pipeline remains **Blender → GLB → React / Three.js → GitHub Pages**. The redesign changes presentation, navigation and browser lighting; the canonical model binary is unchanged.
 
 | Current viewer model | Value |
 | --- | --- |
@@ -31,14 +37,16 @@ The pipeline is **Blender → GLB → React / Three.js → GitHub Pages**. Asset
 | GLB size | `8,613,156` bytes |
 | SHA-256 | `4f3e2868b532d1e3ea50e83aeb9a696e3c1f6484b38b2067db4973b57e66d115` |
 
-The stored identifier retains the model's original feature-development name. It does not mean the asset is absent from `main`.
+The stored identifier retains the model's original feature-development name. The asset is already included on `main`; that fact is separate from deployment of this editorial redesign.
 
-**Validation is version-specific.** Historical Interior2 checks are retained as evidence for that earlier model. At the reviewed `main` baseline `3dac25f`, build and deployment succeeded, but [Live Browser QA run 35518268054](https://github.com/safal207/Architectural-AI-Lab/actions/runs/35518268054) reported horizontal overflow at 320 px. A complete deployed mobile QA pass for the repair is still required; older passing reports do not cover it.
+**Validation is version-specific.** Historical Interior2 evidence applies to the earlier model. At the reviewed `main` baseline `3dac25f`, build and deployment succeeded, but [Live Browser QA run 35518268054](https://github.com/safal207/Architectural-AI-Lab/actions/runs/35518268054) reported horizontal overflow at 320 px.
 
-[Project details and evidence](projects/Dubai-Luxury-Villa-AI) · [Run the viewer locally](projects/Dubai-Luxury-Villa-AI/web-viewer/app)
+The [earlier portfolio repair verification](projects/Dubai-Luxury-Villa-AI/validation/portfolio-reconciliation-2026-09-21.md) records passing local build, tour and 390 → 320 → 390 px layout checks for the repair preceding this redesign. Those results do not certify the new editorial revision or its public deployment. Fresh editorial and deployed checks must be recorded separately.
 
-The [portfolio repair verification](projects/Dubai-Luxury-Villa-AI/validation/portfolio-reconciliation-2026-09-21.md) records the successful local build, desktop/mobile tour checks and 390 → 320 → 390 px layout regression for this change.
+Current browser QA entry points are `qa/live-browser.mjs` for desktop/mobile tours, gallery and brief downloads; `qa/mobile-hero-layout.mjs` for responsive containment; and `qa/editorial-resilience.mjs` for focus, room-detail state, brief updates and operation without WebGL. [Setup and QA instructions](projects/Dubai-Luxury-Villa-AI/web-viewer/README.md)
+
+[Project details and source evidence](projects/Dubai-Luxury-Villa-AI) · [Viewer app](projects/Dubai-Luxury-Villa-AI/web-viewer/app)
 
 ## Scope
 
-This is a portfolio concept for architectural visualization and virtual tours. The floor plan is a navigation schematic, and the walking route is an interaction aid rather than construction-grade collision or a measured navmesh. The project does not provide a measured drawing set, specifications, BIM, engineering or construction documentation, and does not represent an existing property.
+This is a portfolio concept for architectural visualization and virtual tours. Floor plans and areas are indicative; the walking route is an interaction aid rather than construction-grade collision or a measured navmesh. The project does not provide a measured drawing set, specifications, BIM, engineering or construction documentation, and does not represent an existing property.

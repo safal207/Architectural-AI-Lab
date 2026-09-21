@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { createHash } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const baseUrl = process.env.VILLA_URL ?? 'https://safal207.github.io/Architectural-AI-Lab/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-output';
@@ -112,25 +112,97 @@ async function verifyPublishedAsset(page) {
   };
 }
 
-async function verifySalesCase(page) {
+async function verifyPortfolio(page) {
   await page.getByRole('heading', {
     level: 1,
-    name: 'Turn an architectural concept into an investor-ready interactive property story.',
-    exact: true
+    name: /^Desert,\s*distilled\.$/
   }).waitFor();
 
-  await page.getByRole('heading', { level: 2, name: 'Request a 5-day digital twin pilot', exact: true }).waitFor();
-  const pilotLink = page.getByRole('link', { name: 'Request a 5-day pilot', exact: true });
-  await pilotLink.waitFor();
-  const href = await pilotLink.getAttribute('href');
-  check(href?.includes('/Architectural-AI-Lab/issues/new'), `Unexpected pilot CTA href: ${href}`);
+  const heroImage = page.locator('.hero-image img');
+  await heroImage.waitFor({ state: 'visible' });
+  await page.waitForFunction(() => {
+    const image = document.querySelector('.hero-image img');
+    return image?.complete && image.naturalWidth > 0;
+  });
+  const imageSource = await heroImage.evaluate((image) => image.currentSrc);
+  check(new URL(imageSource).pathname.includes('/editorial/residence-'), 'Hero does not show the residence image');
+  await page.getByRole('button', { name: /Enter the residence/ }).waitFor({ state: 'visible' });
+
+  const stories = page.locator('.space-stories');
+  await stories.getByRole('heading', { level: 3, name: 'The heart of the home.', exact: true }).waitFor();
+  await stories.getByRole('heading', { level: 3, name: 'Life, open to the sky.', exact: true }).waitFor();
+  await stories.getByRole('button', { name: 'Explore the kitchen', exact: true }).waitFor();
+  await stories.getByRole('button', { name: 'Explore the terrace', exact: true }).waitFor();
+  check(await stories.locator('.space-story__image img').count() === 2, 'Expected kitchen and terrace image stories');
+
+  const briefLink = page.locator('.header-brief');
+  check(await briefLink.getAttribute('href') === '#brief', 'Project navigation does not point to the brief');
+  await page.locator('#brief').getByRole('button', { name: 'Download my brief', exact: true }).waitFor();
+}
+
+async function verifyGallery(page) {
+  const openGallery = page.getByRole('button', { name: 'Enlarge Kitchen & living image', exact: true });
+  await openGallery.click();
+  const gallery = page.getByRole('dialog', { name: 'Residence image gallery', exact: true });
+  await gallery.waitFor({ state: 'visible' });
+  await page.waitForFunction(() => {
+    const image = document.querySelector('.image-dialog img');
+    return image?.complete && image.naturalWidth > 0 && image.currentSrc.includes('/interior-');
+  });
+  check(await gallery.evaluate((element) => element.open), 'Gallery opened without native modal state');
+  await page.keyboard.press('ArrowRight');
+  await page.waitForFunction(() => {
+    const image = document.querySelector('.image-dialog img');
+    return image?.complete && image.naturalWidth > 0 && image.currentSrc.includes('/residence-');
+  });
+  await page.keyboard.press('ArrowLeft');
+  await gallery.getByRole('img', { name: /Fluted timber kitchen island/ }).waitFor();
+  await page.keyboard.press('Escape');
+  await gallery.waitFor({ state: 'hidden' });
+  check(await openGallery.evaluate((button) => button === document.activeElement), 'Closing the gallery did not return focus to its trigger');
+
+  await page.getByRole('button', { name: 'Enlarge Pool & terrace image', exact: true }).click();
+  await gallery.waitFor({ state: 'visible' });
+  await gallery.getByRole('button', { name: 'Close image gallery', exact: true }).click();
+  await gallery.waitFor({ state: 'hidden' });
+}
+
+async function verifyProjectBrief(page, label) {
+  const brief = page.locator('#brief');
+  const notes = 'A quiet kitchen with an island.\nKeep the garden view.';
+  await brief.getByText('Kitchen design', { exact: true }).click();
+  check(await brief.getByRole('radio', { name: 'Kitchen design', exact: true }).isChecked(), 'Project type selection did not update');
+  await brief.getByRole('textbox', { name: /What do you have in mind/ }).fill(notes);
+  const expectedMaterial = (await page.locator('.material-switcher__options button[aria-pressed="true"] strong').innerText()).trim();
+  const expectedLighting = (await page.locator('nav[aria-label="Lighting mode"] button[aria-pressed="true"]').innerText()).trim();
+
+  const downloadPromise = page.waitForEvent('download');
+  await brief.getByRole('button', { name: 'Download my brief', exact: true }).click();
+  const download = await downloadPromise;
+  check(download.suggestedFilename() === 'architectural-ai-lab-project-brief.txt', 'Brief filename is unexpected');
+  const downloadPath = `${outputDir}/${label}-project-brief.txt`;
+  await download.saveAs(downloadPath);
+  check(await download.failure() === null, 'Project brief download failed');
+  const content = await readFile(downloadPath, 'utf8');
+  for (const expected of [
+    'ARCHITECTURAL AI LAB / PROJECT BRIEF',
+    'Project: Kitchen design',
+    `Material direction: ${expectedMaterial}`,
+    `Preferred atmosphere: ${expectedLighting}`,
+    notes,
+    'Concept planning brief. Not construction documentation.'
+  ]) {
+    check(content.includes(expected), `Downloaded brief is missing ${JSON.stringify(expected)}`);
+  }
+  await brief.getByRole('status').filter({ hasText: 'Your brief is ready.' }).waitFor();
+  return { filename: download.suggestedFilename(), material: expectedMaterial, lighting: expectedLighting, notesPreserved: true };
 }
 
 async function verifyDesktopTour(page) {
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
-  await tour.getByRole('heading', { name: 'Understand the house first. Then step inside it.', exact: true }).waitFor();
-  await tour.getByText('Interactive architectural map', { exact: true }).waitFor();
+  await tour.getByRole('heading', { name: 'Plan your journey.', exact: true }).waitFor();
+  await tour.getByText('Concept floor plan', { exact: true }).waitFor();
 
   const livingZone = tour.locator('.house-plan__zone--living');
   await fastClick(livingZone);
@@ -256,7 +328,9 @@ try {
   observe(desktop, report.desktop);
   await desktop.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
   console.log('Desktop page loaded');
-  await verifySalesCase(desktop);
+  await verifyPortfolio(desktop);
+  await verifyGallery(desktop);
+  report.desktop.gallery = 'PASS';
   await waitForModel(desktop);
   report.desktop.asset = await verifyPublishedAsset(desktop);
   console.log('Desktop model and asset verified');
@@ -294,6 +368,7 @@ try {
   await fastClick(materialPanel.getByRole('button', { name: /Sandstone Warmth/ }));
   await desktop.getByText('Material: Sandstone Warmth', { exact: true }).waitFor();
   await waitForModel(desktop);
+  report.desktop.projectBrief = await verifyProjectBrief(desktop, 'desktop');
 
   const canvas = desktop.locator('.three-canvas canvas');
   await canvas.scrollIntoViewIfNeeded();
@@ -309,7 +384,7 @@ try {
   check(report.desktop.modelRequests === 1, `Desktop loaded villa.glb ${report.desktop.modelRequests} times; expected one request from the production viewer`);
 
   if (captureScreenshots) await desktop.screenshot({ path: `${outputDir}/desktop.png`, fullPage: false, animations: 'disabled', timeout: 60_000 });
-  report.desktop.salesCase = 'PASS';
+  report.desktop.portfolio = 'PASS';
   report.desktop.roomSelection = 'PASS';
   report.desktop.lighting = 'PASS';
   report.desktop.materialState = 'PASS';
@@ -326,7 +401,9 @@ try {
   observe(mobile, report.mobile);
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
   console.log('Mobile page loaded');
-  await verifySalesCase(mobile);
+  await verifyPortfolio(mobile);
+  await verifyGallery(mobile);
+  report.mobile.gallery = 'PASS';
   await waitForModel(mobile);
   await verifyMobileTour(mobile);
   report.mobile.housePlan = 'PASS';
@@ -334,6 +411,7 @@ try {
   report.mobile.guidedExploreBoundary = 'PASS';
   report.mobile.touchControls = 'PASS';
   report.mobile.persistentScene = 'PASS';
+  report.mobile.projectBrief = await verifyProjectBrief(mobile, 'mobile');
 
   const mobileRooms = mobile.locator('.rooms-panel');
   await fastClick(mobileRooms.getByRole('button', { name: 'Pool Terrace — 46 sqm', exact: true }));
@@ -371,7 +449,7 @@ try {
   const mobileCanvas = await mobile.locator('.three-canvas canvas').boundingBox();
   check(mobileCanvas && mobileCanvas.width >= 300 && mobileCanvas.height >= 180, 'Mobile WebGL canvas is unexpectedly small');
   if (captureScreenshots) await mobile.screenshot({ path: `${outputDir}/mobile.png`, fullPage: false, animations: 'disabled', timeout: 60_000 });
-  report.mobile.salesCase = 'PASS';
+  report.mobile.portfolio = 'PASS';
   report.mobile.roomSelection = 'PASS';
   report.mobile.noHorizontalOverflow = 'PASS';
   report.mobile.canvas = 'PASS';

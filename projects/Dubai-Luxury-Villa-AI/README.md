@@ -53,12 +53,13 @@ At the reviewed `main` baseline `3dac25f`, build and deployment succeeded. [Live
 - Guided camera views, Explore movement, orbit and zoom.
 - Furnished interiors, kitchen, staircase, master suite and landscaped pool context.
 - Day, evening and night lighting; architectural material variants.
-- A local metadata-grounded property assistant and investor summary.
+- An editorial gallery of native exterior and interior concept renders.
+- Material palettes and a downloadable local brief for villa, kitchen or interior work.
 - Desktop/mobile browser checks with screenshot evidence.
 
-## Pilot scope
+## Project direction
 
-The site presents a **5-day visualization pilot** for one property concept or one priority zone: Blender geometry, web presentation, room-linked information and a QA receipt. Duration and deliverables depend on an agreed brief and usable source material; the offer is not a blanket delivery guarantee. Public GitHub intake should not include confidential client materials.
+The editorial preview presents the villa as an architecture and interiors portfolio. Visitors can explore the kitchen and terrace studies, open images, walk the 3D residence, compare finishes and download a project brief containing their chosen palette and atmosphere. The brief stays on their device; no inquiry is submitted. This preview is being developed in draft PR #9 and is separate from the currently published site.
 
 ## Boundaries
 

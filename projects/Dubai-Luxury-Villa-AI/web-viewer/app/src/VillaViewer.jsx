@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createScene } from './three/scene';
-import { createCamera } from './three/camera';
+import { createCamera, OVERVIEW_POSITION, OVERVIEW_TARGET, updateOverviewProjection } from './three/camera';
 import { createRenderer } from './three/renderer';
 import { createLights } from './three/lights';
 import { createInteriorLights } from './three/interiorLights';
@@ -19,12 +19,6 @@ import {
   updateTourCameraProjection
 } from './walkthroughEngine';
 import './Walkthrough.css';
-
-const ROOM_NODE_NAMES = {
-  'living-room': 'living_room',
-  'master-bedroom': 'master_bedroom',
-  'pool-terrace': 'pool_terrace'
-};
 
 const MATERIAL_FAMILY_BY_NAME = {
   M4_OrganicWarmLimestone: 'stone',
@@ -203,6 +197,25 @@ function neutralizeImportedLights(root) {
   return count;
 }
 
+function restoreProceduralMaterialColors(root) {
+  // glTF cannot export these Blender procedural color ramps. Use their authored
+  // linear midpoint only when the export has neither a color nor a color map.
+  // Sources: run_v03_m4.py and run_v04_pool_context.py, respectively.
+  const sourceColors = {
+    M4_OrganicWarmLimestone: [0.47, 0.325, 0.19],
+    V04_PoolContextGravelV3: [0.305, 0.270, 0.220]
+  };
+  root.traverse((object) => {
+    if (!object.isMesh || !object.material) return;
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    for (const material of materials) {
+      const sourceColor = sourceColors[material.name];
+      if (!sourceColor || material.map || material.color?.getHex() !== 0xffffff) continue;
+      material.color.setRGB(...sourceColor, THREE.LinearSRGBColorSpace);
+    }
+  });
+}
+
 function setInteriorLightMultiplier(group, multiplier) {
   if (!group) return;
   group.traverse((object) => {
@@ -283,11 +296,13 @@ export default function VillaViewer({
     );
 
     runtime.scene.background = new THREE.Color(current.lightingMode?.background ?? '#bfd0d7');
+    runtime.scene.environmentIntensity = current.lightingMode?.environment ?? 0.24;
     runtime.renderer.setClearColor(runtime.scene.background);
     runtime.renderer.toneMappingExposure = lighting.exposure;
     runtime.ambient.intensity = lighting.ambient;
     runtime.hemisphere.intensity = lighting.hemisphere;
     runtime.sun.intensity = lighting.sun;
+    runtime.sun.color.set(current.lightingMode?.sunColor ?? '#ffd9a8');
     runtime.fill.intensity = lighting.fill;
     setInteriorLightMultiplier(runtime.interiorLightGroup, lighting.interior);
   };
@@ -360,20 +375,11 @@ export default function VillaViewer({
     runtime.pointerLockControls?.unlock();
     runtime.isExplore = false;
     setFirstPersonReady(false);
-    if (wasFirstPerson) runtime.camera.position.set(18, 12, 20);
-    runtime.camera.fov = 45;
-    runtime.camera.updateProjectionMatrix();
+    if (wasFirstPerson) runtime.camera.position.fromArray(OVERVIEW_POSITION);
+    updateOverviewProjection(runtime.camera);
 
     if (runtime.orbitControls) {
-      const roomNodeName = ROOM_NODE_NAMES[current.selectedRoom?.id];
-      const roomNode = roomNodeName ? runtime.villaRoot.getObjectByName(roomNodeName) : null;
-      if (roomNode) {
-        const target = new THREE.Vector3();
-        roomNode.getWorldPosition(target);
-        runtime.orbitControls.target.copy(target);
-      } else {
-        runtime.orbitControls.target.set(0, 2.8, 0);
-      }
+      runtime.orbitControls.target.fromArray(OVERVIEW_TARGET);
       runtime.orbitControls.update();
     }
   };
@@ -384,22 +390,21 @@ export default function VillaViewer({
 
     const scene = createScene(THREE);
     const camera = createCamera(THREE);
-    camera.fov = 45;
     camera.aspect = container.clientWidth / Math.max(container.clientHeight, 1);
-    camera.updateProjectionMatrix();
-    camera.position.set(18, 12, 20);
+    updateOverviewProjection(camera);
 
     const renderer = createRenderer(THREE, container);
     renderer.shadowMap.enabled = true;
     renderer.domElement.style.touchAction = 'none';
     renderer.domElement.tabIndex = 0;
 
-    const { ambient, hemisphere, sun, fill } = createLights(THREE, scene);
+    const { ambient, hemisphere, sun, fill, environment } = createLights(THREE, scene, renderer);
     const orbitControls = new OrbitControls(camera, renderer.domElement);
     orbitControls.enableDamping = true;
-    orbitControls.target.set(0, 2.8, 0);
+    orbitControls.target.fromArray(OVERVIEW_TARGET);
     orbitControls.minDistance = 8;
     orbitControls.maxDistance = 60;
+    orbitControls.maxPolarAngle = Math.PI * 0.49;
 
     const isTouchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     setIsTouchUi(isTouchDevice);
@@ -464,6 +469,7 @@ export default function VillaViewer({
         runtime.villaRoot = gltf.scene;
         runtime.villaRoot.name = 'dubai_luxury_villa_active';
         runtime.villaRoot.rotation.y = Math.PI;
+        restoreProceduralMaterialColors(runtime.villaRoot);
         runtime.villaRoot.traverse((object) => {
           if (object.isMesh) {
             object.castShadow = true;
@@ -575,11 +581,13 @@ export default function VillaViewer({
         const stop = TOUR_STOPS.find((item) => item.id === latestPropsRef.current.activeTourStopId);
         updateTourCameraProjection(camera, stop, { presentation: !runtime.isExplore });
       } else {
-        camera.updateProjectionMatrix();
+        updateOverviewProjection(camera);
       }
       requestRender();
     };
     window.addEventListener('resize', resize);
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
+    resizeObserver?.observe(container);
     resize();
 
     const animate = (now = performance.now()) => {
@@ -677,6 +685,7 @@ export default function VillaViewer({
       runtime.disposed = true;
       if (runtime.frameId) cancelAnimationFrame(runtime.frameId);
       window.removeEventListener('resize', resize);
+      resizeObserver?.disconnect();
       disposeKeyboard();
       renderer.domElement.removeEventListener('webglcontextrestored', contextRestored);
       renderer.domElement.removeEventListener('click', lockFirstPerson);
@@ -696,6 +705,8 @@ export default function VillaViewer({
         scene.remove(runtime.villaRoot);
         disposeObject(runtime.villaRoot);
       }
+      scene.environment = null;
+      environment.dispose();
       renderer.dispose();
       renderer.domElement.remove();
       if (runtimeRef.current === runtime) runtimeRef.current = null;
@@ -749,15 +760,15 @@ export default function VillaViewer({
     <section>
       <div className="viewer-heading">
         <div>
-          <p className="eyebrow">Interactive architectural walkthrough</p>
-          <h2>{isFirstPerson ? activeStop.title : '3D Villa Viewer'}</h2>
+          <p className="eyebrow">Your own perspective</p>
+          <h2>{isFirstPerson ? activeStop.title : 'The residence, in 3D'}</h2>
         </div>
         <p>
           {isFirstPerson
             ? isExplore
-              ? 'Look around and walk through the rooms. Switch to Guided to return to the tour.'
-              : 'Use the arrows to continue the tour or switch to Explore to walk yourself.'
-            : 'Drag to orbit · scroll to zoom · choose a room or enter the guided walkthrough.'}
+              ? 'Look around. Follow the spaces at your own pace.'
+              : 'Follow the arrows, or explore at your own pace.'
+            : 'Drag to rotate · scroll to move closer'}
         </p>
       </div>
 
@@ -810,7 +821,7 @@ export default function VillaViewer({
                 {walkStatus.edgeType ? ` · ${walkStatus.edgeType}` : ''}
                 {' · '}
                 {isExplore
-                  ? walkGraphReady ? 'Explore route ready' : firstPersonReady ? 'Explore anchor ready' : 'Preparing route'
+                  ? walkGraphReady ? 'Explore' : firstPersonReady ? 'Explore' : 'Preparing route'
                   : 'Guided view'}
               </span>
             </div>
@@ -919,7 +930,7 @@ export default function VillaViewer({
       </div>
 
       <p className="viewer-note">
-        Guided shows each space from a selected viewpoint. Explore starts from the walking area of the selected stop.
+        Choose a space to step inside. Guided frames the details; Explore lets you walk through them.
       </p>
     </section>
   );

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import './MaterialSwitcher.css';
 
 const MATERIALS = [
   {
     id: "warm-limestone",
     name: "Warm Limestone",
-    description: "Warm stone, muted ivory plaster and source-textured walnut stay visibly separate under interior lighting.",
+    description: "Soft ivory, natural stone and warm walnut.",
     swatch: "#b29b80",
     familyColors: {
       stone: "#9f896f",
@@ -16,7 +17,7 @@ const MATERIALS = [
   {
     id: "sandstone",
     name: "Sandstone Warmth",
-    description: "Travertine and sand tones with warm walnut texture and quieter plaster for a calm residential presentation.",
+    description: "Sun-warmed mineral tones with honeyed timber.",
     swatch: "#a98461",
     familyColors: {
       stone: "#9f7958",
@@ -28,7 +29,7 @@ const MATERIALS = [
   {
     id: "graphite-mineral",
     name: "Graphite Mineral",
-    description: "Restrained mineral contrast while the walnut diffuse texture keeps its own dark grain instead of receiving a second near-black tint.",
+    description: "Deeper stone, soft grey and rich walnut.",
     swatch: "#5c5751",
     familyColors: {
       stone: "#4d4944",
@@ -52,10 +53,9 @@ export default function MaterialSwitcher({ onChange }) {
   }
 
   return (
-    <section className="material-switcher" aria-label="Material finish moods">
-      <h2>Finish Moods</h2>
+    <section className="material-switcher" id="materials" aria-label="Material finish moods">
       <div className="material-switcher__options">
-        {MATERIALS.map((material) => (
+        {MATERIALS.map((material, index) => (
           <button
             key={material.id}
             type="button"
@@ -63,20 +63,23 @@ export default function MaterialSwitcher({ onChange }) {
             onClick={() => select(material)}
             className={activeId === material.id ? "is-active" : ""}
           >
-            <span
-              aria-hidden="true"
-              className="material-switcher__swatch"
-              style={{ backgroundColor: material.swatch }}
-            />
-            <span>
+            <span className="material-switcher__samples" aria-hidden="true">
+              <span className="material-switcher__sample material-switcher__sample--stone" style={{ backgroundColor: material.familyColors.stone }} />
+              <span className="material-switcher__sample material-switcher__sample--plaster" style={{ backgroundColor: material.familyColors.plaster }} />
+              <span className="material-switcher__sample material-switcher__sample--timber" style={{ backgroundColor: material.familyColors.timber }} />
+              <span className="material-switcher__sample material-switcher__sample--deck" style={{ backgroundColor: material.familyColors.deck }} />
+              <span className="material-switcher__sample-label">0{index + 1}</span>
+            </span>
+            <span className="material-switcher__copy">
               <strong>{material.name}</strong>
               <small>{material.description}</small>
+              <span className="material-switcher__selection">{activeId === material.id ? 'Selected palette' : 'View this palette'}<span aria-hidden="true">{activeId === material.id ? '✓' : '↗'}</span></span>
             </span>
           </button>
         ))}
       </div>
       <p className="material-switcher__note">
-        Presentation mood control. Presets preserve source PBR maps while the viewer applies restrained family-specific roughness and normal response for stone, plaster, timber and deck. Textured walnut uses a light warm multiplier so the source grain supplies the dark value instead of being darkened twice.
+        Stone · Plaster · Timber · Decking — concept finishes, seen in the light you choose.
       </p>
     </section>
   );

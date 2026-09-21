@@ -7,19 +7,29 @@ import {
   FLOOR_PLAN_ZONES,
   TOUR_STOPS
 } from './tourData';
-import { WALKTHROUGH_FEATURES } from './navigationData';
-import './TourExperience.css';
 import './Walkthrough.css';
+import './TourExperience.css';
 
 const PLAN_LABELS = {
   entry: ['Entry', 'Arrival'],
-  stair: ['Stair Hall', 'Vertical link'],
+  stair: ['Stair Hall', 'To the upper floor'],
   living: ['Living Room', '75 m²'],
   dining: ['Kitchen + Dining', 'Social zone'],
-  private: ['Private Core', 'Service zone'],
+  private: ['Private Core', 'Living room view'],
   terrace: ['Pool Terrace', '46 m²'],
-  landing: ['Upper Landing', 'Floor 2 arrival'],
+  landing: ['Upper Landing', 'Private level'],
   master: ['Master Bedroom', '52 m²']
+};
+
+const STOP_NOTES = {
+  overview: 'See the residence, its pool and the approach to the house.',
+  entry: 'A first glimpse of the spaces beyond the entrance.',
+  living: 'Open living, soft furnishings and generous glazing.',
+  dining: 'The kitchen island, dining table and warm pendant light.',
+  'stair-ground': 'Follow the timber stair towards the private level.',
+  'stair-upper': 'An open doorway leads into the master suite.',
+  master: 'Layered bedding, walnut details and quiet bedside light.',
+  pool: 'The infinity edge, planted terrace and desert garden.'
 };
 
 const PLAN_MODES = [
@@ -101,12 +111,12 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
   };
 
   return (
-    <section className="tour-experience" aria-label="Virtual house tour plan and client viewing graph">
+    <section className="tour-experience" id="journey" aria-label="Virtual house tour plan and client viewing graph">
       <div className="tour-experience__intro">
         <div>
-          <p className="eyebrow">Your tour</p>
-          <h2>Understand the house first. Then step inside it.</h2>
-          <p>Choose a room on the plan, follow the guided tour or take a walk at your own pace.</p>
+          <p className="eyebrow">Explore the layout</p>
+          <h2>Plan your journey.</h2>
+          <p>Two floors. Eight viewpoints. Start wherever you like.</p>
         </div>
         <button
           type="button"
@@ -121,20 +131,13 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
         </button>
       </div>
 
-      <div className="walkthrough-feature-grid" aria-label="Walkthrough capabilities">
-        {WALKTHROUGH_FEATURES.map((feature) => (
-          <div key={feature.id} className="walkthrough-feature">
-            <strong>{feature.label}</strong><span>{feature.status}</span>
-          </div>
-        ))}
-      </div>
-
+      <div className="tour-experience__layout">
       <article className="house-plan-card house-plan-card--hero">
         <div className="house-plan-card__header house-plan-card__header--hero">
           <div>
-            <p className="eyebrow">Interactive architectural map</p>
+            <p className="eyebrow">Concept floor plan</p>
             <h3>Floor {floor} <span className="house-plan-card__current">· {activeStop.floor === floor ? activeStop.title : 'Explore this floor'}</span></h3>
-            <p className="house-plan-card__subtitle">Choose a room to open its view. The marker shows your selected tour stop.</p>
+            <p className="house-plan-card__subtitle">Select a space to see its view above.</p>
           </div>
 
           <div className="house-plan-controls">
@@ -169,7 +172,7 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
 
         <div className={`house-plan-stage house-plan-stage--${planMode}`}>
           <div className={`house-plan house-plan--architectural house-plan--${planMode}`} aria-label={`Floor ${floor} architectural orientation plan`}>
-            <div className="house-plan__sheet-label">F{floor} · RESIDENCE NAVIGATION PLAN</div>
+            <div className="house-plan__sheet-label">0{floor} / CONCEPT PLAN</div>
 
             <svg className="house-plan__route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               {routePoints.length > 1 && (
@@ -191,9 +194,10 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
                   type="button"
                   className={activeStopId === zone.tourStopId ? `house-plan__zone house-plan__zone--${zone.id} is-active` : `house-plan__zone house-plan__zone--${zone.id}`}
                   style={{ left: `${zone.x}%`, top: `${zone.y}%`, width: `${zone.w}%`, height: `${zone.h}%` }}
+                  aria-pressed={activeStopId === zone.tourStopId}
                   onClick={() => selectStop(zone.tourStopId)}
                 >
-                  <strong>{label}</strong><span>{meta}</span>
+                  <span className="house-plan__zone-label"><strong>{label}</strong><span>{meta}</span></span>
                 </button>
               );
             })}
@@ -230,7 +234,7 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
               <div className="house-plan__position" style={{ left: `${marker.x}%`, top: `${marker.y}%` }} aria-label={`Selected stop: ${activeStop.title}`}>
                 <span className="house-plan__position-pulse" />
                 <span className="house-plan__heading" style={{ transform: `rotate(${marker.rotation}deg)` }} />
-                <strong>SELECTED STOP</strong>
+                <strong>YOUR VIEW</strong>
               </div>
             )}
             <div className="house-plan__north" aria-hidden="true"><b>N</b><span>↑</span></div>
@@ -245,24 +249,25 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
           <span><i className="legend-light" /> Light</span>
           <span><i className="legend-stair" /> Stair</span>
         </div>
-        <p className="house-plan-card__note">Presentation navigation plan, not a measured construction drawing. The goal is instant spatial understanding and reliable tour control.</p>
+        <p className="house-plan-card__note">Concept navigation plan · Areas are indicative, not measured drawings.</p>
       </article>
 
       <article className="client-graph-card client-graph-card--timeline">
         <div className="client-graph-card__summary">
           <div>
-            <p className="eyebrow">Guided route</p>
+            <p className="eyebrow">Your selected view</p>
             <h3>{activeStop.order}. {activeStop.title}</h3>
           </div>
-          <p className="client-graph-card__description">{activeStop.description}</p>
+          <p className="client-graph-card__description">{STOP_NOTES[activeStop.id] ?? activeStop.description}</p>
         </div>
 
         <ol className="client-graph client-graph--timeline">
           {TOUR_STOPS.map((stop) => (
             <li key={stop.id} className={stop.id === activeStopId ? 'is-active' : stop.order < activeStop.order ? 'is-visited' : ''}>
-              <button type="button" onClick={() => selectStop(stop.id)}>
-                <span className="client-graph__number">{stop.order}</span>
-                <span><strong>{stop.title}</strong><small>{stop.floor === 'site' ? 'Site' : `F${stop.floor}`}</small></span>
+              <button type="button" aria-current={stop.id === activeStopId ? 'step' : undefined} onClick={() => selectStop(stop.id)}>
+                <span className="client-graph__number">{String(stop.order).padStart(2, '0')}</span>
+                <span><strong>{stop.title}</strong><small>{stop.floor === 'site' ? 'The residence' : `Floor ${stop.floor}`}</small></span>
+                <span className="client-graph__arrow" aria-hidden="true">↗</span>
               </button>
             </li>
           ))}
@@ -273,6 +278,7 @@ export default function TourExperience({ activeStopId, onSelectStop, tourMode, o
           <button type="button" onClick={() => { const index = TOUR_STOPS.findIndex((stop) => stop.id === activeStopId); selectStop(TOUR_STOPS[Math.min(TOUR_STOPS.length - 1, index + 1)].id); }} disabled={activeStop.order === TOUR_STOPS.length}>Next stop →</button>
         </div>
       </article>
+      </div>
     </section>
   );
 }

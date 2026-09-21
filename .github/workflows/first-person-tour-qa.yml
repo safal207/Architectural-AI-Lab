@@ -72,3 +72,18 @@ jobs:
           path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-first-person-output
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Check editorial focus, project brief and WebGL fallback
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-editorial-resilience-output
+        run: node qa/editorial-resilience.mjs
+
+      - name: Upload editorial resilience evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-editorial-resilience
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-editorial-resilience-output
+          if-no-files-found: warn
+          retention-days: 14

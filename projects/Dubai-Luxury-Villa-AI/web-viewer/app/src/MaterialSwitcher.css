@@ -1,0 +1,122 @@
+.material-switcher {
+  min-width: 0;
+  color: #292923;
+}
+
+.material-switcher__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 32px;
+}
+
+.material-switcher__heading h2 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 4vw, 3.7rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -.045em;
+}
+
+.material-switcher__heading > p {
+  max-width: 315px;
+  margin: 0;
+  color: #756e62;
+  font-size: .87rem;
+  line-height: 1.65;
+}
+
+.material-switcher__options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 2.5vw, 32px);
+}
+
+.material-switcher .material-switcher__options button {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #292923;
+  background: transparent;
+  text-align: left;
+}
+
+.material-switcher .material-switcher__options button:focus-visible {
+  outline: 2px solid #936349;
+  outline-offset: 6px;
+}
+
+.material-switcher__samples {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr .75fr;
+  grid-template-rows: 1fr .48fr;
+  width: 100%;
+  aspect-ratio: 1.6;
+  gap: 4px;
+  padding: 9px;
+  border: 1px solid #d8d2c6;
+  background: #eee9df;
+  transition: border-color .18s ease, background .18s ease;
+}
+
+.material-switcher__sample { display: block; min-width: 0; }
+.material-switcher__sample--stone { grid-row: span 2; }
+.material-switcher__sample--plaster { grid-row: span 2; }
+.material-switcher__sample--timber { grid-column: 3; grid-row: 1; }
+.material-switcher__sample--deck { grid-column: 3; grid-row: 2; }
+
+.material-switcher__sample-label {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  color: #fffdf7;
+  font-size: .62rem;
+  font-weight: 400;
+  letter-spacing: .11em;
+}
+
+.material-switcher__options button.is-active .material-switcher__samples { border-color: #936349; background: #e3d7c8; }
+.material-switcher__options button:hover .material-switcher__samples { border-color: #936349; }
+.material-switcher__copy { display: block; padding-top: 19px; }
+.material-switcher__copy > strong { display: block; font-size: 1.05rem; font-weight: 500; letter-spacing: -.02em; }
+.material-switcher .material-switcher__copy small { display: block; min-height: 40px; margin-top: 8px; color: #756e62; font-size: .78rem; line-height: 1.6; }
+
+.material-switcher__selection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 19px;
+  padding-top: 13px;
+  border-top: 1px solid #d8d2c6;
+  color: #817668;
+  font-size: .65rem;
+}
+
+.material-switcher__selection > span { font-size: .88rem; }
+.material-switcher__options button.is-active .material-switcher__selection { color: #936349; border-color: #a78a72; }
+.material-switcher__note { margin: 23px 0 0; color: #8b8171; font-size: .66rem; line-height: 1.6; }
+
+@media (max-width: 700px) {
+  .material-switcher__heading { display: block; margin-bottom: 25px; }
+  .material-switcher__heading h2 { max-width: 350px; font-size: 2.5rem; }
+  .material-switcher__heading > p { margin-top: 18px; font-size: .83rem; }
+  .material-switcher__options { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .material-switcher .material-switcher__options button { display: grid; grid-template-columns: minmax(100px, .8fr) minmax(0, 1.2fr); gap: 18px; align-items: stretch; }
+  .material-switcher__samples { height: 100%; min-height: 154px; aspect-ratio: auto; gap: 3px; padding: 6px; }
+  .material-switcher__sample-label { left: 14px; bottom: 15px; }
+  .material-switcher__copy { padding-top: 3px; }
+  .material-switcher__copy > strong { font-size: .94rem; line-height: 1.4; }
+  .material-switcher .material-switcher__copy small { min-height: 0; font-size: .73rem; }
+  .material-switcher__selection { margin-top: 14px; padding-top: 10px; font-size: .61rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .material-switcher__samples { transition: none; }
+}

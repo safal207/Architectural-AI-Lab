@@ -18,7 +18,8 @@ async function measure(page, label) {
     const heading = document.querySelector('.sales-hero h1');
     const lead = document.querySelector('.sales-hero__lead');
     const actions = document.querySelector('.sales-hero__actions');
-    if (!hero || !copy || !heading || !lead || !actions) return null;
+    const image = document.querySelector('.hero-image img');
+    if (!hero || !copy || !heading || !lead || !actions || !image) return null;
 
     const box = (node) => {
       const rect = node.getBoundingClientRect();
@@ -49,9 +50,13 @@ async function measure(page, label) {
 
     const sectionSelectors = [
       '.app-shell',
+      '.site-header',
       '.sales-hero',
-      '.case-story',
-      '.pilot-card',
+      '.hero-image',
+      '.hero-enter',
+      '.spaces-section',
+      '.space-stories',
+      '.experience-section',
       '.tour-experience',
       '.house-plan-card',
       '.client-graph-card',
@@ -59,8 +64,10 @@ async function measure(page, label) {
       '.app-grid',
       '.viewer-panel',
       '.three-canvas',
-      '.lower-grid',
-      'footer'
+      '.material-story',
+      '.material-switcher',
+      '.project-brief',
+      '.site-footer'
     ];
     const sections = Object.fromEntries(sectionSelectors.map((selector) => {
       const node = document.querySelector(selector);
@@ -74,13 +81,17 @@ async function measure(page, label) {
       heading: box(heading),
       lead: box(lead),
       actions: box(actions),
+      heroImage: { complete: image.complete, naturalWidth: image.naturalWidth, currentSrc: image.currentSrc },
       sections,
       offenders
     };
   });
 
   check(metrics, `${label}: hero metrics unavailable`);
-  for (const key of ['hero', 'copy', 'heading', 'lead', 'actions']) {
+  // The mobile hero image intentionally reaches the viewport edges beyond the
+  // inset copy column. Check its viewport bounds separately, while requiring
+  // all text and controls to remain internally contained.
+  for (const key of ['copy', 'heading', 'lead', 'actions']) {
     const value = metrics[key];
     check(
       value.scrollWidth <= value.clientWidth + 1,
@@ -100,16 +111,19 @@ function assertPageContained(metrics, label) {
     metrics.document.scrollWidth <= metrics.document.clientWidth + 1,
     `${label}: horizontal overflow (${metrics.document.scrollWidth}px > ${metrics.document.clientWidth}px); sections=${JSON.stringify(metrics.sections)}; offenders=${JSON.stringify(metrics.offenders)}`
   );
+  check(metrics.heroImage.complete && metrics.heroImage.naturalWidth > 0, `${label}: residence hero image failed to load`);
   for (const [selector, section] of Object.entries(metrics.sections)) {
     check(section, `${label}: missing section ${selector}`);
     check(
       section.left >= -1 && section.right <= metrics.document.clientWidth + 1,
       `${label}: ${selector} extends outside the viewport (${section.left}px–${section.right}px)`
     );
-    check(
-      section.scrollWidth <= section.clientWidth + 1,
-      `${label}: ${selector} overflows internally (${section.scrollWidth}px > ${section.clientWidth}px)`
-    );
+    if (selector !== '.sales-hero') {
+      check(
+        section.scrollWidth <= section.clientWidth + 1,
+        `${label}: ${selector} overflows internally (${section.scrollWidth}px > ${section.clientWidth}px)`
+      );
+    }
   }
 }
 
@@ -130,6 +144,11 @@ try {
 
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.locator('.sales-hero h1').waitFor({ state: 'visible', timeout: 30_000 });
+  await page.waitForFunction(() => {
+    const image = document.querySelector('.hero-image img');
+    return image?.complete && image.naturalWidth > 0;
+  });
+  await page.evaluate(() => document.fonts.ready);
 
   for (const [label, width] of [['390', 390], ['320', 320], ['390-return', 390]]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 800 });
