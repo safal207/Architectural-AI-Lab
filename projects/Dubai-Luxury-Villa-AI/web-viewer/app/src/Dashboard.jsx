@@ -31,11 +31,15 @@ export default function Dashboard() {
   const [material, setMaterial] = useState(null);
   const [lightingMode, setLightingMode] = useState(initialLightingMode);
   const [tourMode, setTourMode] = useState(false);
+  const [droneMode, setDroneMode] = useState(false);
   const [activeTourStopId, setActiveTourStopId] = useState('overview');
+  const [viewRequestId, setViewRequestId] = useState(0);
   const activeLighting = lightingModes[lightingMode] ?? lightingModes.day;
   const currentStop = TOUR_STOPS.find((stop) => stop.id === (tourMode ? activeTourStopId : 'overview')) ?? TOUR_STOPS[0];
   const detailRoom = tourMode && ['living', 'master', 'pool'].includes(activeTourStopId) ? selectedRoom : null;
   const selectTourStop = (stop) => {
+    setDroneMode(false);
+    setViewRequestId((value) => value + 1);
     setActiveTourStopId(stop.id);
     setTourMode(stop.id !== 'overview');
     setSelectedRoom(rooms.find((item) => item.id === stop.roomId) ?? null);
@@ -46,6 +50,8 @@ export default function Dashboard() {
     if (stop) selectTourStop(stop);
   };
   const toggleTourMode = (enabled) => {
+    setDroneMode(false);
+    setViewRequestId((value) => value + 1);
     setTourMode(enabled);
     if (enabled && activeTourStopId === 'overview') selectTourStop(TOUR_STOPS.find((stop) => stop.id === 'entry'));
   };
@@ -84,7 +90,7 @@ export default function Dashboard() {
           <div className="residence-workbench">
             <article className="viewer-panel">
               <SceneBoundary><Suspense fallback={<div className="scene-placeholder" role="status"><span className="eyebrow">Preparing your visit</span><p>Opening the residence…</p></div>}>
-                <VillaViewer selectedRoom={selectedRoom} lightingMode={activeLighting} material={material} tourMode={tourMode} activeTourStopId={activeTourStopId} onSelectTourStop={selectTourStop} onExitTour={() => toggleTourMode(false)} />
+                <VillaViewer droneMode={droneMode} setDroneMode={setDroneMode} viewRequestId={viewRequestId} selectedRoom={selectedRoom} lightingMode={activeLighting} material={material} tourMode={tourMode} activeTourStopId={activeTourStopId} onSelectTourStop={selectTourStop} onExitTour={() => toggleTourMode(false)} />
               </Suspense></SceneBoundary>
             </article>
             <aside className="material-story material-study" aria-labelledby="material-title">
@@ -102,7 +108,7 @@ export default function Dashboard() {
         </section>
         <div className="experience-status"><span>Lighting: {activeLighting.name}</span><span>Material: {material?.name ?? 'Original hero materials'}</span><a href="#journey">Explore the floor plan <span aria-hidden="true">↓</span></a></div>
       </section>
-      <section className="journey-section section-wrap" aria-label="Floor plan and route"><TourExperience activeStopId={activeTourStopId} onSelectStop={selectTourStop} tourMode={tourMode} onToggleTourMode={toggleTourMode} onViewStop={enterSpace} /></section>
+      <section className="journey-section section-wrap" aria-label="Floor plan and route"><TourExperience activeStopId={activeTourStopId} onSelectStop={selectTourStop} tourMode={tourMode && !droneMode} onToggleTourMode={toggleTourMode} onViewStop={enterSpace} /></section>
       <ProjectBrief material={material} lighting={activeLighting.name} />
       <footer className="site-footer"><a className="footer-wordmark" href="#top">Architectural AI Lab <span aria-hidden="true">↗</span></a><div><span>Dubai residence · Concept portfolio</span><span>Architecture / Kitchens / Interiors</span></div><p>Architectural studies and interactive visualisations.<br />Concept plans and areas; not construction documentation.</p><a href="https://github.com/safal207/Architectural-AI-Lab" target="_blank" rel="noreferrer">Project archive ↗</a></footer>
     </main>

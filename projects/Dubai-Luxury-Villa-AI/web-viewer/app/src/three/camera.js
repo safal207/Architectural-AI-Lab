@@ -1,6 +1,6 @@
-// A lower pool-side angle preserves the horizontal proportions of the house.
+// Frame the complete pool and the stair terrace from the pool-side approach.
 export const OVERVIEW_TARGET = [0, 2.2, 2.0];
-export const OVERVIEW_POSITION = [-13.8, 5.9, 20.3];
+export const OVERVIEW_POSITION = [-16.5, 8.8, 25];
 
 export function updateOverviewProjection(camera) {
   // Keep the horizontal composition on narrow screens without resetting orbit.

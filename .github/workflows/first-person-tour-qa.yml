@@ -32,6 +32,12 @@ jobs:
       - name: Validate walkthrough input lifecycle
         run: node qa/walkthrough-input.mjs
 
+      - name: Validate stair clearance, pool surfaces and drone controls
+        run: |
+          node qa/stair-presentation.mjs
+          node qa/pool-presentation.mjs
+          node qa/drone-controls.mjs
+
       - name: Build viewer
         run: npm run build
 
@@ -51,6 +57,12 @@ jobs:
           done
           cat /tmp/villa-preview.log
           exit 1
+
+      - name: Check drone flight and repaired scene in browser
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-first-person-output/drone
+        run: node qa/drone-flight.mjs
 
       - name: Run first-person desktop and touch smoke QA
         env:

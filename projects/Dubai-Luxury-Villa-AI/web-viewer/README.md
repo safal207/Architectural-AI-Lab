@@ -16,6 +16,7 @@ The editorial redesign is a development preview for draft PR #9. The public demo
 - An image gallery with keyboard navigation, Escape to close and focus return.
 - Direct links from the image stories into the relevant 3D tour stops.
 - A full-house pool-side overview with responsive framing, followed by Guided and Explore modes.
+- Free Drone flight with drag-to-look, keyboard/touch movement, vertical controls and a Fly inside shortcut. Orbit overview returns to the exterior; Go inside starts the room tour.
 - Day, evening and night presentation with reflected environment light and interior fixtures.
 - Three material palettes beside the desktop model and compactly above it on mobile: Warm Limestone, Sandstone Warmth and Graphite Mineral.
 - A two-floor navigation plan, eight tour viewpoints, room information and keyboard/touch controls.
@@ -25,7 +26,7 @@ The editorial redesign is a development preview for draft PR #9. The public demo
 
 The interface uses React, Three.js and Vite. A persistent scene avoids reloading the model when changing views. The browser owns runtime lighting, so web presentation differs from the native Blender renders.
 
-[Architecture benchmark and development notes, in Russian](../validation/global-architecture-benchmark-2026-09-21.md) explain the reference projects and the presentation changes. Model geometry is unchanged; concept diagrams and palette choices are not measured drawings or material specifications. Current-revision local verification results are included in that report.
+[Architecture benchmark and development notes, in Russian](../validation/global-architecture-benchmark-2026-09-21.md) explain the reference projects and the earlier presentation changes, with verification for that revision. The subsequent [scene repair and drone report](../validation/scene-repairs-and-drone-2026-09-21.md) covers browser-time stair openings, pool surface/coping corrections and free flight. The canonical GLB is unchanged; concept diagrams and palette choices are not measured drawings or material specifications.
 
 ## Images and model
 
@@ -78,6 +79,8 @@ In a separate terminal, from `app`, set `VILLA_URL` to `http://127.0.0.1:4173/`.
 | [`qa/editorial-resilience.mjs`](app/qa/editorial-resilience.mjs) | Story-to-viewer focus and tour stops, clearing stale room details, invalidating a prepared brief after preference changes, and gallery/brief operation when WebGL is unavailable. |
 | [`qa/first-person-ui.mjs`](app/qa/first-person-ui.mjs) | Guided/Explore controls and desktop/touch movement behavior. |
 | [`qa/walkthrough-input.mjs`](app/qa/walkthrough-input.mjs) and [`qa/walkthrough-graph.mjs`](app/qa/walkthrough-graph.mjs) | Input lifecycle, authored navigation and route behavior. |
+| [`qa/stair-presentation.mjs`](app/qa/stair-presentation.mjs) and [`qa/pool-presentation.mjs`](app/qa/pool-presentation.mjs) | Renderer-free checks against actual GLB geometry for stair openings, pool separation and coping alignment; preserved materials and route anchors. |
+| [`qa/drone-controls.mjs`](app/qa/drone-controls.mjs) | Renderer-free checks of camera movement, input lifecycle, flight bounds and focus handling. |
 
 Run each script with `node`, for example `node qa/editorial-resilience.mjs`. The resilience suite intentionally disables WebGL in a separate page and records the expected renderer errors; it checks that the portfolio remains usable rather than requiring an error-free simulated failure.
 
@@ -92,4 +95,4 @@ The [earlier local repair report](../validation/portfolio-reconciliation-2026-09
 
 ## Concept limits
 
-The plan is a navigation schematic with indicative areas. Walk bounds are interaction aids, not measured construction geometry or a complete collision simulation. This portfolio and its downloaded brief are not BIM, specifications, engineering, construction documentation or representations of an existing property.
+The plan is a navigation schematic with indicative areas. Walk bounds are interaction aids, not measured construction geometry or a complete collision simulation. Drone flight is free movement within scene bounds and can pass through surfaces. This portfolio and its downloaded brief are not BIM, specifications, engineering, construction documentation or representations of an existing property.

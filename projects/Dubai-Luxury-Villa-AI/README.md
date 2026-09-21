@@ -20,6 +20,8 @@ Select a room on the two-floor navigation plan or choose a tour stop. **Guided**
 
 The pool's Guided camera is independent of its Explore anchor, allowing a wider presentation of the landscape without moving the walking route. The scene stays loaded when switching stops, modes, lighting or materials.
 
+The development preview also includes **Drone flight**: drag to look, use WASD or arrow keys to move, E/Q to rise or descend, and Shift to move faster. Touch controls provide the same movement directions. **Fly inside** moves to the living-area anchor; **Orbit overview** returns to the exterior. Free flight has scene bounds but no surface-collision simulation.
+
 The plan is a navigation schematic. Route bounds are interaction aids, not a measured navmesh or construction-grade collision system.
 
 ## Current viewer asset
@@ -53,7 +55,7 @@ At the reviewed `main` baseline `3dac25f`, build and deployment succeeded. [Live
 - Sticky navigation through five project chapters, including on mobile.
 - Interactive room plan, tour route and room-linked metadata.
 - A direct kitchen shortcut and an explicit return from the plan to the selected 3D view.
-- Guided camera views, Explore movement, orbit and zoom.
+- Guided camera views, Explore movement, orbit, zoom and free Drone flight.
 - Furnished interiors, kitchen, staircase, master suite and landscaped pool context.
 - Day, evening and night lighting; architectural material variants.
 - An editorial gallery of native exterior and interior concept renders.
@@ -66,6 +68,8 @@ At the reviewed `main` baseline `3dac25f`, build and deployment succeeded. [Live
 The editorial preview presents the villa as an architecture and interiors portfolio. Visitors can explore the kitchen and terrace studies, open images, walk the 3D residence, compare finishes and download a project brief containing their chosen palette and atmosphere. The brief stays on their device; no inquiry is submitted. This preview is being developed in draft PR #9 and is separate from the currently published site.
 
 The [architecture benchmark and development notes, in Russian](validation/global-architecture-benchmark-2026-09-21.md) compare the presentation with primary-source projects by John Pawson, Norm Architects and Studio MK27. The resulting additions clarify our existing concept and its controls; they do not change the GLB geometry or establish construction, climate or engineering performance.
+
+The subsequent [scene repair and drone report, in Russian](validation/scene-repairs-and-drone-2026-09-21.md) records the stair-opening repair, pool surface and coping corrections, free-flight controls and their verification status. These browser-time repairs preserve the canonical GLB file.
 
 ## Boundaries
 
