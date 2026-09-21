@@ -144,6 +144,12 @@ try {
 
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.locator('.sales-hero h1').waitFor({ state: 'visible', timeout: 30_000 });
+  // Measure the completed presentation, not the intentional image entrance
+  // scale or the Suspense placeholder for the separately loaded 3D module.
+  await page.locator('.three-canvas').waitFor({ state: 'visible', timeout: 60_000 });
+  await page.locator('.hero-image img').evaluate((image) =>
+    Promise.all(image.getAnimations().map((animation) => animation.finished))
+  );
   await page.waitForFunction(() => {
     const image = document.querySelector('.hero-image img');
     return image?.complete && image.naturalWidth > 0;
