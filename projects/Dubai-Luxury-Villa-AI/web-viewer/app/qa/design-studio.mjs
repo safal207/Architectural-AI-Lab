@@ -17,6 +17,8 @@ async function download(name) {
   await page.getByRole('button', { name: 'Download my brief', exact: true }).click();
   const file = await promise;
   await file.saveAs(`${output}/${name}.txt`);
+  await page.locator('#brief').getByRole('status')
+    .filter({ hasText: /^Your brief is ready\. Check your downloads\.$/ }).waitFor();
   return readFile(`${output}/${name}.txt`, 'utf8');
 }
 try {
@@ -68,7 +70,10 @@ try {
   const kitchen = await download('kitchen');
   for (const line of ['Project: Kitchen design', 'Location: Lisbon', 'Approximate area: 24.5 m²', 'Scope: Layout and storage', 'Priorities: Natural light', 'Material direction: Graphite Mineral', 'Concept reference only']) check(kitchen.includes(line), `Missing export field: ${line}`);
   await page.locator('#project-location').fill('Porto');
-  check(!(await page.locator('.brief-result').textContent()).includes('ready'), 'Editing a field left old ready status');
+  // Field edits invalidate the prepared status in a React effect after render.
+  // Observe both states instead of sampling text before the effect has run.
+  await page.locator('#brief').getByRole('status')
+    .filter({ hasText: /^Includes your selected materials and atmosphere\.$/ }).waitFor();
   await page.getByRole('radio', { name: 'Villa architecture', exact: true }).check();
   check(await page.locator('#project-area').inputValue() === '320', 'Villa area was not remembered');
   check(await page.locator('#project-scope').inputValue() === 'New villa concept', 'Villa scope was not remembered');
