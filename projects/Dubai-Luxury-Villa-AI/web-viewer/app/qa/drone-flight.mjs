@@ -62,6 +62,10 @@ try {
   await click(page,'Orbit overview');await mode(page,'orbit');await sleep(page);
   await click(page,'Drone flight');await mode(page,'drone');
   const canvas=page.locator('.three-canvas canvas');
+  assert.equal(await page.getByRole('application', { name: 'Interactive 3D residence', exact: true }).count(), 1, 'Focusable scene has no accessible application name');
+  assert.equal(await canvas.getAttribute('tabindex'), '0', 'Scene must remain reachable by keyboard');
+  const descriptionId = await canvas.getAttribute('aria-describedby');
+  assert.ok(descriptionId && await page.evaluate(id => document.getElementById(id)?.textContent.includes('Drone flight'), descriptionId), 'Scene must reference its navigation instructions');
   assert.equal(await page.evaluate(()=>document.pointerLockElement),null);
   let before=await position(page);
   await page.keyboard.down('w');await waitMovement(page,before);await page.keyboard.up('w');

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
@@ -260,6 +260,7 @@ export default function VillaViewer({
   onSelectTourStop,
   onExitTour
 }) {
+  const viewerNoteId = useId();
   const mountRef = useRef(null);
   const runtimeRef = useRef(null);
   const mobileMotionRef = useRef({ forward: 0, right: 0 });
@@ -436,6 +437,9 @@ export default function VillaViewer({
     renderer.shadowMap.enabled = true;
     renderer.domElement.style.touchAction = 'none';
     renderer.domElement.tabIndex = 0;
+    renderer.domElement.setAttribute('role', 'application');
+    renderer.domElement.setAttribute('aria-label', 'Interactive 3D residence');
+    renderer.domElement.setAttribute('aria-describedby', viewerNoteId);
 
     const { ambient, hemisphere, sun, fill, environment } = createLights(THREE, scene, renderer);
     const orbitControls = new OrbitControls(camera, renderer.domElement);
@@ -780,7 +784,7 @@ export default function VillaViewer({
       renderer.domElement.remove();
       if (runtimeRef.current === runtime) runtimeRef.current = null;
     };
-  }, []);
+  }, [viewerNoteId]);
 
   useEffect(() => {
     syncLighting();
@@ -1055,7 +1059,7 @@ export default function VillaViewer({
         )}
       </div>
 
-      <p className="viewer-note">
+      <p className="viewer-note" id={viewerNoteId}>
         Orbit to see the whole villa. Drone flight moves freely; Go inside starts the room-by-room tour.
       </p>
     </section>
