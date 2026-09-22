@@ -1,0 +1,30 @@
+[
+  {
+    "clientWidth": 305,
+    "height": 800,
+    "scrollWidth": 305,
+    "stage": "320",
+    "width": 320
+  },
+  {
+    "clientWidth": 375,
+    "height": 844,
+    "scrollWidth": 375,
+    "stage": "390",
+    "width": 390
+  },
+  {
+    "clientWidth": 305,
+    "height": 800,
+    "scrollWidth": 305,
+    "stage": "320-return-viewer",
+    "width": 320
+  },
+  {
+    "clientWidth": 375,
+    "height": 844,
+    "scrollWidth": 375,
+    "stage": "390-return-brief",
+    "width": 390
+  }
+]

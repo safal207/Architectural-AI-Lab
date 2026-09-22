@@ -1,0 +1,137 @@
+[
+  {
+    "path": "evidence/01-brief-320.png",
+    "bytes": 26381,
+    "sha256": "f3dd29219e7819c5e4752eb07a46c0b75c106cbd2f42c0d23b3673bb28adeed3"
+  },
+  {
+    "path": "evidence/02-contact-320.png",
+    "bytes": 25149,
+    "sha256": "c9fd41159a2a3916ab85f16362591a980741f626b08f049fcf341a150c86cee9"
+  },
+  {
+    "path": "evidence/03-hero-390.png",
+    "bytes": 40330,
+    "sha256": "16a2c4ca1ae6820fc8e5690e29774ed50666708804b72f023b7c60ba719ed991"
+  },
+  {
+    "path": "evidence/04-viewer-320.png",
+    "bytes": 30613,
+    "sha256": "ac27f2611f568304aedf6b268cd7310aa54664d1d1bef3c988175a257ae7a76d"
+  },
+  {
+    "path": "evidence/05-resize.json",
+    "bytes": 481,
+    "sha256": "0d49a3fb7265352813ab99b871f91666dbcf9fd26f1d4379bbbee0753a93bc81"
+  },
+  {
+    "path": "evidence/06-area-boundaries.json",
+    "bytes": 878,
+    "sha256": "0b9def5067d424a4eea74f9f7a8b5e939e5994506967d28ebc56f2a88183823f"
+  },
+  {
+    "path": "evidence/07-living.png",
+    "bytes": 89728,
+    "sha256": "03a37afb89243e4ea8fc026fb3445d115a4bf00eb2f6e0f2ed9298b30283ce0c"
+  },
+  {
+    "path": "evidence/07-living.txt",
+    "bytes": 15825,
+    "sha256": "05f396e347d1efd8c11230c3756e59e4da0b37ce1f6d1db124de47c9190c9e15"
+  },
+  {
+    "path": "evidence/08-master.png",
+    "bytes": 73335,
+    "sha256": "c25c3bce721aa292576bc9ca6932307ed31ed8b12b3da1e216af8c2cd85a02e0"
+  },
+  {
+    "path": "evidence/08-master.txt",
+    "bytes": 15285,
+    "sha256": "188b34e4774db139902d311f4331f97e10a1760e9871d60d6af462da684cc791"
+  },
+  {
+    "path": "evidence/09-pool.png",
+    "bytes": 76210,
+    "sha256": "3b7c4f161e7f3099e8cbab07bbf0421b020d088b02b098fab2cf2db647c5f4e7"
+  },
+  {
+    "path": "evidence/09-pool.txt",
+    "bytes": 15848,
+    "sha256": "c3fee1e56511f92490ad1d5f134ee808e309ee0e01ebb9ee846559658cdc40ca"
+  },
+  {
+    "path": "evidence/10-kitchen.png",
+    "bytes": 95723,
+    "sha256": "e3b4edec20de7fe5be950e34852269bb5747d66065c1a1ebabc9606691d04dba"
+  },
+  {
+    "path": "evidence/10-kitchen.txt",
+    "bytes": 15791,
+    "sha256": "e5918ac659964d3c9cb6c703b3f50f6025022505e74dc695f5f01677fc8ea8bb"
+  },
+  {
+    "path": "evidence/11-dollhouse.png",
+    "bytes": 67021,
+    "sha256": "256b680cef71ed317298f81478d53c8dd8396406ffd5217171a0d72cdf89bc5b"
+  },
+  {
+    "path": "evidence/12-plan.png",
+    "bytes": 66790,
+    "sha256": "94a4d236aa664217bd86ebb433c6b2219d4cc7e44caa0b59b6c62bacb648ccd4"
+  },
+  {
+    "path": "evidence/13-gallery-focus.json",
+    "bytes": 715,
+    "sha256": "5702804c95f33b55ab17e619c534c18bcc03bc032b8ed82f236b021f919c6bf2"
+  },
+  {
+    "path": "evidence/14-contact-desktop.png",
+    "bytes": 51479,
+    "sha256": "e50746f713093d4ba01d7eb1a85277043c29ae504e389e2b4cb4d1e541ff1862"
+  },
+  {
+    "path": "evidence/15-light-status-reset.txt",
+    "bytes": 15773,
+    "sha256": "968f3f3c9f81ac1518b754992b2830bac24fe97ae6abd4cd632fa1fec594d0f2"
+  },
+  {
+    "path": "evidence/16-console-errors.json",
+    "bytes": 2,
+    "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+    "path": "evidence/17-gallery-kitchen.png",
+    "bytes": 45107,
+    "sha256": "35a7d872df3cf464b40cdd358953e40f363ce189a483e73897590a1f85b1ef86"
+  },
+  {
+    "path": "evidence/18-gallery-pool.png",
+    "bytes": 72084,
+    "sha256": "2c4923149c69e70bef1a080453076b23044dc9d34a2fabe937e4ef93afff1288"
+  },
+  {
+    "path": "evidence/19-gallery-return-focus.json",
+    "bytes": 78,
+    "sha256": "969cda702280d38bec1378b72b7ad45da8c60fc6577db52ec376b95315c684b6"
+  },
+  {
+    "path": "evidence/20-reload-320.json",
+    "bytes": 113,
+    "sha256": "aa84606a4b5dc152459df8c13a331aad6e610d1f08d713504460af64cd4a13d0"
+  },
+  {
+    "path": "evidence/brief-night.txt",
+    "bytes": 709,
+    "sha256": "48723af2b8bf163a78b2496f5ef094a4f9b2cf01fe7682ccac112f73dcde9d98"
+  },
+  {
+    "path": "evidence/brief-no-priorities.txt",
+    "bytes": 711,
+    "sha256": "8ebfa7d15c2b2d2799fbc187f33a8284406f1c19d5a41ad81896787aa05bdd30"
+  },
+  {
+    "path": "evidence/brief-two-priorities.txt",
+    "bytes": 727,
+    "sha256": "a71402f809949cc3114acae4df7aa6dec03c0947173f38a9bb5978025883fc2c"
+  }
+]

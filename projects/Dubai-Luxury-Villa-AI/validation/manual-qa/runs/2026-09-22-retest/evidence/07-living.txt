@@ -1,0 +1,412 @@
+- main:
+  - link "Skip to the interactive residence":
+    - /url: "#viewer"
+  - link "Architectural AI Lab home":
+    - /url: "#top"
+    - generic: a / a
+    - text: ARCHITECTURAL
+    - text: AI LAB
+  - navigation "Main navigation":
+    - link "The concept":
+      - /url: "#design"
+    - link "Spaces":
+      - /url: "#spaces"
+    - link "Experience":
+      - /url: "#viewer"
+    - link "Contact":
+      - /url: "#contact"
+  - link "Your project":
+    - /url: "#brief"
+    - text: Your project
+    - generic: ↗
+  - region "Desert, distilled.":
+    - generic: Selected residence / 001
+    - generic: Dubai, UAE · Concept study
+    - heading "Desert, distilled." [level=1]:
+      - text: Desert,
+      - emphasis: distilled.
+    - paragraph:
+      - text: Two levels. A sheltered terrace.
+      - text: Stone and timber, inside and out.
+    - link "Discover the residence":
+      - /url: "#design"
+      - text: Discover the residence
+      - generic: ↘
+    - img "Warm stone villa, glazed living spaces and a reflecting pool in evening light"
+    - generic: 01 / THE RESIDENCE
+    - generic: Stone. Shade. Stillness.
+    - button "Enter the residence Explore in 3D":
+      - generic: ↗
+      - text: Enter the residence
+      - generic: Explore in 3D
+    - generic: Architecture & interiors
+    - generic: A continuous dialogue between inside and out
+    - link "Scroll to the design concept":
+      - /url: "#design"
+      - text: ↓
+  - navigation "Project chapters":
+    - link "Dubai residence 001":
+      - /url: "#top"
+    - link "Concept":
+      - /url: "#design"
+      - generic: "01"
+      - text: Concept
+    - link "Spaces":
+      - /url: "#spaces"
+      - generic: "02"
+      - text: Spaces
+    - link "3D studio":
+      - /url: "#viewer"
+      - generic: "03"
+      - text: 3D studio
+    - link "Plan":
+      - /url: "#journey"
+      - generic: "04"
+      - text: Plan
+    - link "Brief":
+      - /url: "#brief"
+      - generic: "05"
+      - text: Brief
+  - region "A house in three gestures.":
+    - paragraph: 01 / The architectural idea
+    - heading "A house in three gestures." [level=2]:
+      - text: A house in
+      - emphasis: three gestures.
+    - paragraph: "Two levels, held together by a small set of decisions: a deep horizontal edge, a view towards water, and the rhythm of timber."
+    - term: Location
+    - definition: Dubai, UAE
+    - term: Stage
+    - definition: Concept study
+    - term: Scope
+    - definition: Architecture & interiors
+    - term: Organisation
+    - definition: Two levels
+    - figure "Design intent / 01 From the current 3D model":
+      - 'img "The residence: an axonometric view of the current model"':
+        - generic: "01"
+      - generic: Design intent / 01
+      - generic: From the current 3D model
+    - tablist "Architectural gestures":
+      - tab "Deep edges" [selected]:
+        - generic: "01"
+        - generic: Deep edges
+        - generic: ↗
+      - tab "Open thresholds":
+        - generic: "02"
+        - generic: Open thresholds
+        - generic: ↗
+      - tab "A timber thread":
+        - generic: "03"
+        - generic: A timber thread
+        - generic: ↗
+    - tabpanel "Deep edges":
+      - heading "A horizontal frame." [level=3]
+      - paragraph: Projecting roof and floor planes extend beyond the glazed rooms. Their deep edges give the villa its long, layered outline beside the pool.
+      - button "See the terrace in 3D":
+        - text: See the terrace in 3D
+        - generic: ↗
+  - region "Gather inside. Unwind outside.":
+    - paragraph: 02 / Rooms for living
+    - heading "Gather inside. Unwind outside." [level=2]:
+      - text: Gather inside.
+      - emphasis: Unwind outside.
+    - paragraph: The kitchen island brings cooking and conversation together. Beyond the glazed living room, the terrace carries the same horizontal lines towards the pool.
+    - paragraph: Two studies from the project archive. Enter either space to explore the current model.
+    - article:
+      - button "Enlarge Kitchen & living image":
+        - img "Fluted timber kitchen island, sculptural stools and a soft neutral living area"
+        - generic: ↗
+        - generic: Interior concept study
+      - paragraph: 01 / Kitchen & living
+      - heading "The heart of the home." [level=3]
+      - paragraph: A tactile timber island anchors an open sequence of cooking, conversation and rest.
+      - generic: Fluted timber island
+      - generic: Pendant lighting
+      - generic: Open living
+      - button "Explore the kitchen":
+        - text: Explore the kitchen
+        - generic: ↗
+    - article:
+      - button "Enlarge Pool & terrace image":
+        - img "Villa glazing and warm stone beside the reflecting pool"
+        - generic: ↗
+        - generic: Pool-side architectural study
+      - paragraph: 02 / Pool & terrace
+      - heading "Life, open to the sky." [level=3]
+      - paragraph: Long horizontal lines and a reflecting pool extend the living space into the landscape.
+      - generic: Infinity edge
+      - generic: Low planting
+      - generic: Glazed threshold
+      - button "Explore the terrace":
+        - text: Explore the terrace
+        - generic: ↗
+  - region "Make yourself at home.":
+    - paragraph: 03 / The residence studio
+    - heading "Make yourself at home." [level=2]:
+      - text: Make yourself
+      - emphasis: at home.
+    - paragraph: Move between rooms. Compare finishes. See the light change.
+    - generic: The time of day
+    - navigation "Lighting mode":
+      - button "Day": Day
+      - button "Evening" [pressed]: Evening
+      - button "Night": Night
+    - complementary:
+      - generic: Go directly to
+      - button "Living Room — 75 sqm" [active] [pressed]
+      - button "Master Bedroom — 52 sqm"
+      - button "Pool Terrace — 46 sqm"
+      - button "Kitchen + dining"
+      - button "Exterior overview": Exterior overview ↗
+    - article:
+      - paragraph: Your own perspective
+      - heading "Living room" [level=2]
+      - paragraph: Follow the arrows, or explore at your own pace.
+      - group "Scene navigation":
+        - button "Orbit overview"
+        - button "Drone flight"
+        - button "Go inside": Go inside ↗
+      - generic "Interactive Dubai luxury villa virtual tour prototype":
+        - application "Interactive 3D residence"
+      - strong: Living room
+      - generic: Floor 1 · Guided view
+      - button "Exit walkthrough": Exit
+      - group "Walkthrough mode":
+        - button "Guided" [pressed]
+        - button "Explore"
+      - navigation "Guided walkthrough controls":
+        - button "Previous stop": ←
+        - strong: "2"
+        - text: / 7
+        - button "Next stop": →
+      - paragraph: Orbit to see the whole villa. Drone flight moves freely; Go inside starts the room-by-room tour.
+    - complementary "One house. Three expressions.":
+      - paragraph: Finish study
+      - heading "One house. Three expressions." [level=3]:
+        - text: One house.
+        - emphasis: Three expressions.
+      - paragraph: Choose a palette to see stone, plaster, timber and decking change together.
+      - region "Material finish moods":
+        - button "Warm Limestone Selected palette" [pressed]:
+          - generic: "01"
+          - strong: Warm Limestone
+          - text: Selected palette
+          - generic: ✓
+        - button "Sandstone Warmth View this palette":
+          - generic: "02"
+          - strong: Sandstone Warmth
+          - text: View this palette
+          - generic: ↗
+        - button "Graphite Mineral View this palette":
+          - generic: "03"
+          - strong: Graphite Mineral
+          - text: View this palette
+          - generic: ↗
+        - paragraph:
+          - generic: Selected direction
+          - text: Soft ivory, natural stone and warm walnut.
+        - paragraph: "Swatches: stone · plaster · timber · decking. Concept colour studies; physical samples would follow."
+      - link "Take this direction into your brief":
+        - /url: "#brief"
+        - text: Take this direction into your brief
+        - generic: ↗
+    - complementary:
+      - generic: A closer look
+      - heading "Living Room" [level=3]
+      - paragraph: A generous gathering space, opening towards the pool through a glazed façade.
+      - term: Concept area
+      - definition: 75 m²
+      - term: Level
+      - definition: "01"
+    - generic: "Lighting: Evening"
+    - generic: "Material: Warm Limestone"
+    - link "Explore the floor plan":
+      - /url: "#journey"
+      - text: Explore the floor plan ↓
+  - region "Floor plan and route":
+    - region "Virtual house tour plan and client viewing graph":
+      - paragraph: 04 / Explore the layout
+      - heading "Plan your journey." [level=2]
+      - paragraph: Two floors. Eight viewpoints. Start wherever you like.
+      - 'button "First-person tour: ON" [pressed]'
+      - article:
+        - paragraph: Concept floor plan
+        - heading "Floor 1 · Living room" [level=3]:
+          - text: Floor 1
+          - generic: · Living room
+        - paragraph: Select a space, then open its view in the studio.
+        - button "Open living room in 3D": Open living room in 3D ↗
+        - group "Plan view mode":
+          - button "PLAN" [pressed]
+          - button "DOLLHOUSE"
+          - button "WALK"
+        - group "House floor":
+          - button "Floor 1" [pressed]
+          - button "Floor 2"
+        - generic "Floor 1 architectural orientation plan":
+          - generic: 01 / CONCEPT PLAN
+          - button "Entry Arrival":
+            - strong: Entry
+            - generic: Arrival
+          - button "Stair Hall To the upper floor":
+            - strong: Stair Hall
+            - generic: To the upper floor
+          - button "Living Room 75 m²" [pressed]:
+            - strong: Living Room
+            - generic: 75 m²
+          - button "Kitchen + Dining Social zone":
+            - strong: Kitchen + Dining
+            - generic: Social zone
+          - button "Private Core Living room view" [pressed]:
+            - strong: Private Core
+            - generic: Living room view
+          - button "Pool Terrace 46 m²":
+            - strong: Pool Terrace
+            - generic: 46 m²
+          - generic: Sofa
+          - generic: Table
+          - generic: Dining
+          - generic: Island
+          - generic: ↑
+          - generic: ✦
+          - generic: ✦
+          - generic: ✦
+          - 'generic "Selected stop: Living room"':
+            - strong: YOUR VIEW
+          - generic: "N"
+          - generic: ↑
+        - generic "Plan legend":
+          - generic: Selected stop
+          - generic: Furniture
+          - generic: Door
+          - generic: Window
+          - generic: Light
+          - generic: Stair
+        - paragraph: Concept navigation plan · Areas are indicative, not measured drawings.
+      - article:
+        - paragraph: Your selected view
+        - heading "3. Living room" [level=3]
+        - paragraph: Open living, soft furnishings and generous glazing.
+        - list:
+          - button "01 Exterior overview The residence":
+            - generic: "01"
+            - strong: Exterior overview
+            - generic: The residence
+            - generic: ↗
+          - button "02 Main entry Floor 1":
+            - generic: "02"
+            - strong: Main entry
+            - generic: Floor 1
+            - generic: ↗
+          - button "03 Living room Floor 1":
+            - generic: "03"
+            - strong: Living room
+            - generic: Floor 1
+            - generic: ↗
+          - button "04 Kitchen + dining Floor 1":
+            - generic: "04"
+            - strong: Kitchen + dining
+            - generic: Floor 1
+            - generic: ↗
+          - button "05 Stair hall Floor 1":
+            - generic: "05"
+            - strong: Stair hall
+            - generic: Floor 1
+            - generic: ↗
+          - button "06 Upper landing Floor 2":
+            - generic: "06"
+            - strong: Upper landing
+            - generic: Floor 2
+            - generic: ↗
+          - button "07 Master bedroom Floor 2":
+            - generic: "07"
+            - strong: Master bedroom
+            - generic: Floor 2
+            - generic: ↗
+          - button "08 Pool terrace Floor 1":
+            - generic: "08"
+            - strong: Pool terrace
+            - generic: Floor 1
+            - generic: ↗
+        - button "← Previous"
+        - button "Next stop →"
+  - region "Every home starts with a feeling.":
+    - paragraph: 05 / Your next space
+    - heading "Every home starts with a feeling." [level=2]:
+      - text: Every home starts
+      - text: with
+      - emphasis: a feeling.
+    - paragraph: A villa, a kitchen, a room to call your own. Capture a direction for your project, starting with what speaks to you here.
+    - generic: Your brief downloads to your device. Nothing is submitted.
+    - group "What would you like to create?":
+      - generic: What would you like to create?
+      - radio "Villa architecture" [checked]
+      - generic: Villa architecture
+      - radio "Kitchen design"
+      - generic: Kitchen design
+      - radio "Home interiors"
+      - generic: Home interiors
+    - text: Location
+    - generic: Optional
+    - textbox "Location Optional":
+      - /placeholder: City or region
+      - text: QA retest 390
+    - text: Approximate area
+    - generic: m² · Optional
+    - spinbutton "Approximate area m² · Optional"
+    - paragraph: Home floor area, rather than plot size.
+    - text: Where shall we begin?
+    - generic: Optional
+    - combobox "Where shall we begin? Optional":
+      - option "Not decided yet" [selected]
+      - option "New villa concept"
+      - option "Existing villa renovation"
+      - option "Façade and outdoor spaces"
+      - option "Layout study"
+    - group "What matters most? Choose any":
+      - generic: What matters most? Choose any
+      - checkbox "Natural light"
+      - generic: Natural light
+      - checkbox "Generous storage"
+      - generic: Generous storage
+      - checkbox "Natural materials"
+      - generic: Natural materials
+      - checkbox "Easy upkeep"
+      - generic: Easy upkeep
+    - text: What do you have in mind?
+    - generic: Optional
+    - textbox "What do you have in mind? Optional":
+      - /placeholder: A place, a mood, the way you want to live…
+    - generic: Selected palette · Concept
+    - strong: Warm Limestone
+    - button "Download my brief":
+      - text: Download my brief
+      - generic: ↓
+    - status: Includes your selected materials and atmosphere.
+  - region "Let's shape your next space.":
+    - paragraph: 06 / Start a conversation
+    - heading "Let's shape your next space." [level=2]:
+      - text: Let's shape
+      - emphasis: your next space.
+    - paragraph: A villa, a kitchen or a fresh perspective on home. Share your ideas, references or the brief you created above.
+    - link "Message on Telegram @Alexfox14":
+      - /url: https://t.me/Alexfox14
+      - generic: Message on Telegram
+      - text: "@Alexfox14"
+      - generic: ↗
+    - link "Write an email safal0645@gmail.com":
+      - /url: mailto:safal0645@gmail.com
+      - generic: Write an email
+      - text: safal0645@gmail.com
+      - generic: ↗
+    - paragraph: Send a message directly. Your project brief stays on your device until you choose to share it.
+  - link "Architectural AI Lab":
+    - /url: "#top"
+    - text: Architectural AI Lab ↗
+  - generic: Dubai residence · Concept portfolio
+  - generic: Architecture / Kitchens / Interiors
+  - paragraph:
+    - text: Architectural studies and interactive visualisations.
+    - text: Concept plans and areas; not construction documentation.
+  - link "Project archive ↗":
+    - /url: https://github.com/safal207/Architectural-AI-Lab
