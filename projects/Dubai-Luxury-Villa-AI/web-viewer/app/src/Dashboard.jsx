@@ -8,6 +8,7 @@ import SceneBoundary from './SceneBoundary';
 import RoomSelector from './RoomSelector';
 import MaterialSwitcher from './MaterialSwitcher';
 import SpaceStories from './SpaceStories';
+import ResidenceFilm from './ResidenceFilm';
 import ProjectBrief from './ProjectBrief';
 import { lightingModes } from './DayNightMode';
 import { TOUR_STOPS } from './tourData';
@@ -87,6 +88,7 @@ export default function Dashboard() {
       <ProjectChapters />
       <DesignIntent onEnterSpace={enterSpace} />
       <SpaceStories onEnter={enterSpace} />
+      <ResidenceFilm />
       <section className="experience-section" id="viewer" aria-labelledby="experience-title">
         <header className="viewer-toolbar">
           <div><p className="eyebrow">03 / The residence studio</p><h2 id="experience-title" tabIndex={-1}>Make yourself <em>at home.</em></h2><p>Move between rooms. Compare finishes. See the light change.</p></div>

@@ -20,7 +20,7 @@ export default function DeveloperCase({ onEnter }) {
         <div className="hero-image__caption"><span>01 / THE RESIDENCE</span><span>Stone. Shade. Stillness.</span></div>
         <button className="hero-enter" type="button" onClick={onEnter}><span className="hero-enter__icon" aria-hidden="true">↗</span><span>Enter the residence<small>Explore in 3D</small></span></button>
       </div>
-      <div className="hero-foot"><span>Architecture & interiors</span><span>A continuous dialogue between inside and out</span><a href="#design" aria-label="Scroll to the design concept">↓</a></div>
+      <div className="hero-foot"><span>Architecture & interiors</span><a className="hero-film-link" href="#film"><span aria-hidden="true">▷</span> Watch the film · 18s</a><a href="#design" aria-label="Scroll to the design concept">↓</a></div>
     </section>
   );
 }
