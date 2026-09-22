@@ -16,6 +16,8 @@ An interactive architectural portfolio: explore the home, compare finishes and l
 
 [Manual testing package, in Russian](projects/Dubai-Luxury-Villa-AI/validation/manual-qa/README.md): strategy, test plan, 50 cases, regression run template and the first published-site report with screenshots and a defect log. The report distinguishes completed checks from remaining browser and device coverage.
 
+[Lighthouse checks and reports](tools/lighthouse/README.md): mobile and desktop audits of performance, accessibility, best practices and SEO, run for proposed changes and after publication. Each profile collects three runs and preserves HTML/JSON reports in GitHub Actions.
+
 ## Explore the residence
 
 The portfolio brings together kitchen and living-space studies, outdoor architecture and a working 3D villa. Large images open into a keyboard-accessible gallery, while room links take visitors directly into the corresponding tour view.
