@@ -4,8 +4,9 @@
     "public/villa.glb": "4f3e2868b532d1e3ea50e83aeb9a696e3c1f6484b38b2067db4973b57e66d115",
     "src/three/stairPresentation.js": "9fda0e6e00296546addde83fa4d6cebc96ae8db03895355c20f717b4a532df35",
     "src/three/poolPresentation.js": "6944b7963c533d66582db3bde1f198102fbf04ad13979d0d40a05ff76b3a529e",
-    "scripts/design-study-renderer.js": "91306d956ef4b8f6f6996e1b1c0404a7ae941a7f2382b8c7c922d2d3c69848b3",
-    "scripts/generate-design-study.mjs": "4bf8129b9a81f6537493a017485019908f79e66be895a13ca19994039b2d5fff"
+    "scripts/design-study-renderer.js": "cf537bf59ab2bca3ff996d04647aa4f0c59d922adb8f91babe0fcffc44918bf1",
+    "scripts/generate-design-study.mjs": "b4aa941f7a5c71bd880ab18ed3ef0089e8ebe9d73b47532625ea7cfb4cae9e31",
+    "package-lock.json": "b5e6cc7e77d94ca607548a8ff28497f6f0e0c79b6b3ab12b9b71dbc2bfd4c0e4"
   },
   "images": {
     "edges": {
@@ -24,6 +25,7 @@
       "bytes": 45156
     }
   },
+  "threeRevision": "180",
   "width": 1440,
   "height": 960,
   "viewBox": [

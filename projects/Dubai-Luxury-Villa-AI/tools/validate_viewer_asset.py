@@ -2,7 +2,10 @@ import hashlib
 import json
 import math
 import struct
+from io import BytesIO
 from pathlib import Path
+
+from PIL import Image
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 APP_ROOT = PROJECT_ROOT / 'web-viewer' / 'app'
@@ -194,6 +197,19 @@ def validate_pool_v4(document, manifest, promotion, raw, digest):
         fail('Pool source render dimensions mismatch')
     if evidence.get('bytes') != len(render) or evidence.get('sha256') != hashlib.sha256(render).hexdigest():
         fail('Pool source receipt does not match committed render')
+    # Identity and header dimensions do not prove that this is a usable image.
+    # Verify chunk CRCs, require a complete IEND, then actually decode pixels.
+    if not render.endswith(b'\x00\x00\x00\x00IEND\xaeB`\x82'):
+        fail('invalid Pool source render PNG: missing complete IEND')
+    try:
+        with Image.open(BytesIO(render), formats=['PNG']) as image:
+            if image.size != dimensions:
+                fail('Pool source render decoded dimensions mismatch')
+            image.verify()
+        with Image.open(BytesIO(render), formats=['PNG']) as image:
+            image.load()
+    except (OSError, SyntaxError, ValueError) as error:
+        fail(f'invalid Pool source render PNG: {error}')
 
     # Blender exports these empties directly into the default scene. Require
     # that same structure: an orphan or transformed parent must not silently

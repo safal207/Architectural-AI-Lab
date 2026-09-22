@@ -1,5 +1,9 @@
 # Model-derived architectural study — 21 September 2026
 
+Historical application/build snapshot: [`1895efafcf4d8c08e6ad26bf2060d1d9caa2f929`](https://github.com/safal207/Architectural-AI-Lab/commit/1895efafcf4d8c08e6ad26bf2060d1d9caa2f929).
+The subsequent rendered-camera synchronization and its drone QA results at the end of this report belong to [`5670daa88ab449b22462391a184a885a182bfd8a`](https://github.com/safal207/Architectural-AI-Lab/commit/5670daa88ab449b22462391a184a885a182bfd8a).
+Module counts and image sizes below describe that study-export stage, not later PR revisions.
+
 The earlier hand-drawn SVG was a generic massing illustration. Its floor setbacks, facade widths and pool relationship were not derived from the project, and it placed an invented joinery rectangle behind the front glazing. The user correctly flagged that its positioning did not match the current villa.
 
 The three design gestures now show orthographic images generated directly from the production `villa.glb`, with the same rotation and stair/pool runtime corrections as the interactive viewer. No architectural mesh is translated for presentation. Furniture, planting and distant context are omitted from this exterior illustration; the glazing is made opaque. These choices are stated in the accessible description. The diagram remains an architectural study, not construction documentation.

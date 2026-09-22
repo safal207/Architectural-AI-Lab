@@ -90,6 +90,6 @@ window.exportDesignStudy=()=>{
     renderer.render(scene,camera);
     images[active]=renderer.domElement.toDataURL('image/webp',.95);
   }
-  return {images,width,height,viewBox:[0,0,720,480],projection:'orthographic',viewerRotationY:Math.PI,includedMeshes:meshes.map(m=>m.name).sort(),highlightedMeshes:groups,landmarks,camera:{position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),left:camera.left,right:camera.right,top:camera.top,bottom:camera.bottom,near:camera.near,far:camera.far}};
+  return {threeRevision:THREE.REVISION,images,width,height,viewBox:[0,0,720,480],projection:'orthographic',viewerRotationY:Math.PI,includedMeshes:meshes.map(m=>m.name).sort(),highlightedMeshes:groups,landmarks,camera:{position:camera.position.toArray(),quaternion:camera.quaternion.toArray(),left:camera.left,right:camera.right,top:camera.top,bottom:camera.bottom,near:camera.near,far:camera.far}};
 };
 window.designStudyReady=true;

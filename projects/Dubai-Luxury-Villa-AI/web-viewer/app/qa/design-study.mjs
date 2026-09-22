@@ -4,6 +4,8 @@ import { createHash } from 'node:crypto';
 import * as THREE from 'three';
 const rootUrl = new URL('../', import.meta.url);
 const study = JSON.parse(readFileSync(new URL('data/design-study.json', rootUrl)));
+assert.equal(study.threeRevision, THREE.REVISION, 'Three.js renderer changed: regenerate the model-derived study');
+assert.equal(typeof study.sources?.['package-lock.json'], 'string', 'Study must record its resolved dependency lockfile');
 const hash = data => createHash('sha256').update(data).digest('hex');
 for (const [path, expected] of Object.entries(study.sources)) {
   const bytes = readFileSync(new URL(path, rootUrl));

@@ -5,7 +5,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const appRoot = fileURLToPath(new URL('../', import.meta.url));
-const sourceFiles = ['public/villa.glb', 'src/three/stairPresentation.js', 'src/three/poolPresentation.js', 'scripts/design-study-renderer.js', 'scripts/generate-design-study.mjs'];
+const sourceFiles = ['public/villa.glb', 'src/three/stairPresentation.js', 'src/three/poolPresentation.js', 'scripts/design-study-renderer.js', 'scripts/generate-design-study.mjs', 'package-lock.json'];
 const hash = data => createHash('sha256').update(data).digest('hex');
 const sources = Object.fromEntries(await Promise.all(sourceFiles.map(async path => {
   const bytes = await readFile(new URL('../' + path, import.meta.url));

@@ -3,6 +3,10 @@
 Verified on 2026-09-21 against the production build served locally on port 4173.
 The published GitHub Pages site is separate; this change remains in draft PR #9.
 
+Historical application/build snapshot: [`c9280bd3c86aef244ad6eab22293edf9f8e74ab4`](https://github.com/safal207/Architectural-AI-Lab/commit/c9280bd3c86aef244ad6eab22293edf9f8e74ab4).
+The mobile test synchronization was subsequently stabilized in [`968220ea3d832a8d29d73db79c87772039f6de90`](https://github.com/safal207/Architectural-AI-Lab/commit/968220ea3d832a8d29d73db79c87772039f6de90).
+Bundle sizes below describe this editorial stage, not later PR revisions.
+
 ## Result
 
 The residence now leads the page through native architectural imagery and a warm

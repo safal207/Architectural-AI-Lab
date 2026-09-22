@@ -49,6 +49,12 @@ async function assertGalleryWorks(page) {
     const image = document.querySelector('.image-dialog img');
     return image?.complete && image.naturalWidth >= 800;
   });
+  const firstImage = await gallery.locator('img').getAttribute('src');
+  await page.keyboard.press('ArrowLeft');
+  await gallery.locator('img[src$="residence-1600.webp"]').waitFor();
+  await page.keyboard.press('ArrowRight');
+  await gallery.locator('img[src$="interior-1600.webp"]').waitFor();
+  check(await gallery.locator('img').getAttribute('src') === firstImage, 'Gallery arrow keys did not wrap back to the first image');
   await page.keyboard.press('Escape');
   await gallery.waitFor({ state: 'hidden' });
   check(await trigger.evaluate((button) => document.activeElement === button), 'Gallery did not restore focus to the image trigger');

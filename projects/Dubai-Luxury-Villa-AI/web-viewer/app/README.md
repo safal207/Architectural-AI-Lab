@@ -35,12 +35,15 @@ The stored identifier retains the asset's original feature-development name; the
 From this directory, with Python 3 available:
 
 ```sh
+python -m pip install -r ../../tools/requirements-validation.txt
 python -m unittest discover -s ../../tools -p 'test_validate_viewer_asset.py'
 python ../../tools/validate_viewer_asset.py
 npm run build
 ```
 
-The asset validator checks the binary digest, source-render receipt, material families, required nodes, runtime-lighting boundary and pool Guided/Explore separation. The build workflow also verifies exact delivery of the manifest and GLB. Browser QA scripts are under `qa/`; their workflow definitions specify browser dependencies and target URLs.
+The asset validator checks the binary digest, source-render receipt, PNG integrity and complete pixel decoding, material families, required nodes, runtime-lighting boundary and pool Guided/Explore separation. The build workflow also verifies exact delivery of the manifest and GLB. Browser QA scripts are under `qa/`; their workflow definitions specify browser dependencies and target URLs.
+
+The model-derived study receipt also binds its images to the renderer's Three.js revision and the dependency lockfile. After changing those dependencies or an export source, regenerate with `node scripts/generate-design-study.mjs` (requires Playwright Chromium), then run `node qa/design-study.mjs` before building.
 
 Build success does not imply a browser QA pass. The reviewed deployed baseline `3dac25f` built and deployed successfully, but [Live Browser QA run 35518268054](https://github.com/safal207/Architectural-AI-Lab/actions/runs/35518268054) found horizontal overflow at 320 px. A fresh deployed run is required to confirm the repair. Earlier Interior2 reports describe a different baseline.
 
