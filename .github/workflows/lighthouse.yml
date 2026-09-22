@@ -1,0 +1,94 @@
+name: Lighthouse
+
+on:
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - 'tools/lighthouse/**'
+      - '.github/workflows/lighthouse.yml'
+  workflow_run:
+    workflows: ['Deploy Villa Viewer']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Audit the published site or a production build of this ref'
+        type: choice
+        options: [production, local]
+        default: production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    name: Lighthouse (${{ matrix.profile }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [mobile, desktop]
+    env:
+      LIGHTHOUSE_PROFILE: ${{ matrix.profile }}
+      LIGHTHOUSE_TARGET: ${{ github.event_name == 'pull_request' && 'local' || inputs.target || 'production' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tools/lighthouse/package-lock.json
+
+      - name: Install audit tools
+        run: npm ci --prefix tools/lighthouse --no-audit --no-fund
+
+      - name: Verify report validation
+        run: npm test --prefix tools/lighthouse
+
+      - name: Build the proposed site
+        if: env.LIGHTHOUSE_TARGET == 'local'
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Locate Chrome
+        run: |
+          chrome_path="$(command -v google-chrome)"
+          echo "CHROME_PATH=$chrome_path" >> "$GITHUB_ENV"
+          "$chrome_path" --version
+
+      - name: Audit three page loads
+        id: audit
+        working-directory: tools/lighthouse
+        run: npm run audit
+
+      - name: Summarize and validate complete reports
+        if: always() && steps.audit.outcome != 'skipped'
+        working-directory: tools/lighthouse
+        run: npm run summary
+
+      - name: Save Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: lighthouse-${{ env.LIGHTHOUSE_TARGET }}-${{ matrix.profile }}
+          path: |
+            tools/lighthouse/reports/
+            tools/lighthouse/.lighthouseci/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

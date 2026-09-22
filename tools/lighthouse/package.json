@@ -1,0 +1,13 @@
+{
+  "name": "architectural-ai-lab-lighthouse",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "audit": "lhci autorun --config=./lighthouserc.cjs",
+    "summary": "node summarize.mjs",
+    "test": "node --test summarize.test.mjs"
+  },
+  "devDependencies": {
+    "@lhci/cli": "0.15.1"
+  }
+}
