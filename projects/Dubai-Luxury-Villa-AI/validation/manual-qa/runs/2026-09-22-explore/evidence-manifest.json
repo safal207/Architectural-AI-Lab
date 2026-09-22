@@ -1,0 +1,27 @@
+[
+  {
+    "path": "evidence/00-production-errors.json",
+    "bytes": 334,
+    "sha256": "fca1418e0744699545ba10eb5764ad52e93492d4d92e309dbdd1bdc618bc7f3f"
+  },
+  {
+    "path": "evidence/01-camera-actions.json",
+    "bytes": 363,
+    "sha256": "6baba2cb36038f678b23b7272a7e24a2f0232fc434c2e0f3750f0138eed54dd7"
+  },
+  {
+    "path": "evidence/02-escape-help.png",
+    "bytes": 57431,
+    "sha256": "274a9a6b0c8c5a2da7552b98940527b9f6f5c1848d9aa18e924288158ec4b874"
+  },
+  {
+    "path": "evidence/03-after-exit.txt",
+    "bytes": 15353,
+    "sha256": "41c255e69e7f0c2829d721361a966458e673cbfbacf0c59d0cd2b7331359ef43"
+  },
+  {
+    "path": "evidence/04-errors.json",
+    "bytes": 2,
+    "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  }
+]

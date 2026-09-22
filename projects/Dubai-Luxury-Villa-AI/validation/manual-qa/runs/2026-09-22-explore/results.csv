@@ -1,0 +1,2 @@
+﻿"Case ID";"Environment";"Status";"Actual";"Evidence"
+"M021";"IAB / localhost:4176 / fff64b4";"PASS";"Drag rotates; W moves; Esc pauses; Guided and Exit work.";"evidence/01-camera-actions.json | evidence/02-escape-help.png | evidence/03-after-exit.txt | evidence/04-errors.json"

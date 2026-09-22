@@ -1,0 +1,92 @@
+{
+  "status": "PASS",
+  "evidenceMode": "interaction-json-only",
+  "desktop": {
+    "dragAndWalk": {
+      "beforeDrag": {
+        "position": [
+          3.2,
+          1.65,
+          -2.2
+        ],
+        "direction": [
+          -0.331,
+          0,
+          0.944
+        ]
+      },
+      "beforeWalk": {
+        "position": [
+          3.2,
+          1.65,
+          -2.2
+        ],
+        "direction": [
+          0.067,
+          -0.054,
+          0.996
+        ]
+      },
+      "afterWalk": {
+        "position": [
+          3.212,
+          1.65,
+          -2.027
+        ],
+        "direction": [
+          0.067,
+          -0.054,
+          0.996
+        ]
+      },
+      "status": "PASS"
+    },
+    "pauseAndFormFocus": "PASS",
+    "entry": "PASS",
+    "walkGraph": "PASS",
+    "guidedMode": "PASS",
+    "exploreMode": "PASS",
+    "modeReturn": "PASS",
+    "stairTransition": "PASS",
+    "poolGuided": "PASS",
+    "persistentScene": "PASS",
+    "modelRequests": 1
+  },
+  "mobile": {
+    "entry": "PASS",
+    "guidedMode": "PASS",
+    "exploreMode": "PASS",
+    "touchControlsExploreOnly": "PASS",
+    "noControlOverlap": "PASS",
+    "controlBoxes": {
+      "guided": {
+        "x": 121,
+        "y": 4803.78125,
+        "width": 148,
+        "height": 52
+      },
+      "guidedModeSwitch": {
+        "x": 124.5,
+        "y": 4753.78125,
+        "width": 141,
+        "height": 46
+      },
+      "explorePad": {
+        "x": 30,
+        "y": 4757.78125,
+        "width": 150,
+        "height": 98
+      },
+      "exploreModeSwitch": {
+        "x": 219,
+        "y": 4507.78125,
+        "width": 141,
+        "height": 46
+      }
+    },
+    "persistentScene": "PASS",
+    "modelRequests": 1
+  },
+  "consoleErrors": [],
+  "pageErrors": []
+}

@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "fff64b4cea5a17f031d398211dcfbc2b983e6a03",
+  "before": {
+    "direction": "-0.996,-0.074,-0.056",
+    "position": "2.200,1.650,0.650"
+  },
+  "afterDrag": {
+    "direction": "-0.868,-0.119,-0.481",
+    "position": "2.200,1.650,0.650"
+  },
+  "afterFourWTaps": {
+    "direction": "-0.868,-0.119,-0.481",
+    "position": "2.124,1.650,0.608"
+  }
+}
