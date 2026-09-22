@@ -2,6 +2,10 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 // Soft reflected light lets the glazing and metal retain depth between the
 // authored fixtures. The environment is generated once and reused in every view.
+/**
+ * Install a reusable reflection environment and the exterior light rig on the scene.
+ * Return the lights and environment render target; the viewer owns their lifetime and disposes the target.
+ */
 export function createLights(THREE, scene, renderer) {
   const pmrem = new THREE.PMREMGenerator(renderer);
   const environmentScene = new RoomEnvironment();

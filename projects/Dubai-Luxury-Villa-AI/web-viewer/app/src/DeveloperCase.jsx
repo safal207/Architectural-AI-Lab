@@ -1,5 +1,6 @@
 const media = `${import.meta.env.BASE_URL}editorial/`;
 
+/** Render the residence introduction and responsive source-render hero; delegate 3D entry to onEnter. */
 export default function DeveloperCase({ onEnter }) {
   return (
     <section className="sales-hero" aria-labelledby="sales-title" id="residence">

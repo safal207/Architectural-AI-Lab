@@ -2,6 +2,10 @@
 export const OVERVIEW_TARGET = [0, 2.2, 2.0];
 export const OVERVIEW_POSITION = [-16.5, 8.8, 25];
 
+/**
+ * Adapt vertical field of view to retain the exterior's horizontal composition on narrow canvases.
+ * Update the projection matrix while preserving camera position and orbit state.
+ */
 export function updateOverviewProjection(camera) {
   // Keep the horizontal composition on narrow screens without resetting orbit.
   const referenceAspect = 1.6;
@@ -12,6 +16,7 @@ export function updateOverviewProjection(camera) {
   camera.updateProjectionMatrix();
 }
 
+/** Create the perspective camera at the authored overview position; the viewer sets its container aspect. */
 export function createCamera(THREE) {
   const camera = new THREE.PerspectiveCamera(
     42,

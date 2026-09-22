@@ -7,6 +7,10 @@ const EDGE_CLEARANCE = 0.08;
 const SLAB_NAMES = ['upper_floor_slab', 'living_ceiling_warm'];
 const ORPHAN_JOINT_NAMES = ['upper_spine_joint_00', 'upper_spine_joint_01', 'upper_spine_joint_02'];
 
+/**
+ * Transform a mesh's local bounding box into the coordinate system described by inverseSpace.
+ * World matrices must already include the model's current transform.
+ */
 function boundsInSpace(mesh, inverseSpace) {
   mesh.geometry.computeBoundingBox();
   return mesh.geometry.boundingBox.clone().applyMatrix4(
@@ -14,10 +18,15 @@ function boundsInSpace(mesh, inverseSpace) {
   );
 }
 
+/** Convert box extrema to plain numeric arrays for the repair evidence stored in the viewer. */
 function serializeBox(box) {
   return { min: box.min.toArray(), max: box.max.toArray() };
 }
 
+/**
+ * Rebuild the slab outside a pre-clipped rectangular opening using non-overlapping box strips.
+ * Dispose temporary strip geometries and return the merged geometry with its segment count.
+ */
 function makeSlabSegments(bounds, opening) {
   // Four non-overlapping strips retain the complete slab outside the opening.
   // A ceiling edge or corner meeting the stair needs fewer strips.

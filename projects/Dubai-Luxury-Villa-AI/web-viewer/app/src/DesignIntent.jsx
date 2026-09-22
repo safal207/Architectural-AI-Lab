@@ -35,6 +35,10 @@ const GESTURES = [
   }
 ];
 
+/**
+ * Present the selected model-derived image and its projected landmark callout.
+ * Use the instance ID for accessible labels and the receipt for image paths and coordinates.
+ */
 function ConceptDiagram({ active, id }) {
   const anchor = study.landmarks[active.id].svg;
   const label = { edges: [645, 100], thresholds: [678, 424], timber: [75, 225] }[active.id];
@@ -70,12 +74,14 @@ function ConceptDiagram({ active, id }) {
   );
 }
 
+/** Connect architectural gesture tabs to their source-backed diagrams and corresponding 3D stops. */
 export default function DesignIntent({ onEnterSpace }) {
   const id = useId();
   const tabRefs = useRef([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const active = GESTURES[activeIndex];
 
+  /** Move tab selection and focus together for arrow, Home and End keys, with wraparound. */
   function handleTabKey(event, index) {
     let next = index;
     if (event.key === 'ArrowDown' || event.key === 'ArrowRight') next = (index + 1) % GESTURES.length;

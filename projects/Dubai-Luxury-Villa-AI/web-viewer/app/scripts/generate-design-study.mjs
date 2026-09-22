@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const appRoot = fileURLToPath(new URL('../', import.meta.url));
 const sourceFiles = ['public/villa.glb', 'src/three/stairPresentation.js', 'src/three/poolPresentation.js', 'scripts/design-study-renderer.js', 'scripts/generate-design-study.mjs', 'package-lock.json'];
+/** Compute the SHA-256 receipt value for source bytes or already-normalized source text. */
 const hash = data => createHash('sha256').update(data).digest('hex');
 const sources = Object.fromEntries(await Promise.all(sourceFiles.map(async path => {
   const bytes = await readFile(new URL('../' + path, import.meta.url));
@@ -15,12 +16,16 @@ const server = await createServer({
   root: appRoot,
   configFile: false,
   server: { host: '127.0.0.1', port: 0 },
-  plugins: [{name: 'design-study-export', configureServer(vite) {
-    vite.middlewares.use('/__design-study', (_req, res) => {
-      res.setHeader('Content-Type', 'text/html');
-      res.end('<!doctype html><html><body style="margin:0"><script type="module" src="/scripts/design-study-renderer.js"></script></body></html>');
-    });
-  }}]
+  plugins: [{
+    name: 'design-study-export',
+    /** Serve the minimal export document so Chromium loads the same model and renderer modules. */
+    configureServer(vite) {
+      vite.middlewares.use('/__design-study', (_req, res) => {
+        res.setHeader('Content-Type', 'text/html');
+        res.end('<!doctype html><html><body style="margin:0"><script type="module" src="/scripts/design-study-renderer.js"></script></body></html>');
+      });
+    }
+  }]
 });
 let browser;
 try {

@@ -121,6 +121,7 @@ const { TOUR_STOPS } = await import('../src/tourData.js');
 const poolStop = TOUR_STOPS.find((stop) => stop.id === 'pool');
 const authoredAspect = 16 / 9;
 const authoredFov = poolStop.presentationFov;
+/** Convert vertical field of view in degrees and aspect ratio to normalized horizontal half-width. */
 const horizontalCoverage = (fov, aspect) => Math.tan(THREE.MathUtils.degToRad(fov) / 2) * aspect;
 const authoredCoverage = horizontalCoverage(authoredFov, authoredAspect);
 for (const aspect of [authoredAspect, 740 / 498, 9 / 16]) {

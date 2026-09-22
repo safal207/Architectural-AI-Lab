@@ -10,8 +10,14 @@ page.setDefaultTimeout(30_000);
 page.on('pageerror', error => report.errors.push(String(error)));
 page.on('console', message => { if (message.type() === 'error') report.errors.push(message.text()); });
 page.on('request', request => { if (/\.glb(?:\?|$)/.test(request.url())) report.glbRequests++; });
+/** Fail the studio scenario with a diagnostic when a required UI or export condition is false. */
 const check = (value, message) => { if (!value) throw new Error(message); };
+/** Wait for the requested tour stop and loaded model before the next studio assertion. */
 const waitStop = async id => page.waitForFunction(stop => document.querySelector('.three-canvas')?.dataset.tourStop === stop && document.querySelector('.three-canvas')?.dataset.modelState === 'loaded', id, { timeout: 120_000 });
+/**
+ * Save a real brief download under the QA output directory and return its UTF-8 contents.
+ * Wait for the rendered prepared status before later edits test its invalidation.
+ */
 async function download(name) {
   const promise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download my brief', exact: true }).click();

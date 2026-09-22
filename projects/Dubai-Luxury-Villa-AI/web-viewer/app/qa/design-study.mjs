@@ -6,6 +6,7 @@ const rootUrl = new URL('../', import.meta.url);
 const study = JSON.parse(readFileSync(new URL('data/design-study.json', rootUrl)));
 assert.equal(study.threeRevision, THREE.REVISION, 'Three.js renderer changed: regenerate the model-derived study');
 assert.equal(typeof study.sources?.['package-lock.json'], 'string', 'Study must record its resolved dependency lockfile');
+/** Compute the SHA-256 used to compare current sources and images with the export receipt. */
 const hash = data => createHash('sha256').update(data).digest('hex');
 for (const [path, expected] of Object.entries(study.sources)) {
   const bytes = readFileSync(new URL(path, rootUrl));
@@ -32,6 +33,7 @@ const root=new THREE.Group();root.rotation.y=Math.PI;
 gltf.scenes[gltf.scene??0].nodes.forEach(index=>root.add(nodes[index]));root.updateMatrixWorld(true);
 const c=study.camera,camera=new THREE.OrthographicCamera(c.left,c.right,c.top,c.bottom,c.near,c.far);
 camera.position.fromArray(c.position);camera.quaternion.fromArray(c.quaternion);camera.updateMatrixWorld(true);
+/** Require two three-dimensional coordinates to agree within 1e-5 model units. */
 const close=(a,b,message)=>assert(new THREE.Vector3(...a).distanceTo(new THREE.Vector3(...b))<1e-5,message);
 for(const [gesture,landmark] of Object.entries(study.landmarks)){
   const index=gltf.nodes.findIndex(node=>node.name===landmark.mesh);

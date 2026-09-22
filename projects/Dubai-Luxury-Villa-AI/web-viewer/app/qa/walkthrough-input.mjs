@@ -3,11 +3,14 @@ import { bindWalkthroughKeyboard, resetWalkthroughInput } from '../src/walkthrou
 
 class Events {
   listeners = new Map();
+  /** Register a deduplicated callback in the synchronous input-event fixture. */
   addEventListener(type, callback) {
     if (!this.listeners.has(type)) this.listeners.set(type, new Set());
     this.listeners.get(type).add(callback);
   }
+  /** Remove a fixture callback so binding cleanup can be asserted. */
   removeEventListener(type, callback) { this.listeners.get(type)?.delete(callback); }
+  /** Deliver a synthetic event to all registered callbacks for its type. */
   dispatch(type, event = {}) {
     for (const callback of this.listeners.get(type) ?? []) callback(event);
   }
@@ -34,22 +37,27 @@ const dispose = bindWalkthroughKeyboard({
   runtime, mobileMotionRef, element, windowTarget, documentTarget,
   onInteract: () => { interactions += 1; }
 });
+/** Create a cancellable synthetic key event with overrides for modifier, focus and composition scenarios. */
 const key = (code = 'KeyW', extra = {}) => ({
   code, defaultPrevented: false,
+  /** Mark the synthetic key as cancelled to verify that walking suppresses page scrolling. */
   preventDefault() { this.defaultPrevented = true; },
   ...extra
 });
+/** Dispatch a forward key with optional event overrides and return it for cancellation assertions. */
 const press = (extra = {}) => {
   const event = key('KeyW', extra);
   windowTarget.dispatch('keydown', event);
   return event;
 };
+/** Require keyboard, touch movement, touch-look ownership and pointer capture to be cleared together. */
 const assertStopped = (label) => {
   assert.equal(runtime.keys.size, 0, `${label}: keyboard must stop`);
   assert.deepEqual(mobileMotionRef.current, { forward: 0, right: 0 }, `${label}: touch motion must stop`);
   assert.equal(runtime.touchLook.active, false, `${label}: touch look must stop`);
   assert.equal(capturedPointer, null, `${label}: touch capture must release`);
 };
+/** Seed held keyboard and touch inputs plus a captured look pointer before a reset-boundary test. */
 const startMotion = () => {
   press();
   mobileMotionRef.current = { forward: 1, right: -1 };

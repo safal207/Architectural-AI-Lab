@@ -25,6 +25,10 @@ const roomStories = {
   'pool-terrace': 'An outdoor room framed by water, low planting and the deep edges of the villa.',
 };
 
+/**
+ * Own room, tour, flight, palette and lighting state for the residence portfolio.
+ * Keep the lazy 3D viewer isolated so its failure leaves the gallery and brief usable.
+ */
 export default function Dashboard() {
   const rooms = roomsData.rooms ?? [];
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -37,6 +41,10 @@ export default function Dashboard() {
   const activeLighting = lightingModes[lightingMode] ?? lightingModes.day;
   const currentStop = TOUR_STOPS.find((stop) => stop.id === (tourMode ? activeTourStopId : 'overview')) ?? TOUR_STOPS[0];
   const detailRoom = tourMode && ['living', 'master', 'pool'].includes(activeTourStopId) ? selectedRoom : null;
+  /**
+   * Leave drone mode and synchronize the stop, tour mode and room details.
+   * Increment the view request even for the same stop so repeat selection resets its camera.
+   */
   const selectTourStop = (stop) => {
     setDroneMode(false);
     setViewRequestId((value) => value + 1);
@@ -44,17 +52,23 @@ export default function Dashboard() {
     setTourMode(stop.id !== 'overview');
     setSelectedRoom(rooms.find((item) => item.id === stop.roomId) ?? null);
   };
+  /** Map a room shortcut to its authored tour stop; ignore rooms without a mapping. */
   const selectRoom = (room) => {
     const roomStops = { 'living-room': 'living', 'master-bedroom': 'master', 'pool-terrace': 'pool' };
     const stop = TOUR_STOPS.find((item) => item.id === roomStops[room?.id]);
     if (stop) selectTourStop(stop);
   };
+  /** Leave drone mode and request a fresh view; entering from overview selects the entry stop. */
   const toggleTourMode = (enabled) => {
     setDroneMode(false);
     setViewRequestId((value) => value + 1);
     setTourMode(enabled);
     if (enabled && activeTourStopId === 'overview') selectTourStop(TOUR_STOPS.find((stop) => stop.id === 'entry'));
   };
+  /**
+   * Select a story's tour stop, transfer keyboard focus to the studio heading and reveal the viewer.
+   * Respect reduced-motion preferences when scrolling.
+   */
   const enterSpace = (id = 'pool') => {
     const stop = TOUR_STOPS.find((item) => item.id === id);
     if (stop) selectTourStop(stop);

@@ -5,6 +5,10 @@ const stories = [
   { title: 'Life, open to the sky.', category: '02 / Pool & terrace', image: 'residence', alt: 'Villa glazing and warm stone beside the reflecting pool', description: 'Long horizontal lines and a reflecting pool extend the living space into the landscape.', stop: 'pool', action: 'Explore the terrace', note: 'Pool-side architectural study', details: ['Infinity edge', 'Low planting', 'Glazed threshold'] },
 ];
 
+/**
+ * Link kitchen and terrace stories to 3D and a native modal image gallery.
+ * Keep image selection local and support arrow navigation, Escape and native focus restoration.
+ */
 export default function SpaceStories({ onEnter }) {
   const [openIndex, setOpenIndex] = useState(null);
   const dialog = useRef(null);

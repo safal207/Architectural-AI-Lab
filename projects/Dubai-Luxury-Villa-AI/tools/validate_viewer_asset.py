@@ -116,10 +116,12 @@ REQUIRED_MATERIALS = {
 
 
 def fail(message):
+    """Stop validation with a diagnostic and a nonzero command-line exit status."""
     raise SystemExit(message)
 
 
 def parse_glb(raw):
+    """Check the GLB 2 header and decode its first JSON chunk; malformed input raises or exits."""
     if len(raw) < 20:
         fail('GLB is too small')
     magic, version, length = struct.unpack_from('<4sII', raw, 0)
@@ -137,6 +139,7 @@ def parse_glb(raw):
 
 
 def validate_promotion(version, rules, promotion, raw, digest):
+    """Match promotion size/digest and enforce the recorded released or feature-only boundary."""
     if promotion.get('bytes') != len(raw):
         fail('promotion receipt byte count does not match committed asset')
     if promotion.get('sha256') != digest:
@@ -251,6 +254,7 @@ def validate_pool_v4(document, manifest, promotion, raw, digest):
 
 
 def main():
+    """Validate committed asset identity, provenance, named nodes and lighting rules; print evidence on success."""
     for path in (GLB_PATH, MANIFEST_PATH):
         if not path.is_file() or path.stat().st_size == 0:
             fail(f'missing viewer asset evidence: {path}')

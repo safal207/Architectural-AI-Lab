@@ -66,6 +66,10 @@ function routePointsForFloor(floor) {
     .filter(Boolean);
 }
 
+/**
+ * Coordinate the two-floor schematic, route list and WALK/PLAN presentation with the parent tour state.
+ * The plan is a navigation aid, not measured construction geometry.
+ */
 export default function TourExperience({ activeStopId, onSelectStop, tourMode, onToggleTourMode, onViewStop }) {
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeStopId) ?? TOUR_STOPS[0];
   const initialFloor = activeStop.floor === 2 ? 2 : 1;

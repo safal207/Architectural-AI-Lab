@@ -14,6 +14,7 @@ const componentReaders = {
   5121: [1, 'readUInt8'], 5123: [2, 'readUInt16LE'],
   5125: [4, 'readUInt32LE'], 5126: [4, 'readFloatLE']
 };
+/** Decode the fixture's supported scalar or vector GLB accessor using its component reader and byte stride. */
 function readAccessor(index) {
   const accessor = gltf.accessors[index];
   const view = gltf.bufferViews[accessor.bufferView];
@@ -75,6 +76,10 @@ const route = graphBefore.edges.filter((edge) => edge.type === 'stairs');
 assert(route.length > 2, 'The real model must supply authored stair segments.');
 const ray = new THREE.Raycaster();
 const up = new THREE.Vector3(0, 1, 0);
+/**
+ * Count slab intersections in the sampled head/shoulder band along the real stair route.
+ * Cast at the corridor center and both sides using the same sampling before and after repair.
+ */
 function blockedHeadSamples() {
   let blocked = 0;
   for (const edge of route) {

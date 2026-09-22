@@ -201,6 +201,10 @@ function neutralizeImportedLights(root) {
   return count;
 }
 
+/**
+ * Restore authored linear midpoint colors only for known Blender ramps exported as untextured white.
+ * Preserve existing color maps and nonwhite colors; this does not reconstruct procedural textures.
+ */
 function restoreProceduralMaterialColors(root) {
   // glTF cannot export these Blender procedural color ramps. Use their authored
   // linear midpoint only when the export has neither a color nor a color map.
@@ -240,6 +244,10 @@ function disposeObject(root) {
   });
 }
 
+/**
+ * Own one persistent Three.js scene and synchronize its camera, materials and lighting with React state.
+ * Support orbit, Guided, Explore and Drone modes, and release scene resources and input listeners on unmount.
+ */
 export default function VillaViewer({
   selectedRoom,
   lightingMode,
@@ -289,6 +297,7 @@ export default function VillaViewer({
     droneMode
   };
 
+  /** Apply the latest atmosphere and current room's lighting profile to the existing lights and request a frame. */
   const syncLighting = () => {
     const runtime = runtimeRef.current;
     if (!runtime) return;
@@ -315,6 +324,7 @@ export default function VillaViewer({
     setInteriorLightMultiplier(runtime.interiorLightGroup, lighting.interior);
   };
 
+  /** Apply the selected concept palette to the loaded model and publish its material-response report. */
   const syncMaterial = () => {
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
@@ -323,6 +333,10 @@ export default function VillaViewer({
     setMaterialResponse(report);
   };
 
+  /**
+   * Transfer input ownership and place the camera for the requested viewing mode.
+   * Clear stale motion, keep Guided views separate from Explore anchors and reset orbit momentum on exit.
+   */
   const syncView = () => {
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
@@ -465,11 +479,13 @@ export default function VillaViewer({
       frameId: null
     };
     runtime.needsRender = true;
+    /** Mark the scene dirty so the animation loop draws a frame even when the camera is idle. */
     const requestRender = () => { runtime.needsRender = true; };
     runtime.drone = createDroneFlight({
       camera, element: renderer.domElement, onChange: requestRender,
       onActivity: () => setHasInteracted(true), onExit: () => setDroneMode(false)
     });
+    /** Invalidate cached shadows and the presentation frame after Three.js restores GPU resources. */
     const contextRestored = () => {
       // Three rebuilds GPU resources, so both cached shadows and the idle
       // presentation frame must be drawn again after context recovery.
@@ -558,6 +574,7 @@ export default function VillaViewer({
       onInteract: () => setHasInteracted(true)
     });
 
+    /** Request desktop pointer lock only when Explore has a valid camera and desktop controls. */
     const lockFirstPerson = () => {
       if (!runtime.isExplore || !runtime.firstPersonAvailable || !runtime.pointerLockControls) return;
       setHasInteracted(true);
@@ -565,6 +582,7 @@ export default function VillaViewer({
       runtime.pointerLockControls.lock();
     };
 
+    /** Capture one primary touch pointer for look-around in a valid Explore view. */
     const pointerDown = (event) => {
       if (!runtime.isTouchDevice || !runtime.isExplore || !runtime.firstPersonAvailable
         || runtime.touchLook.active || event.button !== 0) return;
@@ -577,6 +595,7 @@ export default function VillaViewer({
       renderer.domElement.setPointerCapture?.(event.pointerId);
     };
 
+    /** Apply the captured touch pointer's movement to yaw and bounded pitch, then request a frame. */
     const pointerMove = (event) => {
       const touchLook = runtime.touchLook;
       if (!runtime.isExplore || !runtime.firstPersonAvailable
@@ -607,6 +626,7 @@ export default function VillaViewer({
     renderer.domElement.addEventListener('pointercancel', pointerUp);
     renderer.domElement.addEventListener('lostpointercapture', pointerUp);
 
+    /** Resize the drawing buffer and refresh the active mode's projection without resetting camera position. */
     const resize = () => {
       const width = container.clientWidth;
       const height = Math.max(container.clientHeight, 1);
@@ -628,6 +648,10 @@ export default function VillaViewer({
     resizeObserver?.observe(container);
     resize();
 
+    /**
+     * Advance active controls with a capped frame delta and constrain walking to the authored route.
+     * Render only dirty frames and publish camera diagnostics after rendering for synchronized browser QA.
+     */
     const animate = (now = performance.now()) => {
       runtime.frameId = requestAnimationFrame(animate);
       const delta = Math.min((now - runtime.lastFrameTime) / 1000, 0.05);
@@ -797,10 +821,15 @@ export default function VillaViewer({
     mobileMotionRef.current = { ...mobileMotionRef.current, [axis]: value };
   };
 
+  /** Leave Drone mode and request the exterior stop through the parent's shared navigation state. */
   const returnToOverview = () => {
     setDroneMode(false);
     onSelectTourStop?.(TOUR_STOPS[0]);
   };
+  /**
+   * Clear held flight input and move the drone camera to the living-area walk anchor.
+   * Retain flight projection, restore canvas focus and request the new frame.
+   */
   const flyInside = () => {
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
@@ -811,6 +840,10 @@ export default function VillaViewer({
     runtime.renderer.domElement.focus({ preventScroll: true });
     runtime.needsRender = true;
   };
+  /**
+   * Bind a movement-pad axis to pointer and keyboard holds.
+   * Stop that axis on release, cancellation, capture loss or blur so a held button cannot keep flying.
+   */
   const droneButtonProps = (axis, value) => ({
     onPointerDown: (event) => {
       if (event.button !== 0) return;

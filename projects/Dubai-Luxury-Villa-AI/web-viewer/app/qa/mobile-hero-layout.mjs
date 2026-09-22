@@ -9,6 +9,10 @@ function check(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+/**
+ * Wait two layout frames, then collect hero, image and section bounds plus overflow diagnostics.
+ * Require text and controls to remain contained while permitting the hero image's intentional edge bleed.
+ */
 async function measure(page, label) {
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const metrics = await page.evaluate(() => {
@@ -106,6 +110,7 @@ async function measure(page, label) {
   return metrics;
 }
 
+/** Reject document or section overflow and unloaded hero imagery using the collected viewport metrics. */
 function assertPageContained(metrics, label) {
   check(
     metrics.document.scrollWidth <= metrics.document.clientWidth + 1,

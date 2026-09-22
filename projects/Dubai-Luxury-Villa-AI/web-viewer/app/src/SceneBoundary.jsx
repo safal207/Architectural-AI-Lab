@@ -3,10 +3,12 @@ import { Component } from 'react';
 export default class SceneBoundary extends Component {
   state = { failed: false };
 
+  /** Switch to the static scene fallback when a descendant throws during rendering. */
   static getDerivedStateFromError() {
     return { failed: true };
   }
 
+  /** Show the viewer children or a source image with retry and gallery navigation after a failure. */
   render() {
     if (!this.state.failed) return this.props.children;
     return (

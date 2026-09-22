@@ -1,6 +1,10 @@
 const COPLANAR_TOLERANCE_METERS = 0.001;
 const SHELF_SUBMERGENCE_METERS = 0.012;
 
+/**
+ * Return mesh bounds in the model root's coordinates, or null when position geometry is unavailable.
+ * The caller must ensure world matrices reflect the current transforms.
+ */
 function boundsInRoot(THREE, root, mesh) {
   if (!mesh?.isMesh || !mesh.geometry?.attributes?.position) return null;
   mesh.geometry.computeBoundingBox();
@@ -8,6 +12,7 @@ function boundsInRoot(THREE, root, mesh) {
   return mesh.geometry.boundingBox.clone().applyMatrix4(relative);
 }
 
+/** Apply a root-space offset to a mesh through its actual parent transform and refresh its matrices. */
 function moveInRoot(THREE, root, mesh, offset) {
   const position = root.worldToLocal(mesh.getWorldPosition(new THREE.Vector3())).add(offset);
   root.localToWorld(position);
@@ -17,11 +22,16 @@ function moveInRoot(THREE, root, mesh, offset) {
   mesh.updateWorldMatrix(false, true);
 }
 
+/** Check the relative transform for rotation/shear before resizing coping along root-aligned axes. */
 function isAxisAlignedInRoot(THREE, root, mesh) {
   const relative = new THREE.Matrix4().copy(root.matrixWorld).invert().multiply(mesh.matrixWorld);
   return [1, 2, 4, 6, 8, 9].every((index) => Math.abs(relative.elements[index]) < 1e-6);
 }
 
+/**
+ * Fit the three known coping strips to the current basin only when their cross-sections clear the water.
+ * Preserve strip elevations and thicknesses, and return the number of adjusted meshes.
+ */
 function alignCoping(THREE, root, waterBounds) {
   const basin = root.getObjectByName('pool_basin');
   const left = root.getObjectByName('pool_coping_left');

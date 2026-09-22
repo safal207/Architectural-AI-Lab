@@ -4,6 +4,11 @@ import { isInteractiveTarget } from './walkthroughInput.js';
 export const DRONE_LIMITS = { min: [-42, 0.3, -42], max: [42, 24, 42] };
 const FLIGHT_KEYS = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyQ', 'KeyE', 'ShiftLeft', 'ShiftRight']);
 
+/**
+ * Translate camera-relative forward/right and world-up input within scene bounds.
+ * Normalize combined input above unit length and cap elapsed time at 50 ms; no collision simulation is performed.
+ * Return whether nonzero input was processed, even if a bound prevents displacement.
+ */
 export function moveDrone(camera, motion, seconds, speed = 3.2, bounds = DRONE_LIMITS) {
   const direction = new THREE.Vector3();
   camera.getWorldDirection(direction);
@@ -18,11 +23,16 @@ export function moveDrone(camera, motion, seconds, speed = 3.2, bounds = DRONE_L
   return true;
 }
 
+/**
+ * Bind flight input to the canvas and injectable window/document event targets.
+ * Call update with elapsed seconds each frame; dispose removes bindings and clears held input.
+ */
 export function createDroneFlight({ camera, element, onChange, onActivity, onExit, windowTarget = window, documentTarget = document }) {
   let enabled = false;
   let pointer = null;
   let input = { forward: 0, right: 0, up: 0 };
   const keys = new Set();
+  /** Clear keyboard and pad motion, drop the active pointer and release any remaining pointer capture. */
   const reset = () => {
     keys.clear();
     input = { forward: 0, right: 0, up: 0 };
@@ -30,6 +40,7 @@ export function createDroneFlight({ camera, element, onChange, onActivity, onExi
     pointer = null;
     if (id != null && element.hasPointerCapture?.(id)) element.releasePointerCapture(id);
   };
+  /** Start one primary drag in enabled flight mode, focus the canvas and capture its pointer. */
   const down = event => {
     if (!enabled || event.button !== 0 || pointer) return;
     event.preventDefault();
@@ -38,6 +49,7 @@ export function createDroneFlight({ camera, element, onChange, onActivity, onExi
     element.setPointerCapture?.(event.pointerId);
     onActivity?.();
   };
+  /** Rotate the camera from the active pointer's delta, clamp pitch and notify the renderer. */
   const move = event => {
     if (!enabled || pointer?.id !== event.pointerId) return;
     camera.rotation.y -= (event.clientX - pointer.x) * 0.003;
@@ -46,7 +58,12 @@ export function createDroneFlight({ camera, element, onChange, onActivity, onExi
     pointer.y = event.clientY;
     onChange();
   };
+  /** End the drag only when the released or cancelled pointer owns the current gesture. */
   const up = event => { if (pointer?.id === event.pointerId) pointer = null; };
+  /**
+   * Accept flight keys only for the focused canvas; preserve typing and modified shortcuts.
+   * Escape clears motion before requesting exit from flight mode.
+   */
   const keyDown = event => {
     if (!enabled || event.defaultPrevented || event.isComposing || event.altKey || event.metaKey || event.ctrlKey
       || isInteractiveTarget(event.target) || documentTarget.activeElement !== element || documentTarget.hidden) return;
@@ -54,9 +71,13 @@ export function createDroneFlight({ camera, element, onChange, onActivity, onExi
     if (!FLIGHT_KEYS.has(event.code)) return;
     event.preventDefault(); keys.add(event.code); onActivity?.();
   };
+  /** Forget a released key even when focus or flight ownership has changed. */
   const keyUp = event => keys.delete(event.code);
+  /** Clear held flight input when the document becomes hidden. */
   const visibility = () => { if (documentTarget.hidden) reset(); };
+  /** Clear motion when focus leaves the flight canvas. */
   const focus = event => { if (event.target !== element) reset(); };
+  /** Move the enabled flight camera along its viewing direction for one wheel tick and request a frame. */
   const wheel = event => {
     if (!enabled) return;
     event.preventDefault();
@@ -76,12 +97,20 @@ export function createDroneFlight({ camera, element, onChange, onActivity, onExi
   documentTarget.addEventListener('visibilitychange', visibility);
   documentTarget.addEventListener('focusin', focus);
   return {
+    /** Enter flight once with cleared input, YXZ look rotation and keyboard focus on the canvas. */
     enable() { if (enabled) return; reset(); enabled = true; camera.rotation.reorder('YXZ'); element.focus({ preventScroll: true }); },
+    /** Disable flight updates and release all currently held motion and pointer input. */
     disable() { enabled = false; reset(); },
     reset,
+    /** Set one on-screen motion axis while flight is enabled and record interaction activity. */
     setMotion(axis, value) { if (!enabled) return; input[axis] = value; onActivity?.(); },
+    /**
+     * Combine keyboard and pad axes, apply optional Shift acceleration and advance the camera.
+     * Return whether nonzero motion was processed; hidden or disabled views do not advance.
+     */
     update(delta) {
       if (!enabled || documentTarget.hidden) return false;
+      /** Return a unit contribution when any equivalent movement key is held. */
       const held = (...codes) => codes.some(code => keys.has(code)) ? 1 : 0;
       const motion = {
         forward: THREE.MathUtils.clamp(input.forward + held('KeyW','ArrowUp') - held('KeyS','ArrowDown'), -1, 1),
@@ -92,6 +121,7 @@ export function createDroneFlight({ camera, element, onChange, onActivity, onExi
       if (moved) onChange();
       return moved;
     },
+    /** Disable flight, clear input and remove every canvas, window and document listener owned here. */
     dispose() {
       enabled = false; reset();
       element.removeEventListener('pointerdown', down); element.removeEventListener('pointermove', move);

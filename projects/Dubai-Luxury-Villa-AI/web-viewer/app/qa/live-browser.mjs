@@ -57,6 +57,7 @@ async function assertHeroContained(page, label) {
   return metrics;
 }
 
+/** Require the real model to load and reject placeholder fallback; include resource diagnostics on failure. */
 async function waitForModel(page) {
   try {
     await page.locator('.three-canvas canvas').waitFor({ state: 'visible', timeout: 120_000 });
@@ -112,6 +113,7 @@ async function verifyPublishedAsset(page) {
   };
 }
 
+/** Verify the residence hero, decoded source image, space stories and local-brief entry points. */
 async function verifyPortfolio(page) {
   await page.getByRole('heading', {
     level: 1,
@@ -140,6 +142,7 @@ async function verifyPortfolio(page) {
   await page.locator('#brief').getByRole('button', { name: 'Download my brief', exact: true }).waitFor();
 }
 
+/** Check native modal state, decoded images, both arrow keys, closing controls and restored trigger focus. */
 async function verifyGallery(page) {
   const openGallery = page.getByRole('button', { name: 'Enlarge Kitchen & living image', exact: true });
   await openGallery.click();
@@ -167,6 +170,10 @@ async function verifyGallery(page) {
   await gallery.waitFor({ state: 'hidden' });
 }
 
+/**
+ * Download a kitchen brief and verify notes, current palette and atmosphere in the saved file.
+ * Return a compact evidence record after the ready status appears.
+ */
 async function verifyProjectBrief(page, label) {
   const brief = page.locator('#brief');
   const notes = 'A quiet kitchen with an island.\nKeep the garden view.';
@@ -198,6 +205,7 @@ async function verifyProjectBrief(page, label) {
   return { filename: download.suggestedFilename(), material: expectedMaterial, lighting: expectedLighting, notesPreserved: true };
 }
 
+/** Exercise desktop plan selection, Guided/Explore transitions and WALK exit/reentry without model reloads. */
 async function verifyDesktopTour(page) {
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
@@ -257,6 +265,7 @@ async function verifyDesktopTour(page) {
   check(Number(await canvas.getAttribute('data-model-load-count')) === 1, 'Exiting live walkthrough reloaded villa.glb');
 }
 
+/** Exercise upper-floor room selection and touch-control visibility across Guided/Explore and tour exit. */
 async function verifyMobileTour(page) {
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
@@ -306,6 +315,7 @@ const report = {
   failedResponses: []
 };
 
+/** Track model requests, browser errors and failed HTTP responses for a desktop or mobile run. */
 function observe(page, result) {
   page.setDefaultTimeout(30_000);
   result.modelRequests = 0;

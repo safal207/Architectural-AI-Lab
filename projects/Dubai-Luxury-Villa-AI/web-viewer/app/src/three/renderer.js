@@ -1,5 +1,9 @@
 // WebGL renderer tuned for luxury architectural presentation.
 // Color management is kept here so every viewer mode uses the same photographic baseline.
+/**
+ * Append a WebGL canvas with shared color management, capped pixel ratio and cached shadows.
+ * Only qaCapture=1 preserves the drawing buffer; the caller must dispose the renderer and remove its canvas.
+ */
 export function createRenderer(THREE, container) {
   // CI visual gates can opt into a preserved drawing buffer with `?qaCapture=1`.
   // Production keeps the faster default (`false`), so evidence capture does not

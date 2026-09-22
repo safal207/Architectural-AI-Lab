@@ -61,6 +61,10 @@ for(const mesh of meshes){
   const line=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry,35),lineMaterial);
   line.matrixAutoUpdate=false;line.matrix.copy(mesh.matrixWorld);outlines.add(line);
 }
+/**
+ * Create a disposable study material using mesh-family colors and the active gesture highlight.
+ * These opaque illustration materials are separate from the interactive model's physical materials.
+ */
 function materialFor(mesh, active) {
   const name=mesh.name;
   let color='#e5dfd1';
@@ -72,6 +76,10 @@ function materialFor(mesh, active) {
   if(groups[active].includes(name)) color=active==='thresholds'?'#6eab98':active==='timber'?'#ae7e44':'#c4a46e';
   return new THREE.MeshStandardMaterial({color,roughness:1,metalness:0,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
 }
+/**
+ * Project a named mesh's world bounds into the fixed 720 by 480 diagram coordinate system.
+ * Use its center by default, or its upper/front edge for the roof callout.
+ */
 function landmark(name, edge=false) {
   const box=new THREE.Box3().setFromObject(root.getObjectByName(name));
   const point=box.getCenter(new THREE.Vector3());
@@ -80,6 +88,10 @@ function landmark(name, edge=false) {
   return {mesh:name,world:point.toArray(),svg:[(screen.x+1)*360,(1-screen.y)*240],bounds:{min:box.min.toArray(),max:box.max.toArray()}};
 }
 const landmarks={edges:landmark('roof_plane',true),thresholds:landmark('living_glass_03'),timber:landmark('timber_fin_04'),pool:landmark('pool_water')};
+/**
+ * Render all three highlight variants from the same camera and return WebP data URLs plus provenance.
+ * Replace and dispose prior study materials as variants change; report the runtime Three.js revision.
+ */
 window.exportDesignStudy=()=>{
   const images={};
   for(const active of ['edges','thresholds','timber']){

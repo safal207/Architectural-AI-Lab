@@ -6,21 +6,32 @@ const out = process.env.QA_OUTPUT ?? 'qa-drone-flight-output';
 await mkdir(out, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const report = { status: 'RUNNING', errors: [], desktop: {}, mobile: [] };
+/** Allow a bounded interval for held movement or inertia to advance before a diagnostic sample. */
 const sleep = (page, ms=250) => page.waitForTimeout(ms);
+/** Read the last rendered camera position from viewer diagnostics as a numeric triplet. */
 const position = async page => (await page.locator('.three-canvas').getAttribute('data-camera-position')).split(',').map(Number);
+/** Read the last rendered world-space camera direction from viewer diagnostics. */
 const direction = async page => (await page.locator('.three-canvas').getAttribute('data-camera-direction')).split(',').map(Number);
+/** Measure Euclidean separation between two numeric camera samples. */
 const distance = (a,b) => Math.hypot(...a.map((v,i)=>v-b[i]));
+/** Activate the uniquely named accessible button for a flight scenario. */
 const click = (page, name) => page.getByRole('button', { name, exact: true }).click();
+/** Wait until both requested and rendered interaction modes match before sampling the camera. */
 const mode = (page, expected) => page.waitForFunction(value => {
   const view = document.querySelector('.three-canvas');
   return view?.dataset.interactionMode === value && view?.dataset.renderedInteractionMode === value;
 }, expected);
+/** Wait up to 15 seconds for rendered displacement to exceed the specified model-unit threshold. */
 async function waitMovement(page, before, min=.08) {
   await page.waitForFunction(({before,min}) => {
     const p=document.querySelector('.three-canvas')?.dataset.cameraPosition?.split(',').map(Number);
     return p && Math.hypot(...p.map((v,i)=>v-before[i]))>min;
   }, {before,min}, {timeout:15000});
 }
+/**
+ * Load the daytime viewer, collect browser errors and verify its stair and pool repair diagnostics.
+ * Return the repair evidence after the first camera frame is available.
+ */
 async function start(page) {
   page.on('pageerror', error=>report.errors.push(String(error)));
   page.on('console', msg=>{if(msg.type()==='error')report.errors.push(msg.text());});
@@ -111,6 +122,7 @@ try {
     stopped=await position(mobile);await sleep(mobile,350);
     assert(distance(stopped,await position(mobile))<.004,'mobile pad release must stop');
     const layout=await mobile.evaluate(()=>{
+      /** Read a control's viewport rectangle for overlap checks on the mobile movement pad. */
       const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};
       return{canvas:rect('.three-canvas-shell'),help:rect('.drone-help'),inside:rect('.drone-inside'),pad:rect('.drone-pad'),overflow:document.documentElement.scrollWidth-innerWidth};
     });

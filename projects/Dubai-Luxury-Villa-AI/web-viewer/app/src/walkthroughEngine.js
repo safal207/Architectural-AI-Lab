@@ -118,6 +118,10 @@ function resolveLookTarget(root, stop, position, presentation = true) {
 
 // A vertical FOV authored for a wide hero image needs more vertical coverage
 // on a narrow canvas to retain the same horizontal composition.
+/**
+ * Resolve the stop's vertical field of view in degrees for Guided or Explore mode.
+ * Widen narrow Guided canvases using the authored reference aspect; missing stops return undefined.
+ */
 export function resolveTourFov(stop, aspect, options = {}) {
   if (!stop) return undefined;
   const presentation = options.presentation !== false;
@@ -130,6 +134,7 @@ export function resolveTourFov(stop, aspect, options = {}) {
   ));
 }
 
+/** Apply the stop's mode-aware field of view and update the matrix while retaining camera position. */
 export function updateTourCameraProjection(camera, stop, options = {}) {
   const fov = resolveTourFov(stop, camera.aspect, options);
   if (fov) camera.fov = fov;
@@ -252,6 +257,11 @@ function closestPointOnWalkEdge(point, edge, target) {
   );
 }
 
+/**
+ * Clamp a candidate world position to a walk corridor and return its selected edge.
+ * Prefer the current edge and shared endpoints so overlapping floors cannot cause route jumps.
+ * Return the original candidate with no edge when a graph is unavailable.
+ */
 export function constrainToWalkGraph(candidate, graph, preferredEdgeId) {
   if (!graph?.edges?.length) return { position: candidate, edge: null };
 
@@ -261,6 +271,7 @@ export function constrainToWalkGraph(candidate, graph, preferredEdgeId) {
   // Nearby routes can overlap in plan while belonging to different floors.
   // Once walking, only change edges through a shared authored endpoint; XZ
   // proximity alone must never let a ground-floor move jump onto mid-flight.
+  /** Test whether an edge shares an authored world-space endpoint with the current preferred edge. */
   const connected = (edge) => [edge.a, edge.b].some((point) =>
     point.distanceToSquared(preferredEdge.a) < 1e-6
     || point.distanceToSquared(preferredEdge.b) < 1e-6

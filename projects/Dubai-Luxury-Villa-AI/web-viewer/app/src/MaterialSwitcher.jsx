@@ -40,6 +40,10 @@ const MATERIALS = [
   }
 ];
 
+/**
+ * Present mutually exclusive concept palettes and notify the parent of the initial and selected palette.
+ * The swatches describe material direction, not construction specifications.
+ */
 export default function MaterialSwitcher({ onChange }) {
   const [activeId, setActiveId] = useState(MATERIALS[0].id);
 

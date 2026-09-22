@@ -16,6 +16,7 @@ const poolNames = new Set([
   'pool_coping_left', 'pool_coping_right', 'pool_coping_near', 'infinity_lip'
 ]);
 
+/** Decode a FLOAT VEC3 position accessor from the actual GLB, respecting byte offsets and stride. */
 function readPositions(index) {
   const accessor = gltf.accessors[index];
   assert.equal(accessor.componentType, 5126);
@@ -30,6 +31,10 @@ function readPositions(index) {
   return result;
 }
 
+/**
+ * Reconstruct the GLB hierarchy and real pool position streams without a renderer or texture loader.
+ * Retain relevant authored material values and apply the viewer's root rotation for repair tests.
+ */
 function makeRoot() {
   const nodes = gltf.nodes.map((node) => {
     let object = new THREE.Object3D();
@@ -69,6 +74,7 @@ function makeRoot() {
   return root;
 }
 
+/** Read a named fixture mesh's bounding box in model-root coordinates. */
 function bounds(root, name) {
   const mesh = root.getObjectByName(name);
   mesh.geometry.computeBoundingBox();
@@ -77,10 +83,12 @@ function bounds(root, name) {
   );
 }
 
+/** Require scalar pool measurements to agree within 1e-6 model units. */
 function close(actual, expected, message) {
   assert.ok(Math.abs(actual - expected) < 1e-6, `${message}: ${actual} vs ${expected}`);
 }
 
+/** Compare both X/Z extrema while intentionally allowing a shelf's elevation to change. */
 function sameFootprint(actual, expected, message) {
   for (const axis of ['x', 'z']) {
     close(actual.min[axis], expected.min[axis], `${message} min ${axis}`);
@@ -88,6 +96,7 @@ function sameFootprint(actual, expected, message) {
   }
 }
 
+/** Detect positive X/Z overlap above numeric tolerance; touching edges alone are not overlap. */
 function overlapsInPlan(a, b) {
   return Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x) > 1e-6
     && Math.min(a.max.z, b.max.z) - Math.max(a.min.z, b.min.z) > 1e-6;

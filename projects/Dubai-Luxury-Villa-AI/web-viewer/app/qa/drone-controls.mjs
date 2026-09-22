@@ -3,8 +3,11 @@ import * as THREE from 'three';
 import { createDroneFlight, moveDrone, DRONE_LIMITS } from '../src/droneFlight.js';
 class Events {
   listeners = new Map();
+  /** Register a deduplicated listener in the synchronous event-target fixture. */
   addEventListener(type, listener) { if (!this.listeners.has(type)) this.listeners.set(type,new Set()); this.listeners.get(type).add(listener); }
+  /** Remove one fixture listener so disposal can be checked without a browser. */
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
+  /** Deliver a synthetic event to the fixture's registered listeners for its type. */
   dispatch(type, event = {}) { for (const listener of this.listeners.get(type) ?? []) listener(event); }
 }
 const camera = new THREE.PerspectiveCamera();
@@ -20,14 +23,25 @@ moveDrone(camera,{up:1},.05);
 assert.equal(camera.position.y,DRONE_LIMITS.max[1]);
 const windowTarget = new Events(), documentTarget = new Events(), element = new Events();
 documentTarget.hidden = false;
+/** Model a canvas outside editable controls so the typing guard permits flight input. */
 element.closest = () => null;
+/** Update the fake document's active element and emit the corresponding focus event. */
 element.focus = () => { documentTarget.activeElement = element; documentTarget.dispatch('focusin',{target:element}); };
+/** Provide a no-op capture hook for tests that do not simulate browser pointer ownership. */
 element.setPointerCapture = () => {};
+/** Report no captured pointer in this keyboard and movement-focused fixture. */
 element.hasPointerCapture = () => false;
 let exits = 0;
 const flight = createDroneFlight({camera,element,windowTarget,documentTarget,onChange:()=>{},onExit:()=>{exits++;}});
-const key = (code,target=element) => ({code,target,preventDefault(){this.defaultPrevented=true;}});
+/** Create a synthetic movement key with an overridable target and observable default cancellation. */
+const key = (code,target=element) => ({
+  code, target,
+  /** Record cancellation on the synthetic event so input ownership can be asserted. */
+  preventDefault(){this.defaultPrevented=true;}
+});
+/** Enable flight, focus the fake canvas and hold forward movement for the next reset scenario. */
 const start = () => { flight.enable(); element.focus(); windowTarget.dispatch('keydown',key('KeyW')); };
+/** Advance one 50 ms flight step and return the camera's actual displacement. */
 const moved = () => { const before=camera.position.clone(); flight.update(.05); return camera.position.distanceTo(before); };
 start(); assert.ok(moved()>0);
 windowTarget.dispatch('blur'); assert.equal(moved(),0,'Blur must stop all movement');

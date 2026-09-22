@@ -5,10 +5,12 @@ const chapters = [
   ['journey', 'Plan'], ['brief', 'Brief'],
 ];
 
+/** Render chapter links with a scroll-derived current location and clean up listeners on unmount. */
 export default function ProjectChapters() {
   const [active, setActive] = useState('design');
   useEffect(() => {
     let frame = 0;
+    /** Choose the last chapter above the reading threshold; select Brief at the document bottom. */
     const update = () => {
       frame = 0;
       let current = chapters[0][0];
@@ -18,6 +20,7 @@ export default function ProjectChapters() {
       if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) current = chapters.at(-1)[0];
       setActive(current);
     };
+    /** Coalesce scroll and resize notifications into one pending animation-frame update. */
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
     update();
     window.addEventListener('scroll', schedule, { passive: true });

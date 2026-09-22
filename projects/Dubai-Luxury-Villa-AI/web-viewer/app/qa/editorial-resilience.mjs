@@ -5,10 +5,12 @@ const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-editorial-resilience-output';
 await mkdir(outputDir, { recursive: true });
 
+/** Fail the resilience scenario with a diagnostic when a required condition is false. */
 function check(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+/** Wait for a loaded model at the expected first-person stop before asserting related portfolio state. */
 async function waitForTour(page, stop) {
   await page.waitForFunction((expectedStop) => {
     const canvas = document.querySelector('.three-canvas');
@@ -18,6 +20,7 @@ async function waitForTour(page, stop) {
   }, stop, { timeout: 120_000 });
 }
 
+/** Save and validate an actual brief download, wait for its prepared status and return the text. */
 async function downloadBrief(page, filename) {
   const section = page.locator('#brief');
   const downloadPromise = page.waitForEvent('download');
@@ -33,6 +36,7 @@ async function downloadBrief(page, filename) {
   return content;
 }
 
+/** Wait for the unprepared status and reject a stale download-ready claim after preferences change. */
 async function assertBriefNeedsDownload(page) {
   await page.locator('#brief').getByRole('status')
     .filter({ hasText: 'Includes your selected materials and atmosphere.' }).waitFor();
@@ -40,6 +44,7 @@ async function assertBriefNeedsDownload(page) {
     'Brief still claims it is prepared after preferences changed');
 }
 
+/** Exercise decoded gallery images, keyboard wraparound, Escape and focus restoration from its trigger. */
 async function assertGalleryWorks(page) {
   const trigger = page.getByRole('button', { name: 'Enlarge Kitchen & living image', exact: true });
   await trigger.click();
@@ -68,6 +73,7 @@ const report = {
 };
 const browser = await chromium.launch({ headless: true });
 
+/** Set action timeouts and collect console and page errors into the scenario-specific report. */
 function observe(page, result) {
   page.setDefaultTimeout(30_000);
   page.on('console', (message) => {
@@ -133,6 +139,7 @@ try {
   observe(unavailable, report.webglUnavailable);
   await unavailable.addInitScript(() => {
     const originalGetContext = HTMLCanvasElement.prototype.getContext;
+    /** Simulate unavailable WebGL while delegating ordinary 2D canvas contexts to the original browser method. */
     HTMLCanvasElement.prototype.getContext = function (type, ...args) {
       if (['webgl', 'webgl2', 'experimental-webgl'].includes(type)) return null;
       return originalGetContext.call(this, type, ...args);

@@ -24,6 +24,10 @@ const PROJECT_TYPES = {
 
 const PRIORITIES = ['Natural light', 'Generous storage', 'Natural materials', 'Easy upkeep'];
 
+/**
+ * Collect shared project details and category-specific area/scope for a local text download.
+ * Invalidate the prepared status when inputs, palette or lighting change; nothing is submitted.
+ */
 export default function ProjectBrief({ material, lighting }) {
   const [projectType, setProjectType] = useState('Villa architecture');
   const [location, setLocation] = useState('');
@@ -40,6 +44,7 @@ export default function ProjectBrief({ material, lighting }) {
     projectType, location, area, scope, priorities, notes, material?.id, material?.name, lighting
   ]);
 
+  /** Update one detail in the active project category while retaining the other categories' drafts. */
   function updateProjectDetail(field, value) {
     setDetailsByType((current) => ({
       ...current,
@@ -47,12 +52,17 @@ export default function ProjectBrief({ material, lighting }) {
     }));
   }
 
+  /** Add or remove one priority without discarding the other selected priorities. */
   function togglePriority(priority) {
     setPriorities((current) => current.includes(priority)
       ? current.filter((item) => item !== priority)
       : [...current, priority]);
   }
 
+  /**
+   * Validate the form, download the current brief as UTF-8 text and mark it prepared.
+   * Create a temporary object URL and revoke it after the browser has started the download.
+   */
   function downloadBrief(event) {
     event.preventDefault();
     if (!event.currentTarget.reportValidity()) return;

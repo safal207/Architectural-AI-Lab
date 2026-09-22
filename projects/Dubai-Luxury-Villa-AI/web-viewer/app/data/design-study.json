@@ -2,10 +2,10 @@
   "version": 1,
   "sources": {
     "public/villa.glb": "4f3e2868b532d1e3ea50e83aeb9a696e3c1f6484b38b2067db4973b57e66d115",
-    "src/three/stairPresentation.js": "9fda0e6e00296546addde83fa4d6cebc96ae8db03895355c20f717b4a532df35",
-    "src/three/poolPresentation.js": "6944b7963c533d66582db3bde1f198102fbf04ad13979d0d40a05ff76b3a529e",
-    "scripts/design-study-renderer.js": "cf537bf59ab2bca3ff996d04647aa4f0c59d922adb8f91babe0fcffc44918bf1",
-    "scripts/generate-design-study.mjs": "b4aa941f7a5c71bd880ab18ed3ef0089e8ebe9d73b47532625ea7cfb4cae9e31",
+    "src/three/stairPresentation.js": "73ae480cb5d458c125ec9b55de15f36f9bc20a1b426a4e2fdb88f4cc29f6334a",
+    "src/three/poolPresentation.js": "91133c71275f627cd3981c44c5260b893dd44022fc7e47b2bc9f7bbba9ad6ba9",
+    "scripts/design-study-renderer.js": "5179a9745cb1264d03898cb8eb9f3e39a9f4c725902f4bcdbc4ea4732a17598a",
+    "scripts/generate-design-study.mjs": "7be4e814f547471a6165d04cb4d5d492c129edea1db24052ba392b1faccefd2c",
     "package-lock.json": "b5e6cc7e77d94ca607548a8ff28497f6f0e0c79b6b3ab12b9b71dbc2bfd4c0e4"
   },
   "images": {
