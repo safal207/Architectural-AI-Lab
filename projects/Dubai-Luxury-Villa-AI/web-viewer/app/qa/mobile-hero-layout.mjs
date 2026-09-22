@@ -71,6 +71,7 @@ async function measure(page, label) {
       '.material-story',
       '.material-switcher',
       '.project-brief',
+      '.contact-section',
       '.site-footer'
     ];
     const sections = Object.fromEntries(sectionSelectors.map((selector) => {
@@ -79,7 +80,7 @@ async function measure(page, label) {
     }));
 
     return {
-      document: { clientWidth: root.clientWidth, scrollWidth: root.scrollWidth },
+      document: { clientWidth: root.clientWidth, scrollWidth: root.scrollWidth, bodyWidth: document.body.getBoundingClientRect().width },
       hero: box(hero),
       copy: box(copy),
       heading: box(heading),
@@ -112,6 +113,7 @@ async function measure(page, label) {
 
 /** Reject document or section overflow and unloaded hero imagery using the collected viewport metrics. */
 function assertPageContained(metrics, label) {
+  const contentWidth = metrics.availableWidth ?? metrics.document.clientWidth;
   check(
     metrics.document.scrollWidth <= metrics.document.clientWidth + 1,
     `${label}: horizontal overflow (${metrics.document.scrollWidth}px > ${metrics.document.clientWidth}px); sections=${JSON.stringify(metrics.sections)}; offenders=${JSON.stringify(metrics.offenders)}`
@@ -120,7 +122,7 @@ function assertPageContained(metrics, label) {
   for (const [selector, section] of Object.entries(metrics.sections)) {
     check(section, `${label}: missing section ${selector}`);
     check(
-      section.left >= -1 && section.right <= metrics.document.clientWidth + 1,
+      section.left >= -1 && section.right <= contentWidth + 1,
       `${label}: ${selector} extends outside the viewport (${section.left}px–${section.right}px)`
     );
     if (selector !== '.sales-hero') {
@@ -136,6 +138,7 @@ const browser = await chromium.launch({ headless: true });
 const report = {
   status: 'RUNNING',
   widths: {},
+  reservedScrollbar: {},
   consoleErrors: [],
   pageErrors: []
 };
@@ -176,6 +179,33 @@ try {
     await page.screenshot({ path: `${outputDir}/hero-${label}.png`, fullPage: false, animations: 'disabled' });
     assertPageContained(metrics, label);
     check(metrics.windowMaxScrollX <= 1, `${label}: page can scroll horizontally by ${metrics.windowMaxScrollX}px`);
+  }
+
+  // Reserve a real layout gutter even in headless browsers with overlay scrollbars.
+  // A 320px viewport then has less space for content, as on Windows with classic scrollbars.
+  const desktop = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  desktop.on('console', (message) => {
+    if (message.type() === 'error') report.consoleErrors.push(message.text());
+  });
+  desktop.on('pageerror', (error) => report.pageErrors.push(String(error)));
+  await desktop.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await desktop.addStyleTag({ content: 'html { scrollbar-gutter: stable; }' });
+  await desktop.locator('.three-canvas').waitFor({ state: 'visible', timeout: 60_000 });
+  await desktop.locator('.hero-image img').evaluate((image) =>
+    Promise.all(image.getAnimations().map((animation) => animation.finished))
+  );
+  await desktop.evaluate(() => document.fonts.ready);
+  for (const [label, width] of [['390', 390], ['320', 320], ['390-return', 390]]) {
+    await desktop.setViewportSize({ width, height: width === 390 ? 844 : 800 });
+    const metrics = await measure(desktop, `reserved-scrollbar-${label}`);
+    report.reservedScrollbar[label] = metrics;
+    const availableWidth = await desktop.evaluate(() => document.documentElement.getBoundingClientRect().width);
+    metrics.availableWidth = availableWidth;
+    check(availableWidth < width, `${label}: scrollbar gutter was not reserved; regression would be untested`);
+    check(metrics.document.bodyWidth <= availableWidth + 1,
+      `${label}: body exceeds reserved-scrollbar content width (${metrics.document.bodyWidth}px > ${availableWidth}px)`);
+    assertPageContained(metrics, `reserved-scrollbar-${label}`);
+    await desktop.screenshot({ path: `${outputDir}/reserved-scrollbar-${label}.png`, fullPage: false, animations: 'disabled' });
   }
 
   check(report.consoleErrors.length === 0, `Console errors: ${report.consoleErrors.join(' | ')}`);
