@@ -1,0 +1,44 @@
+[
+  {
+    "focused": true,
+    "message": "Значение должно быть больше или равно 1.",
+    "valid": false,
+    "value": "0"
+  },
+  {
+    "focused": true,
+    "message": "Значение должно быть больше или равно 1.",
+    "valid": false,
+    "value": "-1"
+  },
+  {
+    "focused": true,
+    "message": "Значение должно быть больше или равно 1.",
+    "valid": false,
+    "value": "0.5"
+  },
+  {
+    "focused": true,
+    "message": "Значение должно быть меньше или равно 100000.",
+    "valid": false,
+    "value": "100001"
+  },
+  {
+    "valid": true,
+    "value": "1"
+  },
+  {
+    "valid": true,
+    "value": "100000"
+  },
+  {
+    "valid": true,
+    "value": "320.5"
+  },
+  {
+    "badInput": false,
+    "input": "abc",
+    "valid": true,
+    "value": ""
+  }
+]

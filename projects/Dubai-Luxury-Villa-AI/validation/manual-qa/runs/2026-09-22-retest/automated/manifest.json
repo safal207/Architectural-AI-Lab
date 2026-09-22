@@ -1,0 +1,12 @@
+[
+  {
+    "path": "after.json",
+    "bytes": 27463,
+    "sha256": "b6480a3d0e7a0b2af3f3f29988adf08156470608c0f5e5156324ccb4b5f3cf18"
+  },
+  {
+    "path": "before.json",
+    "bytes": 23293,
+    "sha256": "61b7556e5e0b18e9d7879b15385afa500a65463f8584afdd821902a108b5299d"
+  }
+]

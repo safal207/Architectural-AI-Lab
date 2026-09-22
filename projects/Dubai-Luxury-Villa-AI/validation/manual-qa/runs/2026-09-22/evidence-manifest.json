@@ -1,0 +1,132 @@
+[
+  {
+    "path": "evidence/01-desktop-home.png",
+    "bytes": 74012,
+    "sha256": "38fcceac9961fc4ab40c1c00f74ad50b808cea98eec0bd1fac0b0c532bd0fc38"
+  },
+  {
+    "path": "evidence/02-gallery.png",
+    "bytes": 45558,
+    "sha256": "a390f0853ca8a9795057930219c3af0009cc583c22b2b01cdda4722899aa4693"
+  },
+  {
+    "path": "evidence/03-kitchen-entry.png",
+    "bytes": 66813,
+    "sha256": "3e609c77aec15f1e6dfceba5b947341ab617694abcf32ec1befa4b29a81e72ed"
+  },
+  {
+    "path": "evidence/04-upper-landing.png",
+    "bytes": 54829,
+    "sha256": "07f15a04434841ac4ed9126b7a20f9b98d815d896db60ca9e1c7a93911cffb48"
+  },
+  {
+    "path": "evidence/05-day.png",
+    "bytes": 64457,
+    "sha256": "6a92a32ab9d9173be1108cacd895dcd0cb34cdeab533f3d41088e7c7845fb64e"
+  },
+  {
+    "path": "evidence/06-night.png",
+    "bytes": 58608,
+    "sha256": "f8c463068fa4338b7d86750409a6039dce368eba6226e17517778ad25b7c57ab"
+  },
+  {
+    "path": "evidence/07-graphite.png",
+    "bytes": 52008,
+    "sha256": "f8e60a7eb44ffea49ef3287c50a1e12cf8dc31a30f96e146aaae0882558a2155"
+  },
+  {
+    "path": "evidence/08-sandstone.png",
+    "bytes": 56372,
+    "sha256": "96e94e4e966f54b933a7c771c83d895532ffeb669635235d2f13d62c1a4deeb6"
+  },
+  {
+    "path": "evidence/09-drone-inside.png",
+    "bytes": 73769,
+    "sha256": "219eb920cc8c9f39bcc4a23ed67ae02d8955c530d69ffa3a1158070c4afe676e"
+  },
+  {
+    "path": "evidence/10-plan-state.txt",
+    "bytes": 15713,
+    "sha256": "f257238a23df951d0cade8333a8c8f25193df44eb955786f5a4e2a2aea9988ac"
+  },
+  {
+    "path": "evidence/11-brief-ready.png",
+    "bytes": 35976,
+    "sha256": "ade145ace0c5935a118867fd564382785e2a9d238377364b54534a6247a6162b"
+  },
+  {
+    "path": "evidence/11-brief-ready.txt",
+    "bytes": 15884,
+    "sha256": "66731b4cf7590107aee862144343e46def84c8bd085b81ca2a289cd0a93f1962"
+  },
+  {
+    "path": "evidence/12-area-zero.png",
+    "bytes": 46969,
+    "sha256": "1a0d69d57c1219c7380a7bc0cbea070ef16d8170465da54353e822e7e64fe0bb"
+  },
+  {
+    "path": "evidence/13-area-validity.json",
+    "bytes": 556,
+    "sha256": "bf6eabc1b55b5d3e90700fb71e6ca252f25925f0e8a731c658a5ad50e38661a2"
+  },
+  {
+    "path": "evidence/14-desktop-contact.png",
+    "bytes": 45243,
+    "sha256": "49f5a9d5d773f71cb0d9e651ec19868ddafa3f8461ef1b99ee85738bfbf55a5e"
+  },
+  {
+    "path": "evidence/15-mobile-home-390.png",
+    "bytes": 40328,
+    "sha256": "f29bb4db41acfbfc9d85e8cc1c5482388dddb8bdf1a8bf2596f8bbb1338125cd"
+  },
+  {
+    "path": "evidence/16-mobile-enter-390.png",
+    "bytes": 32164,
+    "sha256": "667933dcc258e5e9f681b71ab1780aeb2131b806aad3ac88cb31535f4d5cb835"
+  },
+  {
+    "path": "evidence/17-mobile-brief-390.png",
+    "bytes": 30229,
+    "sha256": "f4e369265cc2319a2d508e622b9fb7295533bae97fa8ebb7fbe8d6950198829d"
+  },
+  {
+    "path": "evidence/18-mobile-brief-320.png",
+    "bytes": 26322,
+    "sha256": "b80422fd3fb8d0deb3bf0df241ce0f388e23740e8d17200ee22945f23ce18b03"
+  },
+  {
+    "path": "evidence/19-mobile-contact-320.png",
+    "bytes": 25916,
+    "sha256": "7d9183b35468434b8eef3869278493b26414aefc48c81522afbb7f21829e3ece"
+  },
+  {
+    "path": "evidence/20-overflow-320.json",
+    "bytes": 166,
+    "sha256": "55b1e124c41290513baa9b0aef743f7d7158676db09841b843bc25b5078f06cb"
+  },
+  {
+    "path": "evidence/21-metadata.json",
+    "bytes": 2341,
+    "sha256": "07176477647501c089032ed0e1575b2be08cceec7d9b89cf97153fd462e6fc5e"
+  },
+  {
+    "path": "evidence/22-console-errors.json",
+    "bytes": 2,
+    "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  {
+    "path": "evidence/23-end-state.txt",
+    "bytes": 15301,
+    "sha256": "2b4390c6b1e657659579b94f4c99d28118f3a1b2bf3c00c1c363c82675d74d6d"
+  },
+  {
+    "path": "evidence/brief-downloaded.txt",
+    "bytes": 762,
+    "sha256": "6abbffb6f5f7bbe732e306861b1a254bd05786be04b71c3b0c5687abf0b03fe3"
+  },
+  {
+    "path": "evidence/brief-empty.txt",
+    "bytes": 719,
+    "sha256": "4152e798396d40cfc2421f276b2c0351505b9bb8caa9698d6307f78f04fce5a1"
+  }
+]

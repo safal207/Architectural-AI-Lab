@@ -1,0 +1,44 @@
+[
+  {
+    "dialogOpen": true,
+    "inDialog": true,
+    "label": "Previous image",
+    "tag": "BUTTON"
+  },
+  {
+    "dialogOpen": true,
+    "inDialog": true,
+    "label": "Next image",
+    "tag": "BUTTON"
+  },
+  {
+    "dialogOpen": true,
+    "inDialog": false,
+    "label": null,
+    "tag": "BODY"
+  },
+  {
+    "dialogOpen": true,
+    "inDialog": true,
+    "label": "Close image gallery",
+    "tag": "BUTTON"
+  },
+  {
+    "dialogOpen": true,
+    "inDialog": false,
+    "label": null,
+    "tag": "BODY"
+  },
+  {
+    "dialogOpen": true,
+    "inDialog": true,
+    "label": "Next image",
+    "tag": "BUTTON"
+  },
+  {
+    "dialogOpen": true,
+    "inDialog": true,
+    "label": "Previous image",
+    "tag": "BUTTON"
+  }
+]

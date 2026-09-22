@@ -1,0 +1,77 @@
+{
+  "canonical": "https://safal207.github.io/Architectural-AI-Lab/",
+  "description": "Architecture, interiors and a home to explore. Discover a Dubai villa through warm stone, timber, a reflecting pool and an interactive 3D tour.",
+  "og": [
+    {
+      "content": "website",
+      "name": "og:type"
+    },
+    {
+      "content": "Architectural AI Lab",
+      "name": "og:site_name"
+    },
+    {
+      "content": "en_US",
+      "name": "og:locale"
+    },
+    {
+      "content": "Desert, distilled. — Architecture & Interiors",
+      "name": "og:title"
+    },
+    {
+      "content": "A Dubai residence in warm stone and timber. Explore the interiors, follow the light and step inside an interactive 3D tour. By Architectural AI Lab.",
+      "name": "og:description"
+    },
+    {
+      "content": "https://safal207.github.io/Architectural-AI-Lab/",
+      "name": "og:url"
+    },
+    {
+      "content": "https://safal207.github.io/Architectural-AI-Lab/social/desert-distilled-v1.png",
+      "name": "og:image"
+    },
+    {
+      "content": "https://safal207.github.io/Architectural-AI-Lab/social/desert-distilled-v1.png",
+      "name": "og:image:secure_url"
+    },
+    {
+      "content": "image/png",
+      "name": "og:image:type"
+    },
+    {
+      "content": "1730",
+      "name": "og:image:width"
+    },
+    {
+      "content": "909",
+      "name": "og:image:height"
+    },
+    {
+      "content": "Desert, distilled. Architectural AI Lab — a warm stone and timber villa beside a reflecting pool.",
+      "name": "og:image:alt"
+    }
+  ],
+  "title": "Desert, distilled. — Architecture & Interiors | Architectural AI Lab",
+  "twitter": [
+    {
+      "content": "summary_large_image",
+      "name": "twitter:card"
+    },
+    {
+      "content": "Desert, distilled. — Architecture & Interiors",
+      "name": "twitter:title"
+    },
+    {
+      "content": "A Dubai residence in warm stone and timber. Explore the interiors, follow the light and step inside an interactive 3D tour.",
+      "name": "twitter:description"
+    },
+    {
+      "content": "https://safal207.github.io/Architectural-AI-Lab/social/desert-distilled-v1.png",
+      "name": "twitter:image"
+    },
+    {
+      "content": "Desert, distilled. Architectural AI Lab — a warm stone and timber villa beside a reflecting pool.",
+      "name": "twitter:image:alt"
+    }
+  ]
+}

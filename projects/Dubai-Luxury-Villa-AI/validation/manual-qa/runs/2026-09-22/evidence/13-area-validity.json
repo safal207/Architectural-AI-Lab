@@ -1,0 +1,32 @@
+[
+  {
+    "message": "Значение должно быть больше или равно 1.",
+    "valid": false,
+    "value": "-1"
+  },
+  {
+    "message": "Значение должно быть меньше или равно 100000.",
+    "valid": false,
+    "value": "100001"
+  },
+  {
+    "message": "",
+    "valid": true,
+    "value": "1"
+  },
+  {
+    "message": "",
+    "valid": true,
+    "value": "100000"
+  },
+  {
+    "message": "",
+    "valid": true,
+    "value": "320.5"
+  },
+  {
+    "message": "",
+    "valid": true,
+    "value": "320.5"
+  }
+]

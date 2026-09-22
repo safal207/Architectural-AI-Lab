@@ -1,0 +1,965 @@
+{
+  "status": "FAIL",
+  "widths": {
+    "320": {
+      "document": {
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "bodyWidth": 320
+      },
+      "hero": {
+        "left": 20,
+        "right": 300,
+        "width": 280,
+        "clientWidth": 280,
+        "scrollWidth": 300
+      },
+      "copy": {
+        "left": 20,
+        "right": 300,
+        "width": 280,
+        "clientWidth": 280,
+        "scrollWidth": 280
+      },
+      "heading": {
+        "left": 20,
+        "right": 300,
+        "width": 280,
+        "clientWidth": 280,
+        "scrollWidth": 280
+      },
+      "lead": {
+        "left": 20,
+        "right": 180.84375,
+        "width": 160.84375,
+        "clientWidth": 161,
+        "scrollWidth": 161
+      },
+      "actions": {
+        "left": 260,
+        "right": 300,
+        "width": 40,
+        "clientWidth": 40,
+        "scrollWidth": 40
+      },
+      "heroImage": {
+        "complete": true,
+        "naturalWidth": 320,
+        "currentSrc": "http://127.0.0.1:4176/editorial/residence-800.webp"
+      },
+      "sections": {
+        ".app-shell": {
+          "left": 0,
+          "right": 320,
+          "width": 320,
+          "clientWidth": 320,
+          "scrollWidth": 320
+        },
+        ".site-header": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".sales-hero": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 300
+        },
+        ".hero-image": {
+          "left": 0,
+          "right": 320,
+          "width": 320,
+          "clientWidth": 320,
+          "scrollWidth": 320
+        },
+        ".hero-enter": {
+          "left": 20,
+          "right": 207.484375,
+          "width": 187.484375,
+          "clientWidth": 187,
+          "scrollWidth": 187
+        },
+        ".spaces-section": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".space-stories": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".experience-section": {
+          "left": 0,
+          "right": 320,
+          "width": 320,
+          "clientWidth": 320,
+          "scrollWidth": 320
+        },
+        ".tour-experience": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".house-plan-card": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".client-graph-card": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".viewer-toolbar": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".app-grid": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".viewer-panel": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".three-canvas": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".material-story": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".material-switcher": {
+          "left": 32,
+          "right": 288,
+          "width": 256,
+          "clientWidth": 256,
+          "scrollWidth": 256
+        },
+        ".project-brief": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".contact-section": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".site-footer": {
+          "left": 0,
+          "right": 320,
+          "width": 320,
+          "clientWidth": 320,
+          "scrollWidth": 320
+        }
+      },
+      "offenders": [],
+      "windowMaxScrollX": 0
+    },
+    "390": {
+      "document": {
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "bodyWidth": 390
+      },
+      "hero": {
+        "left": 20,
+        "right": 370,
+        "width": 350,
+        "clientWidth": 350,
+        "scrollWidth": 370
+      },
+      "copy": {
+        "left": 20,
+        "right": 370,
+        "width": 350,
+        "clientWidth": 350,
+        "scrollWidth": 350
+      },
+      "heading": {
+        "left": 20,
+        "right": 370,
+        "width": 350,
+        "clientWidth": 350,
+        "scrollWidth": 350
+      },
+      "lead": {
+        "left": 20,
+        "right": 180.84375,
+        "width": 160.84375,
+        "clientWidth": 161,
+        "scrollWidth": 161
+      },
+      "actions": {
+        "left": 330,
+        "right": 370,
+        "width": 40,
+        "clientWidth": 40,
+        "scrollWidth": 40
+      },
+      "heroImage": {
+        "complete": true,
+        "naturalWidth": 390,
+        "currentSrc": "http://127.0.0.1:4176/editorial/residence-800.webp"
+      },
+      "sections": {
+        ".app-shell": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        ".site-header": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".sales-hero": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 370
+        },
+        ".hero-image": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        ".hero-enter": {
+          "left": 20,
+          "right": 207.484375,
+          "width": 187.484375,
+          "clientWidth": 187,
+          "scrollWidth": 187
+        },
+        ".spaces-section": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".space-stories": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".experience-section": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        ".tour-experience": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".house-plan-card": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".client-graph-card": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".viewer-toolbar": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".app-grid": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".viewer-panel": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".three-canvas": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".material-story": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".material-switcher": {
+          "left": 35.875,
+          "right": 354.125,
+          "width": 318.25,
+          "clientWidth": 318,
+          "scrollWidth": 318
+        },
+        ".project-brief": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".contact-section": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".site-footer": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        }
+      },
+      "offenders": [],
+      "windowMaxScrollX": 0
+    },
+    "390-return": {
+      "document": {
+        "clientWidth": 390,
+        "scrollWidth": 390,
+        "bodyWidth": 390
+      },
+      "hero": {
+        "left": 20,
+        "right": 370,
+        "width": 350,
+        "clientWidth": 350,
+        "scrollWidth": 370
+      },
+      "copy": {
+        "left": 20,
+        "right": 370,
+        "width": 350,
+        "clientWidth": 350,
+        "scrollWidth": 350
+      },
+      "heading": {
+        "left": 20,
+        "right": 370,
+        "width": 350,
+        "clientWidth": 350,
+        "scrollWidth": 350
+      },
+      "lead": {
+        "left": 20,
+        "right": 180.84375,
+        "width": 160.84375,
+        "clientWidth": 161,
+        "scrollWidth": 161
+      },
+      "actions": {
+        "left": 330,
+        "right": 370,
+        "width": 40,
+        "clientWidth": 40,
+        "scrollWidth": 40
+      },
+      "heroImage": {
+        "complete": true,
+        "naturalWidth": 390,
+        "currentSrc": "http://127.0.0.1:4176/editorial/residence-800.webp"
+      },
+      "sections": {
+        ".app-shell": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        ".site-header": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".sales-hero": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 370
+        },
+        ".hero-image": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        ".hero-enter": {
+          "left": 20,
+          "right": 207.484375,
+          "width": 187.484375,
+          "clientWidth": 187,
+          "scrollWidth": 187
+        },
+        ".spaces-section": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".space-stories": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".experience-section": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        },
+        ".tour-experience": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".house-plan-card": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".client-graph-card": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".viewer-toolbar": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".app-grid": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".viewer-panel": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".three-canvas": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".material-story": {
+          "left": 20,
+          "right": 370,
+          "width": 350,
+          "clientWidth": 350,
+          "scrollWidth": 350
+        },
+        ".material-switcher": {
+          "left": 35.875,
+          "right": 354.125,
+          "width": 318.25,
+          "clientWidth": 318,
+          "scrollWidth": 318
+        },
+        ".project-brief": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".contact-section": {
+          "left": 20.65625,
+          "right": 369.34375,
+          "width": 348.6875,
+          "clientWidth": 349,
+          "scrollWidth": 349
+        },
+        ".site-footer": {
+          "left": 0,
+          "right": 390,
+          "width": 390,
+          "clientWidth": 390,
+          "scrollWidth": 390
+        }
+      },
+      "offenders": [],
+      "windowMaxScrollX": 0
+    }
+  },
+  "reservedScrollbar": {
+    "320": {
+      "document": {
+        "clientWidth": 320,
+        "scrollWidth": 320,
+        "bodyWidth": 320
+      },
+      "hero": {
+        "left": 20,
+        "right": 300,
+        "width": 280,
+        "clientWidth": 280,
+        "scrollWidth": 300
+      },
+      "copy": {
+        "left": 20,
+        "right": 300,
+        "width": 280,
+        "clientWidth": 280,
+        "scrollWidth": 280
+      },
+      "heading": {
+        "left": 20,
+        "right": 300,
+        "width": 280,
+        "clientWidth": 280,
+        "scrollWidth": 280
+      },
+      "lead": {
+        "left": 20,
+        "right": 180.84375,
+        "width": 160.84375,
+        "clientWidth": 161,
+        "scrollWidth": 161
+      },
+      "actions": {
+        "left": 260,
+        "right": 300,
+        "width": 40,
+        "clientWidth": 40,
+        "scrollWidth": 40
+      },
+      "heroImage": {
+        "complete": true,
+        "naturalWidth": 320,
+        "currentSrc": "http://127.0.0.1:4176/editorial/residence-800.webp"
+      },
+      "sections": {
+        ".app-shell": {
+          "left": 0,
+          "right": 320,
+          "width": 320,
+          "clientWidth": 320,
+          "scrollWidth": 320
+        },
+        ".site-header": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".sales-hero": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 300
+        },
+        ".hero-image": {
+          "left": 0,
+          "right": 320,
+          "width": 320,
+          "clientWidth": 320,
+          "scrollWidth": 320
+        },
+        ".hero-enter": {
+          "left": 20,
+          "right": 207.484375,
+          "width": 187.484375,
+          "clientWidth": 187,
+          "scrollWidth": 187
+        },
+        ".spaces-section": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".space-stories": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".experience-section": {
+          "left": 0,
+          "right": 320,
+          "width": 320,
+          "clientWidth": 320,
+          "scrollWidth": 320
+        },
+        ".tour-experience": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".house-plan-card": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".client-graph-card": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".viewer-toolbar": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".app-grid": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".viewer-panel": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".three-canvas": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".material-story": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".material-switcher": {
+          "left": 32,
+          "right": 288,
+          "width": 256,
+          "clientWidth": 256,
+          "scrollWidth": 256
+        },
+        ".project-brief": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".contact-section": {
+          "left": 20,
+          "right": 300,
+          "width": 280,
+          "clientWidth": 280,
+          "scrollWidth": 280
+        },
+        ".site-footer": {
+          "left": 0,
+          "right": 320,
+          "width": 320,
+          "clientWidth": 320,
+          "scrollWidth": 320
+        }
+      },
+      "offenders": [],
+      "availableWidth": 305
+    },
+    "390": {
+      "document": {
+        "clientWidth": 390,
+        "scrollWidth": 375,
+        "bodyWidth": 375
+      },
+      "hero": {
+        "left": 20,
+        "right": 355,
+        "width": 335,
+        "clientWidth": 335,
+        "scrollWidth": 355
+      },
+      "copy": {
+        "left": 20,
+        "right": 355,
+        "width": 335,
+        "clientWidth": 335,
+        "scrollWidth": 335
+      },
+      "heading": {
+        "left": 20,
+        "right": 355,
+        "width": 335,
+        "clientWidth": 335,
+        "scrollWidth": 335
+      },
+      "lead": {
+        "left": 20,
+        "right": 180.84375,
+        "width": 160.84375,
+        "clientWidth": 161,
+        "scrollWidth": 161
+      },
+      "actions": {
+        "left": 315,
+        "right": 355,
+        "width": 40,
+        "clientWidth": 40,
+        "scrollWidth": 40
+      },
+      "heroImage": {
+        "complete": true,
+        "naturalWidth": 390,
+        "currentSrc": "http://127.0.0.1:4176/editorial/residence-800.webp"
+      },
+      "sections": {
+        ".app-shell": {
+          "left": 0,
+          "right": 375,
+          "width": 375,
+          "clientWidth": 375,
+          "scrollWidth": 375
+        },
+        ".site-header": {
+          "left": 20,
+          "right": 355,
+          "width": 335,
+          "clientWidth": 335,
+          "scrollWidth": 335
+        },
+        ".sales-hero": {
+          "left": 20,
+          "right": 355,
+          "width": 335,
+          "clientWidth": 335,
+          "scrollWidth": 355
+        },
+        ".hero-image": {
+          "left": 0,
+          "right": 375,
+          "width": 375,
+          "clientWidth": 375,
+          "scrollWidth": 375
+        },
+        ".hero-enter": {
+          "left": 20,
+          "right": 207.484375,
+          "width": 187.484375,
+          "clientWidth": 187,
+          "scrollWidth": 187
+        },
+        ".spaces-section": {
+          "left": 20.65625,
+          "right": 354.34375,
+          "width": 333.6875,
+          "clientWidth": 334,
+          "scrollWidth": 334
+        },
+        ".space-stories": {
+          "left": 20.65625,
+          "right": 354.34375,
+          "width": 333.6875,
+          "clientWidth": 334,
+          "scrollWidth": 334
+        },
+        ".experience-section": {
+          "left": 0,
+          "right": 375,
+          "width": 375,
+          "clientWidth": 375,
+          "scrollWidth": 375
+        },
+        ".tour-experience": {
+          "left": 20.65625,
+          "right": 354.34375,
+          "width": 333.6875,
+          "clientWidth": 334,
+          "scrollWidth": 334
+        },
+        ".house-plan-card": {
+          "left": 20.65625,
+          "right": 354.34375,
+          "width": 333.6875,
+          "clientWidth": 334,
+          "scrollWidth": 334
+        },
+        ".client-graph-card": {
+          "left": 20.65625,
+          "right": 354.34375,
+          "width": 333.6875,
+          "clientWidth": 334,
+          "scrollWidth": 334
+        },
+        ".viewer-toolbar": {
+          "left": 20,
+          "right": 355,
+          "width": 335,
+          "clientWidth": 335,
+          "scrollWidth": 335
+        },
+        ".app-grid": {
+          "left": 20,
+          "right": 355,
+          "width": 335,
+          "clientWidth": 335,
+          "scrollWidth": 335
+        },
+        ".viewer-panel": {
+          "left": 20,
+          "right": 355,
+          "width": 335,
+          "clientWidth": 335,
+          "scrollWidth": 335
+        },
+        ".three-canvas": {
+          "left": 20,
+          "right": 355,
+          "width": 335,
+          "clientWidth": 335,
+          "scrollWidth": 335
+        },
+        ".material-story": {
+          "left": 20,
+          "right": 355,
+          "width": 335,
+          "clientWidth": 335,
+          "scrollWidth": 335
+        },
+        ".material-switcher": {
+          "left": 32,
+          "right": 343,
+          "width": 311,
+          "clientWidth": 311,
+          "scrollWidth": 311
+        },
+        ".project-brief": {
+          "left": 20.65625,
+          "right": 354.34375,
+          "width": 333.6875,
+          "clientWidth": 334,
+          "scrollWidth": 334
+        },
+        ".contact-section": {
+          "left": 20.65625,
+          "right": 354.34375,
+          "width": 333.6875,
+          "clientWidth": 334,
+          "scrollWidth": 334
+        },
+        ".site-footer": {
+          "left": 0,
+          "right": 375,
+          "width": 375,
+          "clientWidth": 375,
+          "scrollWidth": 375
+        }
+      },
+      "offenders": [],
+      "availableWidth": 375
+    }
+  },
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failure": "Error: 320: body exceeds reserved-scrollbar content width (320px > 305px)\n    at check (file:///C:/Users/safal/Documents/Codex/2026-09-20/new-chat/work/villa-reconcile/projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/mobile-hero-layout.mjs:9:25)\n    at file:///C:/Users/safal/Documents/Codex/2026-09-20/new-chat/work/villa-reconcile/projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/mobile-hero-layout.mjs:200:5"
+}
