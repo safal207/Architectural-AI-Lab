@@ -8,9 +8,11 @@ AI-assisted architectural visualization for villas, kitchens and home interiors:
 
 ![Pool Context v4 — native Blender exterior study](projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/editorial/residence-1600.webp)
 
-[Public villa demo](https://safal207.github.io/Architectural-AI-Lab/) · [Editorial redesign — draft PR #9](https://github.com/safal207/Architectural-AI-Lab/pull/9)
+[Explore the residence](https://safal207.github.io/Architectural-AI-Lab/) · [Start a conversation](https://safal207.github.io/Architectural-AI-Lab/#contact)
 
-The editorial redesign is a preview change for draft PR #9. **The public demo has not yet been updated with this redesign.** The experience described below is the current development version.
+An interactive architectural portfolio: explore the home, compare finishes and light, and capture a direction for your own space. The site is published through GitHub Pages from `main` after a successful deployment.
+
+**Contact:** [Telegram · @Alexfox14](https://t.me/Alexfox14) · [safal0645@gmail.com](mailto:safal0645@gmail.com)
 
 ## Explore the residence
 

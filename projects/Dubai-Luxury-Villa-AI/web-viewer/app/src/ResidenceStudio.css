@@ -53,3 +53,21 @@
 
 .material-study__mobile-title { display: none; }
 @media (max-width: 850px) { .material-study__mobile-title { display: flex; justify-content: space-between; gap: 12px; font-size: 9px; color: #706957; } .material-study__mobile-title span:first-child { text-transform: uppercase; letter-spacing: .12em; } }
+
+.app-shell #contact { scroll-margin-top: 72px; }
+.contact-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10%; padding-block: 74px 85px; border-top: 1px solid var(--line); }
+.contact-section h2 { font-size: clamp(36px, 4vw, 60px); }
+.contact-intro { color: var(--muted); font-size: 13px; max-width: 380px; margin-top: 26px; }
+.contact-links { min-width: 0; font-style: normal; align-self: center; }
+.contact-links > a { display: block; padding-block: 24px; border-bottom: 1px solid var(--line); }
+.contact-links > a:first-child { border-top: 1px solid var(--line); }
+.contact-label { display: block; margin-bottom: 12px; color: var(--muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.contact-value { display: flex; justify-content: space-between; gap: 14px; font-size: clamp(18px, 2vw, 28px); line-height: 1.4; overflow-wrap: anywhere; }
+.contact-value > span { flex-shrink: 0; color: var(--accent); }
+.contact-links > a:hover .contact-value { color: var(--accent); }
+.contact-links > p { margin-top: 20px; max-width: 370px; color: var(--muted); font-size: 11px; }
+@media (max-width: 700px) {
+  .app-shell #contact { scroll-margin-top: 60px; }
+  .contact-section { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 56px; }
+  .contact-section h2 { font-size: 41px; }
+}

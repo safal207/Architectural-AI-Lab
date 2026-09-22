@@ -80,7 +80,7 @@ export default function Dashboard() {
       <a className="skip-link" href="#viewer">Skip to the interactive residence</a>
       <header className="site-header">
         <a className="brand" href="#top" aria-label="Architectural AI Lab home"><span className="brand-mark" aria-hidden="true">a<span> / </span>a</span><span>ARCHITECTURAL<br />AI LAB</span></a>
-        <nav aria-label="Main navigation"><a href="#design">The concept</a><a href="#spaces">Spaces</a><a href="#viewer">Experience</a></nav>
+        <nav aria-label="Main navigation"><a href="#design">The concept</a><a href="#spaces">Spaces</a><a href="#viewer">Experience</a><a href="#contact">Contact</a></nav>
         <a className="header-brief" href="#brief">Your project <span aria-hidden="true">↗</span></a>
       </header>
       <DeveloperCase onEnter={() => enterSpace()} />
@@ -124,6 +124,18 @@ export default function Dashboard() {
       </section>
       <section className="journey-section section-wrap" aria-label="Floor plan and route"><TourExperience activeStopId={activeTourStopId} onSelectStop={selectTourStop} tourMode={tourMode && !droneMode} onToggleTourMode={toggleTourMode} onViewStop={enterSpace} /></section>
       <ProjectBrief material={material} lighting={activeLighting.name} />
+      <section className="contact-section section-wrap" id="contact" aria-labelledby="contact-title">
+        <div>
+          <p className="eyebrow">06 / Start a conversation</p>
+          <h2 id="contact-title">Let's shape<br /><em>your next space.</em></h2>
+          <p className="contact-intro">A villa, a kitchen or a fresh perspective on home. Share your ideas, references or the brief you created above.</p>
+        </div>
+        <address className="contact-links">
+          <a href="https://t.me/Alexfox14" target="_blank" rel="noopener noreferrer"><span className="contact-label">Message on Telegram</span><span className="contact-value">@Alexfox14 <span aria-hidden="true">↗</span></span></a>
+          <a href="mailto:safal0645@gmail.com"><span className="contact-label">Write an email</span><span className="contact-value">safal0645@gmail.com <span aria-hidden="true">↗</span></span></a>
+          <p>Send a message directly. Your project brief stays on your device until you choose to share it.</p>
+        </address>
+      </section>
       <footer className="site-footer"><a className="footer-wordmark" href="#top">Architectural AI Lab <span aria-hidden="true">↗</span></a><div><span>Dubai residence · Concept portfolio</span><span>Architecture / Kitchens / Interiors</span></div><p>Architectural studies and interactive visualisations.<br />Concept plans and areas; not construction documentation.</p><a href="https://github.com/safal207/Architectural-AI-Lab" target="_blank" rel="noreferrer">Project archive ↗</a></footer>
     </main>
   );
