@@ -9,6 +9,10 @@ function check(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+/**
+ * Wait two layout frames, then collect hero, image and section bounds plus overflow diagnostics.
+ * Require text and controls to remain contained while permitting the hero image's intentional edge bleed.
+ */
 async function measure(page, label) {
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const metrics = await page.evaluate(() => {
@@ -18,7 +22,8 @@ async function measure(page, label) {
     const heading = document.querySelector('.sales-hero h1');
     const lead = document.querySelector('.sales-hero__lead');
     const actions = document.querySelector('.sales-hero__actions');
-    if (!hero || !copy || !heading || !lead || !actions) return null;
+    const image = document.querySelector('.hero-image img');
+    if (!hero || !copy || !heading || !lead || !actions || !image) return null;
 
     const box = (node) => {
       const rect = node.getBoundingClientRect();
@@ -49,16 +54,24 @@ async function measure(page, label) {
 
     const sectionSelectors = [
       '.app-shell',
+      '.site-header',
       '.sales-hero',
-      '.case-story',
-      '.pilot-card',
+      '.hero-image',
+      '.hero-enter',
+      '.spaces-section',
+      '.space-stories',
+      '.experience-section',
       '.tour-experience',
       '.house-plan-card',
       '.client-graph-card',
       '.viewer-toolbar',
       '.app-grid',
-      '.lower-grid',
-      'footer'
+      '.viewer-panel',
+      '.three-canvas',
+      '.material-story',
+      '.material-switcher',
+      '.project-brief',
+      '.site-footer'
     ];
     const sections = Object.fromEntries(sectionSelectors.map((selector) => {
       const node = document.querySelector(selector);
@@ -72,13 +85,17 @@ async function measure(page, label) {
       heading: box(heading),
       lead: box(lead),
       actions: box(actions),
+      heroImage: { complete: image.complete, naturalWidth: image.naturalWidth, currentSrc: image.currentSrc },
       sections,
       offenders
     };
   });
 
   check(metrics, `${label}: hero metrics unavailable`);
-  for (const key of ['hero', 'copy', 'heading', 'lead', 'actions']) {
+  // The mobile hero image intentionally reaches the viewport edges beyond the
+  // inset copy column. Check its viewport bounds separately, while requiring
+  // all text and controls to remain internally contained.
+  for (const key of ['copy', 'heading', 'lead', 'actions']) {
     const value = metrics[key];
     check(
       value.scrollWidth <= value.clientWidth + 1,
@@ -91,6 +108,28 @@ async function measure(page, label) {
   );
 
   return metrics;
+}
+
+/** Reject document or section overflow and unloaded hero imagery using the collected viewport metrics. */
+function assertPageContained(metrics, label) {
+  check(
+    metrics.document.scrollWidth <= metrics.document.clientWidth + 1,
+    `${label}: horizontal overflow (${metrics.document.scrollWidth}px > ${metrics.document.clientWidth}px); sections=${JSON.stringify(metrics.sections)}; offenders=${JSON.stringify(metrics.offenders)}`
+  );
+  check(metrics.heroImage.complete && metrics.heroImage.naturalWidth > 0, `${label}: residence hero image failed to load`);
+  for (const [selector, section] of Object.entries(metrics.sections)) {
+    check(section, `${label}: missing section ${selector}`);
+    check(
+      section.left >= -1 && section.right <= metrics.document.clientWidth + 1,
+      `${label}: ${selector} extends outside the viewport (${section.left}px–${section.right}px)`
+    );
+    if (selector !== '.sales-hero') {
+      check(
+        section.scrollWidth <= section.clientWidth + 1,
+        `${label}: ${selector} overflows internally (${section.scrollWidth}px > ${section.clientWidth}px)`
+      );
+    }
+  }
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -110,35 +149,34 @@ try {
 
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.locator('.sales-hero h1').waitFor({ state: 'visible', timeout: 30_000 });
-
-  report.widths['390'] = await measure(page, '390px');
-  report.widths['390'].windowMaxScrollX = await page.evaluate(() => {
-    const y = window.scrollY;
-    window.scrollTo(99999, y);
-    const x = window.scrollX;
-    window.scrollTo(0, y);
-    return x;
-  });
-  await page.screenshot({ path: `${outputDir}/hero-390.png`, fullPage: false, animations: 'disabled' });
-  check(
-    report.widths['390'].windowMaxScrollX <= 1,
-    `390px: page can scroll horizontally by ${report.widths['390'].windowMaxScrollX}px`
+  // Measure the completed presentation, not the intentional image entrance
+  // scale or the Suspense placeholder for the separately loaded 3D module.
+  await page.locator('.three-canvas').waitFor({ state: 'visible', timeout: 60_000 });
+  await page.locator('.hero-image img').evaluate((image) =>
+    Promise.all(image.getAnimations().map((animation) => animation.finished))
   );
-
-  await page.setViewportSize({ width: 320, height: 800 });
-  report.widths['320'] = await measure(page, '320px');
-  report.widths['320'].windowMaxScrollX = await page.evaluate(() => {
-    const y = window.scrollY;
-    window.scrollTo(99999, y);
-    const x = window.scrollX;
-    window.scrollTo(0, y);
-    return x;
+  await page.waitForFunction(() => {
+    const image = document.querySelector('.hero-image img');
+    return image?.complete && image.naturalWidth > 0;
   });
-  await page.screenshot({ path: `${outputDir}/hero-320.png`, fullPage: false, animations: 'disabled' });
-  check(
-    report.widths['320'].windowMaxScrollX <= 1,
-    `320px: page can scroll horizontally by ${report.widths['320'].windowMaxScrollX}px; sections=${JSON.stringify(report.widths['320'].sections)}; offenders=${JSON.stringify(report.widths['320'].offenders)}`
-  );
+  await page.evaluate(() => document.fonts.ready);
+
+  for (const [label, width] of [['390', 390], ['320', 320], ['390-return', 390]]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 800 });
+    const metrics = await measure(page, label);
+    report.widths[label] = metrics;
+    metrics.windowMaxScrollX = await page.evaluate(() => {
+      const y = window.scrollY;
+      // Override the page's smooth scrolling so the result is read after the move.
+      window.scrollTo({ left: 99999, top: y, behavior: 'instant' });
+      const x = window.scrollX;
+      window.scrollTo({ left: 0, top: y, behavior: 'instant' });
+      return x;
+    });
+    await page.screenshot({ path: `${outputDir}/hero-${label}.png`, fullPage: false, animations: 'disabled' });
+    assertPageContained(metrics, label);
+    check(metrics.windowMaxScrollX <= 1, `${label}: page can scroll horizontally by ${metrics.windowMaxScrollX}px`);
+  }
 
   check(report.consoleErrors.length === 0, `Console errors: ${report.consoleErrors.join(' | ')}`);
   check(report.pageErrors.length === 0, `Page errors: ${report.pageErrors.join(' | ')}`);

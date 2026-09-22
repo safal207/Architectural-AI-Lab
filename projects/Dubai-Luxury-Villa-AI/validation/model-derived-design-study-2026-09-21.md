@@ -1,0 +1,27 @@
+# Model-derived architectural study — 21 September 2026
+
+Historical application/build snapshot: [`1895efafcf4d8c08e6ad26bf2060d1d9caa2f929`](https://github.com/safal207/Architectural-AI-Lab/commit/1895efafcf4d8c08e6ad26bf2060d1d9caa2f929).
+The subsequent rendered-camera synchronization and its drone QA results at the end of this report belong to [`5670daa88ab449b22462391a184a885a182bfd8a`](https://github.com/safal207/Architectural-AI-Lab/commit/5670daa88ab449b22462391a184a885a182bfd8a).
+Module counts and image sizes below describe that study-export stage, not later PR revisions.
+
+The earlier hand-drawn SVG was a generic massing illustration. Its floor setbacks, facade widths and pool relationship were not derived from the project, and it placed an invented joinery rectangle behind the front glazing. The user correctly flagged that its positioning did not match the current villa.
+
+The three design gestures now show orthographic images generated directly from the production `villa.glb`, with the same rotation and stair/pool runtime corrections as the interactive viewer. No architectural mesh is translated for presentation. Furniture, planting and distant context are omitted from this exterior illustration; the glazing is made opaque. These choices are stated in the accessible description. The diagram remains an architectural study, not construction documentation.
+
+- Roof/floor planes, glazing/water and facade timber each have a separate highlight image from the same fixed camera.
+- Callout endpoints are projected from the actual `roof_plane`, `living_glass_03`, `timber_fin_04` and `pool_water` mesh bounds.
+- The caption identifies the current 3D model as the source. The GLB file itself is unchanged.
+- Three WebP files total 141,956 bytes; the page does not load a second GLB to display the illustration.
+- The reproducible export records normalized source hashes, image hashes, camera parameters and landmark coordinates in `app/data/design-study.json`.
+
+## Verification
+
+- `node qa/design-study.mjs`: PASS. Independently reconstructs source bounds from GLB metadata and checks the source/image receipts, orthographic projections, pool in front of glazing, facade orientation and absence of the fictitious island and repaired orphan trim.
+- Production build: PASS, 70 modules. The existing Three.js chunk-size warning remains.
+- `node qa/design-studio.mjs`: PASS. All three images decode at 1440×960 and match their tabs. Keyboard switching, links into 3D, palette selection, floor-plan navigation and project brief behavior remain working. One GLB request, no page/console errors.
+- Responsive checks: 1024, 796, 768, 390 and 320 px; no horizontal overflow. The 796 px and 390 px screenshots were visually reviewed.
+- Local evidence is in ignored `app/qa-model-study-output/`, including `report.json`, `design-796.png` and `design-mobile.png`.
+
+The provenance check is included in First Person Tour QA. GitHub status must be read for the current commit; these local results do not imply a green remote run. During this correction, the previous revision's `walkthrough-qa` showed a failure while its other listed checks passed. Its log was retrieved after an initial permission-review timeout. The failing assertion compared the camera after reselecting the entry against an initial sample captured as soon as React requested Guided mode; that sample could still belong to the preceding rendered frame. The viewer now records the interaction mode together with camera coordinates after rendering, and the drone test waits for that frame before sampling. This changes measurement synchronization, not navigation behavior.
+
+The corrected `qa/drone-flight.mjs` passed locally on desktop and both 390/320 px mobile sizes. Evidence: `app/qa-drone-rendered-frame-output/report.json`. The new run waits for a rendered mode before taking each camera reference; no camera-distance tolerances were relaxed.

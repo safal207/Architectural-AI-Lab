@@ -115,6 +115,31 @@ function resolveLookTarget(root, stop, position, presentation = true) {
   return null;
 }
 
+
+// A vertical FOV authored for a wide hero image needs more vertical coverage
+// on a narrow canvas to retain the same horizontal composition.
+/**
+ * Resolve the stop's vertical field of view in degrees for Guided or Explore mode.
+ * Widen narrow Guided canvases using the authored reference aspect; missing stops return undefined.
+ */
+export function resolveTourFov(stop, aspect, options = {}) {
+  if (!stop) return undefined;
+  const presentation = options.presentation !== false;
+  const fov = presentation ? (stop.presentationFov ?? stop.firstPersonFov) : stop.firstPersonFov;
+  const referenceAspect = stop.presentationAspect;
+  if (!presentation || !fov || !Number.isFinite(aspect) || aspect <= 0
+    || !Number.isFinite(referenceAspect) || referenceAspect <= 0 || aspect >= referenceAspect) return fov;
+  return THREE.MathUtils.radToDeg(2 * Math.atan(
+    Math.tan(THREE.MathUtils.degToRad(fov) / 2) * referenceAspect / aspect
+  ));
+}
+
+/** Apply the stop's mode-aware field of view and update the matrix while retaining camera position. */
+export function updateTourCameraProjection(camera, stop, options = {}) {
+  const fov = resolveTourFov(stop, camera.aspect, options);
+  if (fov) camera.fov = fov;
+  camera.updateProjectionMatrix();
+}
 /**
  * Place a tour camera without conflating a guided hero view with a walk anchor.
  * Guided mode uses authored presentation nodes/offsets when available. Explore
@@ -130,13 +155,8 @@ export function placeFirstPersonCamera(camera, root, activeStopId, options = {})
     : resolveTourPosition(root, stop);
   if (!position) return false;
 
-  const requestedFov = presentation
-    ? (stop.presentationFov ?? stop.firstPersonFov)
-    : stop.firstPersonFov;
-  if (requestedFov) {
-    camera.fov = requestedFov;
-    camera.updateProjectionMatrix();
-  }
+  updateTourCameraProjection(camera, stop, { presentation });
+
   camera.position.copy(position);
 
   const target = resolveLookTarget(root, stop, position, presentation)
@@ -237,22 +257,36 @@ function closestPointOnWalkEdge(point, edge, target) {
   );
 }
 
+/**
+ * Clamp a candidate world position to a walk corridor and return its selected edge.
+ * Prefer the current edge and shared endpoints so overlapping floors cannot cause route jumps.
+ * Return the original candidate with no edge when a graph is unavailable.
+ */
 export function constrainToWalkGraph(candidate, graph, preferredEdgeId) {
   if (!graph?.edges?.length) return { position: candidate, edge: null };
 
   let best = null;
   const closest = new THREE.Vector3();
-  const orderedEdges = preferredEdgeId
+  const preferredEdge = graph.edges.find((edge) => edge.id === preferredEdgeId);
+  // Nearby routes can overlap in plan while belonging to different floors.
+  // Once walking, only change edges through a shared authored endpoint; XZ
+  // proximity alone must never let a ground-floor move jump onto mid-flight.
+  /** Test whether an edge shares an authored world-space endpoint with the current preferred edge. */
+  const connected = (edge) => [edge.a, edge.b].some((point) =>
+    point.distanceToSquared(preferredEdge.a) < 1e-6
+    || point.distanceToSquared(preferredEdge.b) < 1e-6
+  );
+  const orderedEdges = preferredEdge
     ? [
-        ...graph.edges.filter((edge) => edge.id === preferredEdgeId),
-        ...graph.edges.filter((edge) => edge.id !== preferredEdgeId)
+        preferredEdge,
+        ...graph.edges.filter((edge) => edge !== preferredEdge && connected(edge))
       ]
     : graph.edges;
 
   orderedEdges.forEach((edge) => {
     closestPointOnWalkEdge(candidate, edge, closest);
     const horizontalDistance = Math.hypot(candidate.x - closest.x, candidate.z - closest.z);
-    const floorPenalty = edge.type === 'stairs' ? 0 : Math.abs(candidate.y - closest.y) * 3.5;
+    const floorPenalty = preferredEdge && edge.type === 'stairs' ? 0 : Math.abs(candidate.y - closest.y) * 3.5;
     const score = horizontalDistance + floorPenalty;
     if (!best || score < best.score) {
       best = {

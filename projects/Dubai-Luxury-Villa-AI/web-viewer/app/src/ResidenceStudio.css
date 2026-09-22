@@ -1,0 +1,73 @@
+.project-chapters {
+  position: sticky; top: 0; z-index: 30; display: flex; justify-content: space-between;
+  align-items: center; gap: 24px; min-height: 64px; padding-inline: clamp(20px, 4vw, 80px);
+  background: #f5f2ebf5; backdrop-filter: blur(16px); border-bottom: 1px solid var(--line);
+}
+.project-chapters__name { font-size: 12px; }
+.project-chapters__name span { margin-left: 14px; color: var(--muted); font-size: 9px; }
+.project-chapters > div { display: flex; align-items: stretch; gap: 32px; }
+.project-chapters > div a { display: flex; align-items: center; gap: 9px; min-height: 64px; border-bottom: 2px solid transparent; font-size: 11px; color: var(--muted); }
+.project-chapters > div a > span { font-size: 8px; opacity: .7; }
+.project-chapters > div a[aria-current] { color: var(--ink); border-bottom-color: var(--accent); }
+.app-shell #design, .app-shell #spaces, .app-shell #viewer, .app-shell #journey, .app-shell #brief { scroll-margin-top: 72px; }
+.experience-section .residence-workbench { display: grid; grid-template-columns: minmax(0, 1fr) 268px; align-items: stretch; gap: 0; }
+.experience-section .material-study { display: flex; flex-direction: column; gap: 24px; padding: 28px 22px; margin: 0; background: #eeeadf; color: var(--ink); }
+.material-study__intro h3 { font-family: Georgia, serif; font-size: 31px; letter-spacing: -.035em; line-height: 1.1; }
+.material-study__intro h3 em { color: #7a6e54; }
+.experience-section .material-study .eyebrow { color: #756b55; font-size: 9px; margin-bottom: 14px; }
+.material-study__intro > p:last-child { font-size: 11px; color: #706957; margin-top: 17px; }
+.material-study__brief { display: flex; justify-content: space-between; gap: 10px; margin-top: auto; border-top: 1px solid #cbc3b1; padding-top: 17px; font-size: 10px; line-height: 1.5; }
+.experience-section .kitchen-shortcut { font-size: 11px; color: #d0d4c8; padding: 10px 12px; border-color: #53584c; white-space: nowrap; }
+.experience-section .kitchen-shortcut:hover, .experience-section .kitchen-shortcut[aria-pressed="true"] { border-color: #c4bea9; color: #f9f6ed; background: #454a3d; }
+.tour-experience .plan-open-view { margin-top: 12px; color: #62543b; border: 0; border-bottom: 1px solid #bdb5a4; padding: 0 0 5px; font-size: 11px; text-align: left; }
+.spaces-section .section-intro { margin-bottom: 42px; }
+.space-story__details { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--line); color: #706d62; font-size: 10px; }
+@media (max-width: 1100px) {
+  .project-chapters > div { gap: 22px; }
+  .experience-section .residence-workbench { grid-template-columns: minmax(0, 1fr) 235px; }
+  .experience-section .material-study { padding: 24px 17px; }
+  .material-study__intro h3 { font-size: 27px; }
+}
+@media (max-width: 850px) {
+  .project-chapters__name { display: none; }
+  .project-chapters > div { justify-content: space-between; width: 100%; }
+  .experience-section .residence-workbench { display: flex; flex-direction: column; }
+  .experience-section .material-study { order: -1; gap: 14px; padding: 18px; }
+  .material-study__intro { display: none; }
+  .material-study__brief { display: none; }
+}
+@media (max-width: 700px) {
+  .project-chapters { min-height: 52px; padding-inline: 20px; gap: 0; }
+  .project-chapters > div { gap: 10px; }
+  .project-chapters > div a { min-height: 52px; font-size: 10px; }
+  .project-chapters > div a > span { display: none; }
+  .app-shell #design, .app-shell #spaces, .app-shell #viewer, .app-shell #journey, .app-shell #brief { scroll-margin-top: 60px; }
+  .experience-section .rooms-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .experience-section .rooms-panel > .control-label { grid-column: 1 / -1; margin-bottom: 6px; }
+  .experience-section .room-selector { display: contents; }
+  .experience-section .room-selector button, .experience-section .kitchen-shortcut { padding: 11px 9px; font-size: 10px; white-space: normal; text-align: left; }
+  .experience-section .overview-button { grid-column: 1 / -1; }
+  .experience-section .material-study { padding: 14px 12px; }
+}
+.spaces-evidence { font-size: 11px; margin-top: 20px; padding-top: 17px; border-top: 1px solid var(--line); }
+
+.material-study__mobile-title { display: none; }
+@media (max-width: 850px) { .material-study__mobile-title { display: flex; justify-content: space-between; gap: 12px; font-size: 9px; color: #706957; } .material-study__mobile-title span:first-child { text-transform: uppercase; letter-spacing: .12em; } }
+
+.app-shell #contact { scroll-margin-top: 72px; }
+.contact-section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10%; padding-block: 74px 85px; border-top: 1px solid var(--line); }
+.contact-section h2 { font-size: clamp(36px, 4vw, 60px); }
+.contact-intro { color: var(--muted); font-size: 13px; max-width: 380px; margin-top: 26px; }
+.contact-links { min-width: 0; font-style: normal; align-self: center; }
+.contact-links > a { display: block; padding-block: 24px; border-bottom: 1px solid var(--line); }
+.contact-links > a:first-child { border-top: 1px solid var(--line); }
+.contact-label { display: block; margin-bottom: 12px; color: var(--muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.contact-value { display: flex; justify-content: space-between; gap: 14px; font-size: clamp(18px, 2vw, 28px); line-height: 1.4; overflow-wrap: anywhere; }
+.contact-value > span { flex-shrink: 0; color: var(--accent); }
+.contact-links > a:hover .contact-value { color: var(--accent); }
+.contact-links > p { margin-top: 20px; max-width: 370px; color: var(--muted); font-size: 11px; }
+@media (max-width: 700px) {
+  .app-shell #contact { scroll-margin-top: 60px; }
+  .contact-section { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 56px; }
+  .contact-section h2 { font-size: 41px; }
+}

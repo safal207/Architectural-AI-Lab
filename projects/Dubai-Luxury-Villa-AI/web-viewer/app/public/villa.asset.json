@@ -2,7 +2,7 @@
   "asset": "Dubai Luxury Villa AI",
   "viewer_asset": "villa.glb",
   "version": "v0.4-pool-context-v4-feature-candidate",
-  "status": "FEATURE_BRANCH_VISUAL_QA_ONLY",
+  "status": "MAIN_PORTFOLIO_PROTOTYPE",
   "source_pipeline": {
     "form": "v0.3-r1.2 PASS / FROZEN",
     "material": "v0.3-m4 PASS / FROZEN",
@@ -60,6 +60,7 @@
     "browser-owned Day Evening Night lighting without duplicated Blender punctual lights"
   ],
   "generator": "Native Blender 4.0.2 pipeline via GitHub Actions",
-  "promotion_scope": "feat/pool-context-v4 only; main intentionally untouched",
+  "promotion_scope": "Pool Context v4 asset included on main for portfolio presentation; current viewer changes require their own build and browser validation",
+  "provenance_note": "The asset identifier and source receipts retain their original feature-development labels. Historical feature-only and main_untouched fields describe the source review, not current deployment scope. Manifest status does not certify a deployment or a browser QA pass.",
   "claim_boundary": "AI-assisted architectural visualization and virtual-tour prototype; not BIM, measured construction geometry, code-compliance evidence, landscape construction documentation or as-built documentation."
 }

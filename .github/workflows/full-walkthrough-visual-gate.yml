@@ -3,7 +3,7 @@ name: Full Walkthrough Visual Gate
 on:
   pull_request:
     paths:
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/full-walkthrough-day.mjs'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
       - 'projects/Dubai-Luxury-Villa-AI/validation/full-walkthrough-visual-review-v1.md'
       - '.github/workflows/full-walkthrough-visual-gate.yml'
   workflow_dispatch:

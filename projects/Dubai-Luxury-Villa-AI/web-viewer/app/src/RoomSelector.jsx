@@ -1,10 +1,11 @@
 import rooms from '../data/rooms.json';
 
-export default function RoomSelector({ onSelect }) {
+/** Render room shortcuts with a parent-controlled selected ID and pass the chosen room to onSelect. */
+export default function RoomSelector({ onSelect, selectedId }) {
   return (
-    <div>
+    <div className="room-selector">
       {rooms.rooms.map((room) => (
-        <button key={room.id} onClick={() => onSelect(room)}>
+        <button type="button" key={room.id} aria-pressed={room.id === selectedId} onClick={() => onSelect(room)}>
           {room.name} — {room.area} sqm
         </button>
       ))}

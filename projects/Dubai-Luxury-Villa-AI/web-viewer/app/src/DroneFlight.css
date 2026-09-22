@@ -1,0 +1,24 @@
+.scene-navigation { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 18px 15px; }
+.scene-navigation button { font-size: 11px; padding: 10px 15px; min-height: 42px; border-color: #596151; color: #e3e5dc; }
+.scene-navigation button[aria-pressed="true"] { background: #e9e3d5; color: #2b3026; border-color: #e9e3d5; }
+.scene-navigation button:last-child { margin-left: auto; }
+.drone-help { position: absolute; z-index: 4; top: 14px; left: 14px; max-width: calc(100% - 142px); padding: 11px 13px; background: #22291fe8; color: #f6f2e8; border: 1px solid #d5d0ba55; border-radius: 7px; pointer-events: none; }
+.drone-help strong, .drone-help span, .drone-help small { display: block; }
+.drone-help strong { font-size: 13px; margin-bottom: 5px; }
+.drone-help span { font-size: 10px; line-height: 1.5; }
+.drone-help small { font-size: 9px; color: #d4cebb; margin-top: 4px; }
+.drone-inside { position: absolute; z-index: 5; top: 14px; right: 14px; padding: 10px 12px; min-height: 42px; background: #eee8d9; color: #2e342a; border: 0; font-size: 11px; }
+.drone-pad { position: absolute; z-index: 5; bottom: 14px; left: 50%; transform: translateX(-50%); display: grid; grid-template-columns: repeat(3,46px); gap: 5px; padding: 7px; border-radius: 9px; background: #22291fe8; border: 1px solid #d5d0ba55; }
+.drone-pad button { min-width: 46px; min-height: 42px; padding: 0; border: 0; background: #eff0df1c; color: #fbf7ed; font-size: 21px; touch-action: none; user-select: none; }
+.drone-pad button:active { background: #e9e3d5; color: #2b3026; }
+@media (max-width: 600px) {
+ .scene-navigation { padding: 0 12px 12px; gap: 5px; }
+ .scene-navigation button { padding: 9px 8px; font-size: 10px; flex: 1; min-height: 44px; white-space: nowrap; }
+ .scene-navigation button:last-child { margin-left: 0; }
+ .drone-help { top: 10px; left: 10px; padding: 9px; max-width: calc(100% - 118px); }
+ .drone-help strong { font-size: 12px; }
+ .drone-help span { font-size: 9px; }
+ .drone-help small { display: none; }
+ .drone-inside { top: 10px; right: 10px; font-size: 10px; padding: 9px; }
+ .drone-pad { bottom: 10px; }
+}

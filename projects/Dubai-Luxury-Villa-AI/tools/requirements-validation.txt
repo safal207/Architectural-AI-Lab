@@ -1,0 +1,2 @@
+# PNG chunk verification and complete image decoding for source-render evidence.
+Pillow==12.3.0

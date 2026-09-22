@@ -1,161 +1,78 @@
 # Dubai Luxury Villa AI
 
-AI-assisted digital-twin presentation prototype for luxury real estate.
+An architectural visualization concept for presenting a contemporary villa, its interiors and its pool terrace through a live 3D tour.
 
-## Live demo
+**[Open the villa](https://safal207.github.io/Architectural-AI-Lab/)**
 
-**GitHub Pages:** https://safal207.github.io/Architectural-AI-Lab/
+![Pool Context v4 — native Blender concept render](renders/villa-v0.4-pool-context-v4.png)
 
-The public viewer now runs the gated `v0.4-interior2` Blender asset: a real GLB containing the frozen exterior baseline plus an interior presentation layer with furniture, kitchen elements, doors, practical lighting cues, a refined staircase, upper landing/corridor connection and a hollow master-suite shell.
+## The current concept
 
-The live page is structured as a developer-facing portfolio case: value proposition → verified proof → client viewing graph → interactive house plan → virtual tour → bounded pilot offer.
+The viewer asset on `main` is **Pool Context v4**. It combines the earlier exterior, materials and interior-tour work with a repaired upper landing, an open master-suite threshold, layered bedroom furnishings and a planted desert setting beyond the pool's infinity edge.
 
-## Client house viewing graph
+The model contains a living area, kitchen island and dining area, staircase, upper landing, master bedroom and pool terrace. Its native Blender source, GLB export, render evidence and browser presentation form a reproducible visualization pipeline.
 
-```text
-Exterior overview
-      ↓
-Main entry
-      ↓
-Living room
-      ↓
-Kitchen + dining
-      ↓
-Stair hall
-      ↓
-Upper landing
-      ↓
-Master bedroom
-      ↓
-Pool terrace
-```
+## Walk through the house
 
-The web viewer contains a two-floor **navigation schematic** linked to this route. Selecting plan zones or graph nodes changes the room/tour state. Guided first-person mode uses named Blender-authored camera anchors and curated look targets; click the 3D view for pointer-lock free look and use WASD/arrow keys to move.
+**Exterior → Entry → Living room → Kitchen + dining → Stair hall → Upper landing → Master bedroom → Pool terrace**
 
-Free-walk currently has **no collision/navmesh guarantee**, so the prototype does not claim physically constrained traversal through every opening or stair tread. The plan is not a measured architectural drawing.
+Select a room on the two-floor navigation plan or choose a tour stop. **Guided** mode presents authored camera views; **Explore** mode starts from the corresponding walk point and allows keyboard or touch movement along the route. On desktop, click the 3D view to look around, use WASD or arrow keys to move, and press Esc to release the pointer.
 
-## Developer pilot offer
+The pool's Guided camera is independent of its Explore anchor, allowing a wider presentation of the landscape without moving the walking route. The scene stays loaded when switching stops, modes, lighting or materials.
 
-**5-day digital twin pilot** — a deliberately small first engagement intended to test whether one property concept or one priority zone can become a useful interactive presentation before committing to a larger visualization programme.
+The development preview also includes **Drone flight**: drag to look, use WASD or arrow keys to move, E/Q to rise or descend, and Shift to move faster. Touch controls provide the same movement directions. **Fly inside** moves to the living-area anchor; **Orbit overview** returns to the exterior. Free flight has scene bounds but no surface-collision simulation.
 
-Pilot framing shown on the live site:
+The plan is a navigation schematic. Route bounds are interaction aids, not a measured navmesh or construction-grade collision system.
 
-- one property concept or one priority zone
-- Blender → GLB → web-viewer path
-- core interaction and room-linked metadata
-- QA receipt with explicit claim boundaries
+## Current viewer asset
 
-The five-day framing is a service offer, not a blanket delivery guarantee. Scope, source quality, access and required outputs must be agreed first. The public GitHub intake must not contain confidential client materials.
+| Field | Value |
+| --- | --- |
+| Presentation version | Pool Context v4 |
+| Stored identifier | `v0.4-pool-context-v4-feature-candidate` |
+| File | [`web-viewer/app/public/villa.glb`](web-viewer/app/public/villa.glb) |
+| Size | `8,613,156` bytes |
+| SHA-256 | `4f3e2868b532d1e3ea50e83aeb9a696e3c1f6484b38b2067db4973b57e66d115` |
+| Format | GLB 2.0 |
 
-## Verified gate chain
+The stored identifier and original source receipts retain their feature-development names. They record the model's history; the asset itself is now included on `main`.
 
-```text
-Form v0.3-r1.2 PASS / FROZEN
-        ↓
-Material v0.3-m4 PASS / FROZEN
-        ↓
-Light v0.3-l2 PASS / FROZEN
-        ↓
-Life v0.3-life2 PASS / FROZEN
-        ↓
-Interior Tour v0.4-interior2 PASS / FROZEN
-        ↓
-Three.js viewer promotion
-        ↓
-GitHub Pages
-        ↓
-Live desktop/mobile browser QA
-```
+The model's material families and named room, tour, look-target and pool-presentation nodes are checked by [`tools/validate_viewer_asset.py`](tools/validate_viewer_asset.py). Browser lighting is owned by Three.js; duplicated Blender punctual lights are excluded from this asset. Day/evening/night and material controls are presentation choices, not pixel-identical reproductions of the Blender render above.
 
-The Interior2 visual gate was frozen only after actual first-person Blender review showed the living/dining interior, staircase, hollow master suite, furniture, door and upper-floor connection.
+## Evidence and validation status
 
-## Current promoted viewer asset
+Evidence is tied to the asset and revision it checked:
 
-- version: `v0.4-interior2`
-- file: `web-viewer/app/public/villa.glb`
-- bytes: `7,845,032`
-- SHA-256: `fde86661b3b7ba4ce3352a56b83ad87156428feafd32d2d406dd12529eb97aed`
-- promotion: `APPROVED_FOR_PORTFOLIO_VIEWER`
+- [Pool Context v4 source receipt](validation/v0.4-pool-context-v4-receipt.json) records the GLB and source render digests.
+- [Original Pool Context v4 feature-promotion receipt](validation/v0.4-pool-context-v4-feature-promotion.json) records the initial feature-branch review. Its feature-only wording is historical, not the current deployment scope.
+- [Interior2 visual review](validation/v0.4-interior2-critique.md), [Interior2 promotion](validation/v0.4-viewer-promotion.json) and the [earlier live QA report](validation/live-browser-qa.md) document the prior Interior2 baseline. Their passes do not certify later model or viewer changes.
 
-Verified content includes:
+At the reviewed `main` baseline `3dac25f`, build and deployment succeeded. [Live Browser QA run 35518268054](https://github.com/safal207/Architectural-AI-Lab/actions/runs/35518268054) reported horizontal overflow at a 320 px viewport. The mobile repair requires a fresh deployed QA pass before claiming full desktop/mobile success. [GitHub Actions](https://github.com/safal207/Architectural-AI-Lab/actions) contains subsequent run results.
 
-- room anchors: `living_room`, `master_bedroom`, `pool_terrace`
-- named client-tour camera anchors for entry, living, dining, stair ground, stair upper, master and pool
-- named curated look targets for those tour stops
-- kitchen island / interior furniture layer
-- living media wall
-- interior doors and handles
-- staircase, landing, refined rail and glazed guard
-- physical presentation bridge from upper stair landing toward the master-suite entrance
-- hollow master-suite floor / ceiling / walls rather than the former solid upper private mass
-- frozen v0.3 architectural material families retained in the GLB
+## Presentation features
 
-## Live proof
+- Architectural intent, project facts and an axonometric study exported from the current repaired model, linked to three 3D views.
+- Sticky navigation through five project chapters, including on mobile.
+- Interactive room plan, tour route and room-linked metadata.
+- A direct kitchen shortcut and an explicit return from the plan to the selected 3D view.
+- Guided camera views, Explore movement, orbit, zoom and free Drone flight.
+- Furnished interiors, kitchen, staircase, master suite and landscaped pool context.
+- Day, evening and night lighting; architectural material variants.
+- An editorial gallery of native exterior and interior concept renders.
+- Material palettes beside the desktop viewer and compactly above it on mobile.
+- A local brief for villa, kitchen or interior work with location, approximate area, category-specific scope, priorities, notes, palette and atmosphere.
+- Desktop/mobile browser checks with screenshot evidence.
 
-Viewer Build run `34956892995` — **PASS**.
+## Project direction
 
-GitHub Pages deploy run `34956893039` — **PASS**.
+The editorial preview presents the villa as an architecture and interiors portfolio. Visitors can explore the kitchen and terrace studies, open images, walk the 3D residence, compare finishes and download a project brief containing their chosen palette and atmosphere. The brief stays on their device; no inquiry is submitted. This preview is being developed in draft PR #9 and is separate from the currently published site.
 
-Post-deploy Live Browser QA run `34956959256` — **PASS** against the real public URL and the promoted `v0.4-interior2` asset.
+The [architecture benchmark and development notes, in Russian](validation/global-architecture-benchmark-2026-09-21.md) compare the presentation with primary-source projects by John Pawson, Norm Architects and Studio MK27. The resulting additions clarify our existing concept and its controls; they do not change the GLB geometry or establish construction, climate or engineering performance.
 
-Live QA confirms:
-
-- live GLB bytes and SHA-256 match provenance
-- house plan — PASS
-- client viewing graph — PASS
-- first-person mode state — PASS
-- Master Bedroom selection — PASS
-- Night lighting state — PASS
-- Warm Wood presentation state — PASS
-- orbit/zoom smoke path — PASS
-- mobile house plan / graph / room path — PASS
-- mobile horizontal overflow — none
-- console errors — `0`
-- uncaught page errors — `0`
-- failed HTTP responses — `0`
-
-See:
-
-- [`validation/v0.4-interior2-critique.md`](validation/v0.4-interior2-critique.md)
-- [`validation/v0.4-interior2-receipt.json`](validation/v0.4-interior2-receipt.json)
-- [`validation/v0.4-viewer-promotion.json`](validation/v0.4-viewer-promotion.json)
-- [`validation/live-browser-qa.md`](validation/live-browser-qa.md)
-
-## Current viewer features
-
-- developer-facing luxury real-estate case narrative
-- bounded 5-day pilot CTA through public GitHub issue intake
-- gated native Blender GLB loading with Three.js `GLTFLoader`
-- two-floor interactive house navigation plan
-- ordered client viewing graph
-- guided first-person tour stops with authored camera/look anchors
-- pointer-lock free look + WASD/arrow-key movement prototype
-- orbit and zoom camera controls
-- room selection and room-anchor focus
-- interior furniture / kitchen / door / staircase / master-suite presentation geometry
-- day / evening / night web presentation lighting
-- architectural material concept variants with an explicit allow-list
-- metadata-grounded property assistant
-- investor summary mode
-- post-deploy desktop/mobile browser QA with screenshot evidence
-
-The interactive web lighting/material controls are presentation features; they are not claimed to be pixel-identical to the frozen native Blender render.
-
-## Target users
-
-- luxury real estate developers
-- architecture studios
-- PropTech teams
-- investor-facing presentation teams
-
-## Quality layer
-
-Creation and verification are deliberately separated. Generated geometry is not treated as proof by itself: native Blender generation, gate review, GLB integrity, provenance, viewer build, exact asset delivery, Pages deployment and live-browser interaction have explicit checks.
+The subsequent [scene repair and drone report, in Russian](validation/scene-repairs-and-drone-2026-09-21.md) records the stair-opening repair, pool surface and coping corrections, free-flight controls and their verification status. These browser-time repairs preserve the canonical GLB file.
 
 ## Boundaries
 
-This is an AI-assisted architectural visualization and digital-twin / virtual-tour portfolio prototype. It is not BIM, engineering, construction documentation, a measured floor plan, accessibility/code-compliance evidence, valuation, sales forecasting, as-built documentation, or a representation of an existing real property.
+This is an AI-assisted architectural visualization and virtual-tour portfolio prototype. It is not a measured architectural drawing set, specifications, BIM, engineering, construction or landscape documentation, code-compliance evidence, valuation, as-built documentation, or a representation of an existing property.
 
-## Status
-
-**Public gated v0.4 virtual-house-tour prototype with live browser proof.** The frozen v0.3 exterior/material/light/life baseline now carries a gated Interior2 presentation layer, two-floor navigation plan and client viewing graph, and the real promoted v0.4 GLB passes build, Pages deployment and post-deploy desktop/mobile browser QA.
+[Local setup and validation commands](web-viewer/app/README.md)

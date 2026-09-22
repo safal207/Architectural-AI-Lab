@@ -1,44 +1,59 @@
 # Dubai Luxury Villa Viewer App
 
-Interactive digital-twin viewer prototype for the Dubai Luxury Villa AI case.
+React / Three.js viewer for the [Dubai Luxury Villa AI concept](../../README.md), built with Vite. The live app presents a furnished villa and pool landscape through Guided views, Explore movement and a two-floor navigation schematic.
 
-## Stack
+## Run locally
 
-- React
-- Three.js
-- GLTFLoader
-- OrbitControls
-- Vite
+Use Node.js 22, matching the build workflow. From this directory:
+
+```sh
+npm ci
+npm run dev
+```
+
+Create and serve the production build with:
+
+```sh
+npm run build
+npm run preview -- --host 127.0.0.1 --port 4173
+```
 
 ## Current asset
 
-The viewer now targets `public/villa.glb`, generated natively by Blender in GitHub Actions.
+`public/villa.glb` is **Pool Context v4**, exported from the native Blender pipeline. It is not the original v0.1 export stored under `exports/`.
 
-Validated native export receipt:
+- Stored identifier: `v0.4-pool-context-v4-feature-candidate`.
+- Format: GLB 2.0.
+- Size: `8,613,156` bytes.
+- SHA-256: `4f3e2868b532d1e3ea50e83aeb9a696e3c1f6484b38b2067db4973b57e66d115`.
+- Manifest: [`public/villa.asset.json`](public/villa.asset.json).
 
-- Blender: headless GitHub Actions run
-- GLB version: 2
-- Size: 144748 bytes
-- SHA-256: `b2730787baf05cd524701c18c1609031085407329fd0628fcdee73e2c409f48c`
-- Container length check: PASS
+The stored identifier retains the asset's original feature-development name; the model is now included on `main`. Original source receipts remain historical evidence rather than a claim that the current branch is feature-only.
 
-The same validated output is stored as:
+## Validation
 
-- `projects/Dubai-Luxury-Villa-AI/exports/villa-v0.1.glb`
-- `projects/Dubai-Luxury-Villa-AI/web-viewer/app/public/villa.glb`
-- `projects/Dubai-Luxury-Villa-AI/validation/native-blender-export.json`
+From this directory, with Python 3 available:
 
-## MVP features
+```sh
+python -m pip install -r ../../tools/requirements-validation.txt
+python -m unittest discover -s ../../tools -p 'test_validate_viewer_asset.py'
+python ../../tools/validate_viewer_asset.py
+npm run build
+```
 
-- Load the Blender-exported villa GLB
-- Orbit and zoom controls
-- Select room metadata
-- Focus controls on named room anchors when present
-- Day / evening / night lighting concept
-- Material concept variants
-- Local metadata-grounded property assistant
-- Investor summary mode
+The asset validator checks the binary digest, source-render receipt, PNG integrity and complete pixel decoding, material families, required nodes, runtime-lighting boundary and pool Guided/Explore separation. The build workflow also verifies exact delivery of the manifest and GLB. Browser QA scripts are under `qa/`; their workflow definitions specify browser dependencies and target URLs.
 
-## Boundaries
+The model-derived study receipt also binds its images to the renderer's Three.js revision and the dependency lockfile. After changing those dependencies or an export source, regenerate with `node scripts/generate-design-study.mjs` (requires Playwright Chromium), then run `node qa/design-study.mjs` before building.
 
-This is a portfolio digital-twin prototype, not BIM, construction documentation, structural engineering, or a property valuation.
+Build success does not imply a browser QA pass. The reviewed deployed baseline `3dac25f` built and deployed successfully, but [Live Browser QA run 35518268054](https://github.com/safal207/Architectural-AI-Lab/actions/runs/35518268054) found horizontal overflow at 320 px. A fresh deployed run is required to confirm the repair. Earlier Interior2 reports describe a different baseline.
+
+## Viewer behavior
+
+- A persistent Three.js scene loads the GLB once.
+- Guided views use authored presentation cameras; Explore uses separate walk anchors and a bounded route.
+- Desktop Explore supports pointer-lock look, WASD/arrow movement and Esc to release the pointer; touch controls are also available.
+- Room selection, the floor plan and the tour route share navigation state.
+- Three.js owns day/evening/night lighting; this GLB contains no duplicate Blender punctual lights.
+- Material variants, local property information and investor summaries are presentation features.
+
+The floor plan is a navigation schematic. This portfolio prototype is not BIM, measured construction geometry, a full collision simulation, engineering documentation or a property valuation.

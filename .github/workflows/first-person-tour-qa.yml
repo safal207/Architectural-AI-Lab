@@ -17,9 +17,9 @@ jobs:
       run:
         working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
 
@@ -28,6 +28,16 @@ jobs:
 
       - name: Validate navigation graph and stair interpolation
         run: node qa/walkthrough-graph.mjs
+
+      - name: Validate walkthrough input lifecycle
+        run: node qa/walkthrough-input.mjs
+
+      - name: Validate stair clearance, pool surfaces and drone controls
+        run: |
+          node qa/stair-presentation.mjs
+          node qa/pool-presentation.mjs
+          node qa/drone-controls.mjs
+          node qa/design-study.mjs
 
       - name: Build viewer
         run: npm run build
@@ -49,17 +59,59 @@ jobs:
           cat /tmp/villa-preview.log
           exit 1
 
+      - name: Check drone flight and repaired scene in browser
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-first-person-output/drone
+        run: node qa/drone-flight.mjs
+
       - name: Run first-person desktop and touch smoke QA
         env:
           VILLA_URL: http://127.0.0.1:4173/
           QA_OUTPUT: qa-first-person-output
         run: node qa/first-person-ui.mjs
 
+      - name: Check room selection, tour exit and narrow mobile layout
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-first-person-output/full-viewer
+        run: node qa/live-browser.mjs
+
       - name: Upload walkthrough QA evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: dubai-villa-first-person-qa
           path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-first-person-output
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Check editorial focus, project brief and WebGL fallback
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-editorial-resilience-output
+        run: node qa/editorial-resilience.mjs
+
+      - name: Upload editorial resilience evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dubai-villa-editorial-resilience
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-editorial-resilience-output
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Check design studio, responsive chapters and project brief fields
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-design-studio-output
+        run: node qa/design-studio.mjs
+
+      - name: Upload design studio evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dubai-villa-design-studio
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-design-studio-output
           if-no-files-found: warn
           retention-days: 14

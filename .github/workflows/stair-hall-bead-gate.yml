@@ -3,9 +3,7 @@ name: Stair Hall Bead Gate
 on:
   pull_request:
     paths:
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/tourData.js'
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/walkthroughEngine.js'
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/stair-hall-bead.mjs'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
       - '.github/workflows/stair-hall-bead-gate.yml'
   workflow_dispatch:
 

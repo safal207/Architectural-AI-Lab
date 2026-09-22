@@ -7,6 +7,9 @@ on:
       - 'projects/Dubai-Luxury-Villa-AI/tools/**'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.3-viewer-promotion.json'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-viewer-promotion.json'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-*-feature-promotion.json'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-pool-context-v4-receipt.json'
+      - 'projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-pool-context-v4.png'
       - '.github/workflows/viewer-build.yml'
   pull_request:
     paths:
@@ -14,6 +17,9 @@ on:
       - 'projects/Dubai-Luxury-Villa-AI/tools/**'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.3-viewer-promotion.json'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-viewer-promotion.json'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-*-feature-promotion.json'
+      - 'projects/Dubai-Luxury-Villa-AI/validation/v0.4-pool-context-v4-receipt.json'
+      - 'projects/Dubai-Luxury-Villa-AI/renders/villa-v0.4-pool-context-v4.png'
       - '.github/workflows/viewer-build.yml'
 
 jobs:
@@ -32,6 +38,12 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
+      - name: Install image validation dependency
+        run: python -m pip install -r ../../tools/requirements-validation.txt
+
+      - name: Run asset validation regressions
+        run: python -m unittest discover -s ../../tools -p 'test_validate_viewer_asset.py'
 
       - name: Validate current gated GLB and provenance
         run: python ../../tools/validate_viewer_asset.py

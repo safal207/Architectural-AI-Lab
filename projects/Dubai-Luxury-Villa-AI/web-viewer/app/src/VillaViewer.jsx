@@ -1,28 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createScene } from './three/scene';
-import { createCamera } from './three/camera';
+import { createCamera, OVERVIEW_POSITION, OVERVIEW_TARGET, updateOverviewProjection } from './three/camera';
 import { createRenderer } from './three/renderer';
 import { createLights } from './three/lights';
 import { createInteriorLights } from './three/interiorLights';
+import { applyStairPresentation } from './three/stairPresentation';
+import { applyPoolPresentation } from './three/poolPresentation';
 import { TOUR_STOPS } from './tourData';
+import { createDroneFlight } from './droneFlight';
+import './DroneFlight.css';
 import { WALKTHROUGH_PLAYER } from './navigationData';
+import { bindWalkthroughKeyboard, resetWalkthroughInput } from './walkthroughInput';
 import {
   buildWalkGraph,
   constrainToWalkGraph,
   nearestTourStop,
-  placeFirstPersonCamera
+  placeFirstPersonCamera,
+  updateTourCameraProjection
 } from './walkthroughEngine';
 import './Walkthrough.css';
-
-const ROOM_NODE_NAMES = {
-  'living-room': 'living_room',
-  'master-bedroom': 'master_bedroom',
-  'pool-terrace': 'pool_terrace'
-};
 
 const MATERIAL_FAMILY_BY_NAME = {
   M4_OrganicWarmLimestone: 'stone',
@@ -201,6 +201,29 @@ function neutralizeImportedLights(root) {
   return count;
 }
 
+/**
+ * Restore authored linear midpoint colors only for known Blender ramps exported as untextured white.
+ * Preserve existing color maps and nonwhite colors; this does not reconstruct procedural textures.
+ */
+function restoreProceduralMaterialColors(root) {
+  // glTF cannot export these Blender procedural color ramps. Use their authored
+  // linear midpoint only when the export has neither a color nor a color map.
+  // Sources: run_v03_m4.py and run_v04_pool_context.py, respectively.
+  const sourceColors = {
+    M4_OrganicWarmLimestone: [0.47, 0.325, 0.19],
+    V04_PoolContextGravelV3: [0.305, 0.270, 0.220]
+  };
+  root.traverse((object) => {
+    if (!object.isMesh || !object.material) return;
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    for (const material of materials) {
+      const sourceColor = sourceColors[material.name];
+      if (!sourceColor || material.map || material.color?.getHex() !== 0xffffff) continue;
+      material.color.setRGB(...sourceColor, THREE.LinearSRGBColorSpace);
+    }
+  });
+}
+
 function setInteriorLightMultiplier(group, multiplier) {
   if (!group) return;
   group.traverse((object) => {
@@ -221,15 +244,23 @@ function disposeObject(root) {
   });
 }
 
+/**
+ * Own one persistent Three.js scene and synchronize its camera, materials and lighting with React state.
+ * Support orbit, Guided, Explore and Drone modes, and release scene resources and input listeners on unmount.
+ */
 export default function VillaViewer({
   selectedRoom,
   lightingMode,
   material,
   tourMode = false,
   activeTourStopId = 'overview',
+  viewRequestId = 0,
+  droneMode = false,
+  setDroneMode,
   onSelectTourStop,
   onExitTour
 }) {
+  const viewerNoteId = useId();
   const mountRef = useRef(null);
   const runtimeRef = useRef(null);
   const mobileMotionRef = useRef({ forward: 0, right: 0 });
@@ -251,6 +282,7 @@ export default function VillaViewer({
     familyCount: 0
   });
   const [walkStatus, setWalkStatus] = useState({
+    stopId: null,
     label: 'Tour anchor',
     floor: null,
     edgeType: null
@@ -262,43 +294,57 @@ export default function VillaViewer({
     material,
     tourMode,
     activeTourStopId,
-    interactionMode
+    interactionMode,
+    droneMode
   };
 
+  /** Apply the latest atmosphere and current room's lighting profile to the existing lights and request a frame. */
   const syncLighting = () => {
     const runtime = runtimeRef.current;
     if (!runtime) return;
+    runtime.needsRender = true;
     const current = latestPropsRef.current;
-    const isFirstPerson = current.tourMode && current.activeTourStopId !== 'overview';
+    const isFirstPerson = !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
     const lighting = resolveRuntimeLighting(
       current.lightingMode,
-      current.activeTourStopId,
+      current.interactionMode === 'explore' && runtime.isExplore
+        ? (runtime.lightingStopId ?? current.activeTourStopId)
+        : current.activeTourStopId,
       isFirstPerson
     );
 
     runtime.scene.background = new THREE.Color(current.lightingMode?.background ?? '#bfd0d7');
+    runtime.scene.environmentIntensity = current.lightingMode?.environment ?? 0.24;
     runtime.renderer.setClearColor(runtime.scene.background);
     runtime.renderer.toneMappingExposure = lighting.exposure;
     runtime.ambient.intensity = lighting.ambient;
     runtime.hemisphere.intensity = lighting.hemisphere;
     runtime.sun.intensity = lighting.sun;
+    runtime.sun.color.set(current.lightingMode?.sunColor ?? '#ffd9a8');
     runtime.fill.intensity = lighting.fill;
     setInteriorLightMultiplier(runtime.interiorLightGroup, lighting.interior);
   };
 
+  /** Apply the selected concept palette to the loaded model and publish its material-response report. */
   const syncMaterial = () => {
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
+    runtime.needsRender = true;
     const report = applyMaterialConcept(runtime.villaRoot, latestPropsRef.current.material);
     setMaterialResponse(report);
   };
 
+  /**
+   * Transfer input ownership and place the camera for the requested viewing mode.
+   * Clear stale motion, keep Guided views separate from Explore anchors and reset orbit momentum on exit.
+   */
   const syncView = () => {
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
+    runtime.needsRender = true;
 
     const current = latestPropsRef.current;
-    const isFirstPerson = current.tourMode && current.activeTourStopId !== 'overview';
+    const isFirstPerson = !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
     const isExplore = isFirstPerson && current.interactionMode === 'explore';
     const wasFirstPerson = runtime.isFirstPerson;
 
@@ -306,9 +352,21 @@ export default function VillaViewer({
     runtime.isExplore = isExplore;
     runtime.currentWalkEdgeId = null;
     runtime.firstPersonAvailable = false;
-    mobileMotionRef.current = { forward: 0, right: 0 };
+    runtime.lightingStopId = current.activeTourStopId;
+    resetWalkthroughInput(runtime, mobileMotionRef, runtime.renderer.domElement);
 
-    if (runtime.orbitControls) runtime.orbitControls.enabled = !isFirstPerson;
+    if (runtime.orbitControls) runtime.orbitControls.enabled = !isFirstPerson && !current.droneMode;
+    runtime.isDrone = current.droneMode;
+    if (current.droneMode) {
+      runtime.pointerLockControls?.unlock();
+      runtime.camera.fov = runtime.camera.aspect < 1 ? 72 : 60;
+      runtime.camera.updateProjectionMatrix();
+      runtime.drone.enable();
+      setFirstPersonReady(false);
+      syncLighting();
+      return;
+    }
+    runtime.drone.disable();
 
     if (isFirstPerson) {
       if (!isExplore) runtime.pointerLockControls?.unlock();
@@ -330,6 +388,7 @@ export default function VillaViewer({
       const activeStop = TOUR_STOPS.find((stop) => stop.id === current.activeTourStopId);
       if (!isExplore && activeStop) {
         setWalkStatus({
+          stopId: activeStop.id,
           label: activeStop.title,
           floor: activeStop.floor,
           edgeType: null
@@ -337,10 +396,12 @@ export default function VillaViewer({
       } else {
         const nearest = nearestTourStop(runtime.walkGraph, runtime.camera.position);
         if (nearest) {
-          setWalkStatus({ label: nearest.title, floor: nearest.floor, edgeType: null });
+          runtime.lightingStopId = nearest.id;
+          setWalkStatus({ stopId: nearest.id, label: nearest.title, floor: nearest.floor, edgeType: null });
         }
       }
 
+      syncLighting();
       if (!wasFirstPerson || !isExplore) setHasInteracted(false);
       return;
     }
@@ -348,20 +409,17 @@ export default function VillaViewer({
     runtime.pointerLockControls?.unlock();
     runtime.isExplore = false;
     setFirstPersonReady(false);
-    if (wasFirstPerson) runtime.camera.position.set(18, 12, 20);
-    runtime.camera.fov = 45;
-    runtime.camera.updateProjectionMatrix();
+    if (runtime.orbitControls) {
+      const damping = runtime.orbitControls.enableDamping;
+      runtime.orbitControls.enableDamping = false;
+      runtime.orbitControls.update();
+      runtime.orbitControls.enableDamping = damping;
+    }
+    runtime.camera.position.fromArray(OVERVIEW_POSITION);
+    updateOverviewProjection(runtime.camera);
 
     if (runtime.orbitControls) {
-      const roomNodeName = ROOM_NODE_NAMES[current.selectedRoom?.id];
-      const roomNode = roomNodeName ? runtime.villaRoot.getObjectByName(roomNodeName) : null;
-      if (roomNode) {
-        const target = new THREE.Vector3();
-        roomNode.getWorldPosition(target);
-        runtime.orbitControls.target.copy(target);
-      } else {
-        runtime.orbitControls.target.set(0, 2.8, 0);
-      }
+      runtime.orbitControls.target.fromArray(OVERVIEW_TARGET);
       runtime.orbitControls.update();
     }
   };
@@ -372,21 +430,24 @@ export default function VillaViewer({
 
     const scene = createScene(THREE);
     const camera = createCamera(THREE);
-    camera.fov = 45;
     camera.aspect = container.clientWidth / Math.max(container.clientHeight, 1);
-    camera.updateProjectionMatrix();
-    camera.position.set(18, 12, 20);
+    updateOverviewProjection(camera);
 
     const renderer = createRenderer(THREE, container);
     renderer.shadowMap.enabled = true;
     renderer.domElement.style.touchAction = 'none';
+    renderer.domElement.tabIndex = 0;
+    renderer.domElement.setAttribute('role', 'application');
+    renderer.domElement.setAttribute('aria-label', 'Interactive 3D residence');
+    renderer.domElement.setAttribute('aria-describedby', viewerNoteId);
 
-    const { ambient, hemisphere, sun, fill } = createLights(THREE, scene);
+    const { ambient, hemisphere, sun, fill, environment } = createLights(THREE, scene, renderer);
     const orbitControls = new OrbitControls(camera, renderer.domElement);
     orbitControls.enableDamping = true;
-    orbitControls.target.set(0, 2.8, 0);
+    orbitControls.target.fromArray(OVERVIEW_TARGET);
     orbitControls.minDistance = 8;
     orbitControls.maxDistance = 60;
+    orbitControls.maxPolarAngle = Math.PI * 0.49;
 
     const isTouchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     setIsTouchUi(isTouchDevice);
@@ -406,12 +467,14 @@ export default function VillaViewer({
       orbitControls,
       pointerLockControls,
       isTouchDevice,
+      isDrone: false,
       isFirstPerson: false,
       isExplore: false,
       villaRoot: null,
       interiorLightGroup: null,
       walkGraph: null,
       currentWalkEdgeId: null,
+      lightingStopId: null,
       firstPersonAvailable: false,
       keys: new Set(),
       touchLook: { active: false, pointerId: null, x: 0, y: 0 },
@@ -419,6 +482,23 @@ export default function VillaViewer({
       lastFrameTime: performance.now(),
       frameId: null
     };
+    runtime.needsRender = true;
+    /** Mark the scene dirty so the animation loop draws a frame even when the camera is idle. */
+    const requestRender = () => { runtime.needsRender = true; };
+    runtime.drone = createDroneFlight({
+      camera, element: renderer.domElement, onChange: requestRender,
+      onActivity: () => setHasInteracted(true), onExit: () => setDroneMode(false)
+    });
+    /** Invalidate cached shadows and the presentation frame after Three.js restores GPU resources. */
+    const contextRestored = () => {
+      // Three rebuilds GPU resources, so both cached shadows and the idle
+      // presentation frame must be drawn again after context recovery.
+      renderer.shadowMap.needsUpdate = true;
+      requestRender();
+    };
+    renderer.domElement.addEventListener('webglcontextrestored', contextRestored);
+    orbitControls.addEventListener('change', requestRender);
+    pointerLockControls?.addEventListener('change', requestRender);
     runtimeRef.current = runtime;
 
     setModelState('loading');
@@ -439,6 +519,7 @@ export default function VillaViewer({
         runtime.villaRoot = gltf.scene;
         runtime.villaRoot.name = 'dubai_luxury_villa_active';
         runtime.villaRoot.rotation.y = Math.PI;
+        restoreProceduralMaterialColors(runtime.villaRoot);
         runtime.villaRoot.traverse((object) => {
           if (object.isMesh) {
             object.castShadow = true;
@@ -446,12 +527,18 @@ export default function VillaViewer({
           }
         });
 
+        const stairReport = applyStairPresentation(runtime.villaRoot);
+        const poolReport = applyPoolPresentation(THREE, runtime.villaRoot);
+        container.dataset.stairRepair = JSON.stringify(stairReport);
+        container.dataset.poolRepair = JSON.stringify(poolReport);
+
         setImportedLightCount(neutralizeImportedLights(runtime.villaRoot));
         scene.add(runtime.villaRoot);
         runtime.villaRoot.updateMatrixWorld(true);
 
         runtime.interiorLightGroup = createInteriorLights(THREE, scene, runtime.villaRoot, 1);
         setInteriorLightCount(runtime.interiorLightGroup.userData.fixtureCount ?? 0);
+        renderer.shadowMap.needsUpdate = true;
 
         runtime.walkGraph = buildWalkGraph(runtime.villaRoot);
         setWalkGraphReady(runtime.walkGraph.edges.length >= 4);
@@ -476,26 +563,35 @@ export default function VillaViewer({
           latestPropsRef.current.material?.swatch ?? '#d8c8ad'
         );
         setModelProgress(null);
+        renderer.shadowMap.needsUpdate = true;
+        requestRender();
         setModelState('fallback');
       }
     );
 
-    const keyDown = (event) => {
-      if (!runtime.isExplore) return;
-      runtime.keys.add(event.code);
-      if (/^(Key[WASD]|Arrow|Shift)/.test(event.code)) setHasInteracted(true);
-    };
-    const keyUp = (event) => runtime.keys.delete(event.code);
+    const disposeKeyboard = bindWalkthroughKeyboard({
+      runtime,
+      mobileMotionRef,
+      element: renderer.domElement,
+      windowTarget: window,
+      documentTarget: document,
+      onInteract: () => setHasInteracted(true)
+    });
 
+    /** Request desktop pointer lock only when Explore has a valid camera and desktop controls. */
     const lockFirstPerson = () => {
-      if (!runtime.isExplore || !runtime.pointerLockControls || !runtime.villaRoot) return;
+      if (!runtime.isExplore || !runtime.firstPersonAvailable || !runtime.pointerLockControls) return;
       setHasInteracted(true);
+      renderer.domElement.focus({ preventScroll: true });
       runtime.pointerLockControls.lock();
     };
 
+    /** Capture one primary touch pointer for look-around in a valid Explore view. */
     const pointerDown = (event) => {
-      if (!runtime.isTouchDevice || !runtime.isExplore) return;
+      if (!runtime.isTouchDevice || !runtime.isExplore || !runtime.firstPersonAvailable
+        || runtime.touchLook.active || event.button !== 0) return;
       setHasInteracted(true);
+      renderer.domElement.focus({ preventScroll: true });
       runtime.touchLook.active = true;
       runtime.touchLook.pointerId = event.pointerId;
       runtime.touchLook.x = event.clientX;
@@ -503,9 +599,11 @@ export default function VillaViewer({
       renderer.domElement.setPointerCapture?.(event.pointerId);
     };
 
+    /** Apply the captured touch pointer's movement to yaw and bounded pitch, then request a frame. */
     const pointerMove = (event) => {
       const touchLook = runtime.touchLook;
-      if (!touchLook.active || touchLook.pointerId !== event.pointerId) return;
+      if (!runtime.isExplore || !runtime.firstPersonAvailable
+        || !touchLook.active || touchLook.pointerId !== event.pointerId) return;
       const dx = event.clientX - touchLook.x;
       const dy = event.clientY - touchLook.y;
       touchLook.x = event.clientX;
@@ -516,6 +614,7 @@ export default function VillaViewer({
         -Math.PI * 0.42,
         Math.PI * 0.42
       );
+      requestRender();
     };
 
     const pointerUp = (event) => {
@@ -524,32 +623,49 @@ export default function VillaViewer({
       runtime.touchLook.pointerId = null;
     };
 
-    window.addEventListener('keydown', keyDown);
-    window.addEventListener('keyup', keyUp);
     renderer.domElement.addEventListener('click', lockFirstPerson);
     renderer.domElement.addEventListener('pointerdown', pointerDown);
     renderer.domElement.addEventListener('pointermove', pointerMove);
     renderer.domElement.addEventListener('pointerup', pointerUp);
     renderer.domElement.addEventListener('pointercancel', pointerUp);
+    renderer.domElement.addEventListener('lostpointercapture', pointerUp);
 
+    /** Resize the drawing buffer and refresh the active mode's projection without resetting camera position. */
     const resize = () => {
       const width = container.clientWidth;
       const height = Math.max(container.clientHeight, 1);
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
-      camera.updateProjectionMatrix();
+      if (runtime.isDrone) {
+        camera.fov = camera.aspect < 1 ? 72 : 60;
+        camera.updateProjectionMatrix();
+      } else if (runtime.isFirstPerson) {
+        const stop = TOUR_STOPS.find((item) => item.id === latestPropsRef.current.activeTourStopId);
+        updateTourCameraProjection(camera, stop, { presentation: !runtime.isExplore });
+      } else {
+        updateOverviewProjection(camera);
+      }
+      requestRender();
     };
     window.addEventListener('resize', resize);
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize);
+    resizeObserver?.observe(container);
     resize();
 
+    /**
+     * Advance active controls with a capped frame delta and constrain walking to the authored route.
+     * Render only dirty frames and publish camera diagnostics after rendering for synchronized browser QA.
+     */
     const animate = (now = performance.now()) => {
       runtime.frameId = requestAnimationFrame(animate);
       const delta = Math.min((now - runtime.lastFrameTime) / 1000, 0.05);
       runtime.lastFrameTime = now;
 
       if (runtime.orbitControls?.enabled) runtime.orbitControls.update();
+      runtime.drone.update(delta);
 
-      const desktopCanWalk = runtime.isExplore && Boolean(runtime.pointerLockControls?.isLocked);
+      const desktopCanWalk = runtime.isExplore && runtime.firstPersonAvailable
+        && Boolean(runtime.pointerLockControls?.isLocked);
       const touchCanWalk = Boolean(
         runtime.isTouchDevice && runtime.isExplore && runtime.firstPersonAvailable
       );
@@ -591,6 +707,7 @@ export default function VillaViewer({
             runtime.currentWalkEdgeId
           );
           camera.position.copy(constrained.position);
+          requestRender();
           runtime.currentWalkEdgeId = constrained.edge?.id ?? runtime.currentWalkEdgeId;
         }
 
@@ -602,13 +719,19 @@ export default function VillaViewer({
             (edge) => edge.id === runtime.currentWalkEdgeId
           ) ?? null;
           if (nearest) {
+            if (runtime.lightingStopId !== nearest.id) {
+              runtime.lightingStopId = nearest.id;
+              syncLighting();
+            }
             setWalkStatus((previous) => {
               const next = {
+                stopId: nearest.id,
                 label: nearest.title,
                 floor: nearest.floor,
                 edgeType: currentEdge?.type ?? null
               };
-              return previous.label === next.label
+              return previous.stopId === next.stopId
+                && previous.label === next.label
                 && previous.floor === next.floor
                 && previous.edgeType === next.edgeType
                 ? previous
@@ -618,7 +741,15 @@ export default function VillaViewer({
         }
       }
 
-      renderer.render(scene, camera);
+      if (runtime.needsRender) {
+        renderer.render(scene, camera);
+        // Mark the mode of this rendered frame, not only React's requested mode.
+        // Browser QA must not sample the previous camera while a new frame is pending.
+        container.dataset.renderedInteractionMode = runtime.isDrone ? 'drone' : runtime.isFirstPerson ? (runtime.isExplore ? 'explore' : 'guided') : 'orbit';
+        container.dataset.cameraPosition = camera.position.toArray().map((value) => value.toFixed(3)).join(',');
+        container.dataset.cameraDirection = camera.getWorldDirection(new THREE.Vector3()).toArray().map((value) => value.toFixed(3)).join(',');
+        runtime.needsRender = false;
+      }
     };
     animate();
 
@@ -626,13 +757,18 @@ export default function VillaViewer({
       runtime.disposed = true;
       if (runtime.frameId) cancelAnimationFrame(runtime.frameId);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('keydown', keyDown);
-      window.removeEventListener('keyup', keyUp);
+      resizeObserver?.disconnect();
+      disposeKeyboard();
+      runtime.drone.dispose();
+      renderer.domElement.removeEventListener('webglcontextrestored', contextRestored);
       renderer.domElement.removeEventListener('click', lockFirstPerson);
       renderer.domElement.removeEventListener('pointerdown', pointerDown);
       renderer.domElement.removeEventListener('pointermove', pointerMove);
       renderer.domElement.removeEventListener('pointerup', pointerUp);
       renderer.domElement.removeEventListener('pointercancel', pointerUp);
+      renderer.domElement.removeEventListener('lostpointercapture', pointerUp);
+      runtime.orbitControls?.removeEventListener('change', requestRender);
+      runtime.pointerLockControls?.removeEventListener('change', requestRender);
       runtime.orbitControls?.dispose();
       runtime.pointerLockControls?.unlock();
       runtime.pointerLockControls?.dispose();
@@ -642,15 +778,17 @@ export default function VillaViewer({
         scene.remove(runtime.villaRoot);
         disposeObject(runtime.villaRoot);
       }
+      scene.environment = null;
+      environment.dispose();
       renderer.dispose();
       renderer.domElement.remove();
       if (runtimeRef.current === runtime) runtimeRef.current = null;
     };
-  }, []);
+  }, [viewerNoteId]);
 
   useEffect(() => {
     syncLighting();
-  }, [lightingMode, tourMode, activeTourStopId]);
+  }, [lightingMode, tourMode, activeTourStopId, droneMode]);
 
   useEffect(() => {
     syncMaterial();
@@ -658,19 +796,20 @@ export default function VillaViewer({
 
   useEffect(() => {
     syncView();
-  }, [selectedRoom, tourMode, activeTourStopId, interactionMode]);
+  }, [selectedRoom, tourMode, activeTourStopId, interactionMode, droneMode, viewRequestId]);
 
   useEffect(() => {
     setInteractionMode('guided');
+    setDroneMode(false);
     setHasInteracted(false);
-  }, [tourMode, activeTourStopId]);
+  }, [tourMode, activeTourStopId, viewRequestId]);
 
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
-  const isFirstPerson = tourMode && activeTourStopId !== 'overview';
+  const isFirstPerson = !droneMode && tourMode && activeTourStopId !== 'overview';
   const isExplore = isFirstPerson && interactionMode === 'explore';
   const runtimeLightingProfile = resolveRuntimeLighting(
     lightingMode,
-    activeTourStopId,
+    isExplore ? (walkStatus.stopId ?? activeTourStopId) : activeTourStopId,
     isFirstPerson
   ).profile;
 
@@ -686,6 +825,45 @@ export default function VillaViewer({
     mobileMotionRef.current = { ...mobileMotionRef.current, [axis]: value };
   };
 
+  /** Leave Drone mode and request the exterior stop through the parent's shared navigation state. */
+  const returnToOverview = () => {
+    setDroneMode(false);
+    onSelectTourStop?.(TOUR_STOPS[0]);
+  };
+  /**
+   * Clear held flight input and move the drone camera to the living-area walk anchor.
+   * Retain flight projection, restore canvas focus and request the new frame.
+   */
+  const flyInside = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime?.villaRoot) return;
+    runtime.drone.reset();
+    placeFirstPersonCamera(runtime.camera, runtime.villaRoot, 'living', { presentation: false });
+    runtime.camera.fov = runtime.camera.aspect < 1 ? 72 : 60;
+    runtime.camera.updateProjectionMatrix();
+    runtime.renderer.domElement.focus({ preventScroll: true });
+    runtime.needsRender = true;
+  };
+  /**
+   * Bind a movement-pad axis to pointer and keyboard holds.
+   * Stop that axis on release, cancellation, capture loss or blur so a held button cannot keep flying.
+   */
+  const droneButtonProps = (axis, value) => ({
+    onPointerDown: (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      runtimeRef.current?.renderer.domElement.focus({ preventScroll: true });
+      runtimeRef.current?.drone.setMotion(axis, value);
+    },
+    onPointerUp: () => runtimeRef.current?.drone.setMotion(axis, 0),
+    onPointerCancel: () => runtimeRef.current?.drone.setMotion(axis, 0),
+    onLostPointerCapture: () => runtimeRef.current?.drone.setMotion(axis, 0),
+    onKeyDown: (event) => { if ([' ', 'Enter'].includes(event.key)) { event.preventDefault(); runtimeRef.current?.drone.setMotion(axis, value); } },
+    onKeyUp: () => runtimeRef.current?.drone.setMotion(axis, 0),
+    onBlur: () => runtimeRef.current?.drone.setMotion(axis, 0),
+  });
+
   const switchMode = (mode) => {
     setHasInteracted(false);
     setInteractionMode(mode);
@@ -695,18 +873,23 @@ export default function VillaViewer({
     <section>
       <div className="viewer-heading">
         <div>
-          <p className="eyebrow">Interactive architectural walkthrough</p>
-          <h2>{isFirstPerson ? activeStop.title : '3D Villa Viewer'}</h2>
+          <p className="eyebrow">Your own perspective</p>
+          <h2>{droneMode ? 'Fly through the residence' : isFirstPerson ? activeStop.title : 'The residence, in 3D'}</h2>
         </div>
         <p>
-          {isFirstPerson
+          {droneMode ? 'Drag to look · move freely, inside and outside' : isFirstPerson
             ? isExplore
-              ? 'Explore freely on the authored walk route. Return to Guided at any time without reloading the villa.'
-              : 'Guided presents the strongest authored view. Use the arrows to continue or switch to Explore to walk yourself.'
-            : 'Drag to orbit · scroll to zoom · choose a room or enter the guided walkthrough.'}
+              ? 'Look around. Follow the spaces at your own pace.'
+              : 'Follow the arrows, or explore at your own pace.'
+            : 'Drag to orbit · choose Drone flight to move freely'}
         </p>
       </div>
 
+      <div className="scene-navigation" role="group" aria-label="Scene navigation">
+        <button type="button" aria-pressed={!droneMode && !isFirstPerson} onClick={returnToOverview} disabled={modelState !== 'loaded'}>Orbit overview</button>
+        <button type="button" aria-pressed={droneMode} onClick={() => setDroneMode(true)} disabled={modelState !== 'loaded'}>Drone flight</button>
+        <button type="button" onClick={() => { setDroneMode(false); onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'entry')); }} disabled={modelState !== 'loaded'}>Go inside <span aria-hidden="true">↗</span></button>
+      </div>
       <div className="three-canvas-shell">
         <div
           ref={mountRef}
@@ -715,8 +898,8 @@ export default function VillaViewer({
           data-model-progress={modelProgress ?? ''}
           data-model-load-count={modelLoadCount}
           data-viewer-runtime={VIEWER_RUNTIME_PROFILE}
-          data-view-mode={isFirstPerson ? 'first-person' : 'orbit'}
-          data-interaction-mode={isFirstPerson ? interactionMode : 'orbit'}
+          data-view-mode={droneMode ? 'drone' : isFirstPerson ? 'first-person' : 'orbit'}
+          data-interaction-mode={droneMode ? 'drone' : isFirstPerson ? interactionMode : 'orbit'}
           data-tour-stop={activeTourStopId}
           data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
           data-interior-light-count={interiorLightCount}
@@ -747,6 +930,18 @@ export default function VillaViewer({
           </div>
         )}
 
+        {droneMode && <>
+          <div className="drone-help"><strong>Free flight</strong><span>{isTouchUi ? 'Drag to look. Hold a control to move.' : 'Drag to look · WASD to move · E up / Q down'}</span><small>Fly freely through the concept model.</small></div>
+          <button className="drone-inside" type="button" onClick={flyInside}>Fly inside ↗</button>
+          <div className="drone-pad" role="group" aria-label="Drone movement controls">
+            <button type="button" aria-label="Fly left" {...droneButtonProps('right', -1)}>←</button>
+            <button type="button" aria-label="Fly forward" {...droneButtonProps('forward', 1)}>↑</button>
+            <button type="button" aria-label="Fly right" {...droneButtonProps('right', 1)}>→</button>
+            <button type="button" aria-label="Descend" {...droneButtonProps('up', -1)}>−</button>
+            <button type="button" aria-label="Fly backward" {...droneButtonProps('forward', -1)}>↓</button>
+            <button type="button" aria-label="Ascend" {...droneButtonProps('up', 1)}>+</button>
+          </div>
+        </>}
         {isFirstPerson && (
           <>
             <div className="first-person-hud" aria-live="polite">
@@ -756,7 +951,7 @@ export default function VillaViewer({
                 {walkStatus.edgeType ? ` · ${walkStatus.edgeType}` : ''}
                 {' · '}
                 {isExplore
-                  ? walkGraphReady ? 'Explore route ready' : firstPersonReady ? 'Explore anchor ready' : 'Preparing route'
+                  ? walkGraphReady ? 'Explore' : firstPersonReady ? 'Explore' : 'Preparing route'
                   : 'Guided view'}
               </span>
             </div>
@@ -864,8 +1059,8 @@ export default function VillaViewer({
         )}
       </div>
 
-      <p className="viewer-note">
-        Guided highlights the strongest presentation views. Explore lets you move through the same villa from reliable walk points without reloading the scene.
+      <p className="viewer-note" id={viewerNoteId}>
+        Orbit to see the whole villa. Drone flight moves freely; Go inside starts the room-by-room tour.
       </p>
     </section>
   );
