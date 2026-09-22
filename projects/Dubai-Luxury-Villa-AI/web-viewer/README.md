@@ -2,9 +2,11 @@
 
 An architectural portfolio combining kitchen and living-space studies, outdoor architecture, material palettes and an interactive villa. The current editorial direction is **Desert, distilled.**
 
-[Public demo](https://safal207.github.io/Architectural-AI-Lab/) · [Editorial redesign — draft PR #9](https://github.com/safal207/Architectural-AI-Lab/pull/9)
+[Public demo](https://safal207.github.io/Architectural-AI-Lab/) · [Published portfolio — merged PR #9](https://github.com/safal207/Architectural-AI-Lab/pull/9)
 
-The editorial redesign is a development preview for draft PR #9. The public demo remains on its existing deployment; this README describes the development version.
+PR #9 was merged and published on 2026-09-22 at `ba69cc7d0e0da02f9c93ff55912571be979005a2`. Historical validation reports retain their original revision and publication status.
+
+[Manual QA package (Russian)](../validation/manual-qa/README.md): testing strategy, release plan, 50 repeatable cases, run template, first UI-driven regression report and an open narrow-window layout defect. Manual coverage and remaining device checks are reported separately from automated CI.
 
 ![Pool-side exterior study](app/public/editorial/residence-1600.webp)
 

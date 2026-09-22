@@ -1,0 +1,25 @@
+ARCHITECTURAL AI LAB / PROJECT BRIEF
+
+Project: Villa architecture
+Location: Dubai — тест QA
+Scope: New villa concept
+Approximate area: 320.5 m²
+Area reference: Home floor area, rather than plot size.
+Priorities: Natural light
+
+Reference: Dubai residence — Desert, distilled.
+Material direction: Sandstone Warmth
+Palette status: Concept reference only; not a material specification.
+Preferred atmosphere: Evening
+
+Your ideas:
+Ручной регресс QA — терраса, свет и дерево.
+Test only; no contact request.
+
+Next details to define:
+Site plan, orientation and access
+Household needs and daily routines
+Budget range and target date
+Reference images and preferred materials
+
+Concept planning brief. Not construction documentation.

@@ -1,0 +1,2 @@
+# Preserve captured bytes so evidence-manifest.json is portable across OS checkouts.
+runs/**/evidence/* -text
