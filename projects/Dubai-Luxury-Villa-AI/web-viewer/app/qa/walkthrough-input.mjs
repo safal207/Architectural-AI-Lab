@@ -19,23 +19,24 @@ class Events {
 const windowTarget = new Events();
 const documentTarget = new Events();
 documentTarget.hidden = false;
-const controls = new Events();
-controls.isLocked = true;
 const runtime = {
   keys: new Set(), isExplore: true, firstPersonAvailable: true,
-  isTouchDevice: false, pointerLockControls: controls,
+  isTouchDevice: false,
   touchLook: { active: false, pointerId: null }
 };
 const mobileMotionRef = { current: { forward: 0, right: 0 } };
 let capturedPointer = null;
 let interactions = 0;
-const element = {
+const element = Object.assign(new Events(), {
   hasPointerCapture: (id) => capturedPointer === id,
-  releasePointerCapture: () => { capturedPointer = null; }
-};
+  releasePointerCapture: () => { capturedPointer = null; },
+  blur: () => { documentTarget.activeElement = null; element.dispatch('blur'); }
+});
+documentTarget.activeElement = element;
+let pauses = 0;
 const dispose = bindWalkthroughKeyboard({
   runtime, mobileMotionRef, element, windowTarget, documentTarget,
-  onInteract: () => { interactions += 1; }
+  onInteract: () => { interactions += 1; }, onPause: () => { pauses += 1; }
 });
 /** Create a cancellable synthetic key event with overrides for modifier, focus and composition scenarios. */
 const key = (code = 'KeyW', extra = {}) => ({
@@ -77,12 +78,18 @@ startMotion();
 windowTarget.dispatch('blur');
 assertStopped('window blur');
 startMotion();
-controls.isLocked = false;
-controls.dispatch('unlock');
-assertStopped('pointer unlock');
-assert.equal(press().defaultPrevented, false, 'Unlocked viewer must not intercept page keys');
+element.blur();
+assertStopped('canvas blur');
+assert.equal(press().defaultPrevented, false, 'Unfocused viewer must not intercept page keys');
 assert.equal(runtime.keys.size, 0);
-controls.isLocked = true;
+documentTarget.activeElement = element;
+startMotion();
+windowTarget.dispatch('keydown', key('Escape'));
+assertStopped('Escape');
+assert.equal(pauses, 1);
+assert.notEqual(documentTarget.activeElement, element);
+assert.equal(press().defaultPrevented, false, 'Esc pauses until the canvas is focused again');
+documentTarget.activeElement = element;
 
 startMotion();
 documentTarget.hidden = true;
@@ -95,6 +102,12 @@ documentTarget.hidden = false;
 // Coarse-pointer laptops can also have keyboards. Typing in the assistant or
 // operating a form/button must not move the camera, including editable children.
 runtime.isTouchDevice = true;
+startMotion();
+element.blur();
+assert.equal(runtime.keys.size, 0, 'Touch laptops must release physical keys on canvas blur');
+assert.deepEqual(mobileMotionRef.current, { forward: 1, right: -1 }, 'Focusing a movement pad must preserve its pointer hold');
+resetWalkthroughInput(runtime, mobileMotionRef, element);
+documentTarget.activeElement = element;
 for (const target of [
   { closest: () => ({ tagName: 'INPUT' }) },
   { closest: () => ({ tagName: 'TEXTAREA' }) },
@@ -132,7 +145,7 @@ press();
 assert.equal(runtime.keys.size, 0, 'Unmount must remove key listeners');
 assert(interactions > 0);
 console.log(JSON.stringify({ status: 'PASS', cases: [
-  'keydown/keyup', 'arrow scrolling', 'blur', 'unlock', 'visibility',
+  'keydown/keyup without pointer lock', 'arrow scrolling', 'blur', 'Escape pause', 'visibility',
   'editable controls', 'browser shortcuts', 'guided/anchor guards',
   'mode reset', 'touch capture release', 'unmount'
 ] }, null, 2));

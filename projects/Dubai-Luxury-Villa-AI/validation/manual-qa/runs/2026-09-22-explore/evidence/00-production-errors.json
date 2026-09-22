@@ -1,0 +1,12 @@
+[
+  {
+    "level": "error",
+    "message": "THREE.PointerLockControls: Unable to use Pointer Lock API",
+    "timestamp": "2026-09-22T13:55:36.550Z"
+  },
+  {
+    "level": "error",
+    "message": "UnknownError: If you see this error we have a bug. Please report this bug to chromium.",
+    "timestamp": "2026-09-22T13:55:36.553Z"
+  }
+]

@@ -96,6 +96,14 @@ try {
   let desktopModelRequests = 0;
   const desktop = await browser.newPage({ viewport: { width: 960, height: 700 } });
   observe(desktop);
+  // Embedded browsers can deny pointer lock. Explore must remain usable there.
+  await desktop.addInitScript(() => {
+    window.pointerLockAttempts = 0;
+    Element.prototype.requestPointerLock = () => {
+      window.pointerLockAttempts += 1;
+      return Promise.reject(new DOMException('Pointer lock unavailable', 'NotAllowedError'));
+    };
+  });
   desktop.on('request', (request) => {
     if (new URL(request.url()).pathname.endsWith('/villa.glb')) desktopModelRequests += 1;
   });
@@ -133,6 +141,60 @@ try {
     'Guided Prev/Next controls should hide while desktop Explore is active'
   );
   await assertPersistentRuntime(desktop, 'desktop explore');
+
+  const canvasElement = desktop.locator('.three-canvas canvas');
+  const cameraState = () => desktop.locator('.three-canvas').evaluate((element) => ({
+    position: element.dataset.cameraPosition.split(',').map(Number),
+    direction: element.dataset.cameraDirection.split(',').map(Number)
+  }));
+  const distance = (a, b) => Math.hypot(...a.map((value, index) => value - b[index]));
+  await canvasElement.scrollIntoViewIfNeeded();
+  const canvasBox = await canvasElement.boundingBox();
+  const x = canvasBox.x + canvasBox.width * 0.5;
+  const y = canvasBox.y + canvasBox.height * 0.4;
+  const beforeDrag = await cameraState();
+  await desktop.mouse.move(x, y);
+  await desktop.mouse.down();
+  await desktop.mouse.move(x - 90, y + 12, { steps: 8 });
+  await desktop.mouse.up();
+  await desktop.waitForFunction((before) => {
+    const values = document.querySelector('.three-canvas').dataset.cameraDirection.split(',').map(Number);
+    return Math.hypot(...values.map((value, index) => value - before[index])) > 0.05;
+  }, beforeDrag.direction);
+  const beforeWalk = await cameraState();
+  check(Math.abs(beforeWalk.direction[1] - beforeDrag.direction[1]) < 0.2,
+    'Small vertical drag unexpectedly flipped the camera pitch');
+  await desktop.keyboard.down('w');
+  try {
+    await desktop.waitForFunction((before) => {
+      const values = document.querySelector('.three-canvas').dataset.cameraPosition.split(',').map(Number);
+      return Math.hypot(...values.map((value, index) => value - before[index])) > 0.08;
+    }, beforeWalk.position, { timeout: 10_000 });
+  } finally {
+    await desktop.keyboard.up('w');
+  }
+  const afterWalk = await cameraState();
+  await desktop.keyboard.down('ArrowUp');
+  await desktop.keyboard.press('Escape');
+  const paused = await cameraState();
+  await desktop.waitForTimeout(250);
+  check(distance(paused.position, (await cameraState()).position) < 0.01, 'Escape left movement active');
+  await desktop.keyboard.up('ArrowUp');
+  check(await canvasElement.evaluate((element) => element !== document.activeElement), 'Escape did not release canvas focus');
+  await desktop.locator('.walkthrough-onboarding').waitFor({ state: 'visible' });
+  await canvasElement.click({ position: { x: canvasBox.width * 0.5, y: canvasBox.height * 0.4 } });
+  await desktop.keyboard.down('w');
+  const notes = desktop.getByRole('textbox', { name: 'What do you have in mind? Optional', exact: true });
+  await notes.focus();
+  const beforeTyping = await cameraState();
+  await desktop.keyboard.type('wasd');
+  await desktop.keyboard.up('w');
+  await desktop.waitForTimeout(250);
+  check(distance(beforeTyping.position, (await cameraState()).position) < 0.01, 'Form focus left walking active');
+  check(await notes.inputValue() === 'wasd', 'Explore intercepted form typing');
+  check(await desktop.evaluate(() => window.pointerLockAttempts === 0 && !document.pointerLockElement), 'Explore still depends on pointer lock');
+  report.desktop.dragAndWalk = { beforeDrag, beforeWalk, afterWalk, status: 'PASS' };
+  report.desktop.pauseAndFormFocus = 'PASS';
 
   await fastClick(modeSwitch.getByRole('button', { name: 'Guided' }));
   await waitForMode(desktop, 'guided');
