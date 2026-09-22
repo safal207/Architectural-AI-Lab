@@ -23,24 +23,35 @@ export function resetWalkthroughInput(runtime, mobileMotionRef, element) {
   }
 }
 
+/** Own movement keys only while the visible Explore canvas has keyboard focus. */
+export function canUseWalkthroughKeyboard(runtime, element, documentTarget) {
+  return runtime.isExplore && runtime.firstPersonAvailable && !documentTarget.hidden
+    && documentTarget.activeElement === element;
+}
+
 // A key released outside the page never produces a matching keyup here. Reset
 // at every ownership boundary so returning to the tour cannot resume old input.
 /**
  * Bind movement keys only while Explore owns input, preserving form editing and browser shortcuts.
- * Reset motion on focus, visibility and pointer-lock boundaries; return a cleanup function for all bindings.
+ * Reset motion on focus and visibility boundaries; return a cleanup function for all bindings.
  */
 export function bindWalkthroughKeyboard({
-  runtime, mobileMotionRef, element, windowTarget, documentTarget, onInteract
+  runtime, mobileMotionRef, element, windowTarget, documentTarget, onInteract, onPause
 }) {
   /** Clear all input sources belonging to this walkthrough runtime. */
   const reset = () => resetWalkthroughInput(runtime, mobileMotionRef, element);
   /** Record an unmodified movement key only when a visible, valid Explore view owns keyboard input. */
   const keyDown = (event) => {
+    if (event.code === 'Escape' && canUseWalkthroughKeyboard(runtime, element, documentTarget)) {
+      reset();
+      element.blur();
+      onPause?.();
+      return;
+    }
     if (!WALK_KEYS.has(event.code) || event.defaultPrevented || event.isComposing
       || event.altKey || event.ctrlKey || event.metaKey
       || isInteractiveTarget(event.target)
-      || !runtime.isExplore || !runtime.firstPersonAvailable || documentTarget.hidden
-      || (!runtime.isTouchDevice && !runtime.pointerLockControls?.isLocked)) return;
+      || !canUseWalkthroughKeyboard(runtime, element, documentTarget)) return;
     event.preventDefault();
     runtime.keys.add(event.code);
     onInteract();
@@ -53,7 +64,13 @@ export function bindWalkthroughKeyboard({
   };
   /** Stop walkthrough motion when focus enters a text-editing control. */
   const focusIn = (event) => {
+    if (event.target !== element) runtime.keys.clear();
     if (event.target?.isContentEditable || event.target?.closest?.('input, textarea, select, [role="textbox"], [role="slider"], [contenteditable]:not([contenteditable="false"])')) reset();
+  };
+  /** Release desktop drag/keys when the canvas loses focus; preserve touch-pad holds. */
+  const canvasBlur = () => {
+    runtime.keys.clear();
+    if (!runtime.isTouchDevice) reset();
   };
 
   windowTarget.addEventListener('keydown', keyDown);
@@ -61,7 +78,7 @@ export function bindWalkthroughKeyboard({
   windowTarget.addEventListener('blur', reset);
   documentTarget.addEventListener('visibilitychange', visibilityChange);
   documentTarget.addEventListener('focusin', focusIn);
-  runtime.pointerLockControls?.addEventListener('unlock', reset);
+  element.addEventListener('blur', canvasBlur);
 
   return () => {
     reset();
@@ -70,6 +87,6 @@ export function bindWalkthroughKeyboard({
     windowTarget.removeEventListener('blur', reset);
     documentTarget.removeEventListener('visibilitychange', visibilityChange);
     documentTarget.removeEventListener('focusin', focusIn);
-    runtime.pointerLockControls?.removeEventListener('unlock', reset);
+    element.removeEventListener('blur', canvasBlur);
   };
 }

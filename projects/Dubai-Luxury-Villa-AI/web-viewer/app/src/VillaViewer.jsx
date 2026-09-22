@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createScene } from './three/scene';
 import { createCamera, OVERVIEW_POSITION, OVERVIEW_TARGET, updateOverviewProjection } from './three/camera';
@@ -14,7 +13,7 @@ import { TOUR_STOPS } from './tourData';
 import { createDroneFlight } from './droneFlight';
 import './DroneFlight.css';
 import { WALKTHROUGH_PLAYER } from './navigationData';
-import { bindWalkthroughKeyboard, resetWalkthroughInput } from './walkthroughInput';
+import { bindWalkthroughKeyboard, canUseWalkthroughKeyboard, resetWalkthroughInput } from './walkthroughInput';
 import {
   buildWalkGraph,
   constrainToWalkGraph,
@@ -358,7 +357,6 @@ export default function VillaViewer({
     if (runtime.orbitControls) runtime.orbitControls.enabled = !isFirstPerson && !current.droneMode;
     runtime.isDrone = current.droneMode;
     if (current.droneMode) {
-      runtime.pointerLockControls?.unlock();
       runtime.camera.fov = runtime.camera.aspect < 1 ? 72 : 60;
       runtime.camera.updateProjectionMatrix();
       runtime.drone.enable();
@@ -369,8 +367,6 @@ export default function VillaViewer({
     runtime.drone.disable();
 
     if (isFirstPerson) {
-      if (!isExplore) runtime.pointerLockControls?.unlock();
-
       runtime.camera.fov = 64;
       runtime.camera.updateProjectionMatrix();
       const tourPlaced = placeFirstPersonCamera(
@@ -381,8 +377,8 @@ export default function VillaViewer({
       );
       runtime.firstPersonAvailable = tourPlaced;
       setFirstPersonReady(tourPlaced);
-      if (tourPlaced && runtime.isTouchDevice && isExplore) {
-        runtime.camera.rotation.order = 'YXZ';
+      if (tourPlaced && isExplore) {
+        runtime.camera.rotation.reorder('YXZ');
       }
 
       const activeStop = TOUR_STOPS.find((stop) => stop.id === current.activeTourStopId);
@@ -406,7 +402,6 @@ export default function VillaViewer({
       return;
     }
 
-    runtime.pointerLockControls?.unlock();
     runtime.isExplore = false;
     setFirstPersonReady(false);
     if (runtime.orbitControls) {
@@ -451,9 +446,6 @@ export default function VillaViewer({
 
     const isTouchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     setIsTouchUi(isTouchDevice);
-    const pointerLockControls = isTouchDevice
-      ? null
-      : new PointerLockControls(camera, renderer.domElement);
 
     const runtime = {
       disposed: false,
@@ -465,7 +457,6 @@ export default function VillaViewer({
       sun,
       fill,
       orbitControls,
-      pointerLockControls,
       isTouchDevice,
       isDrone: false,
       isFirstPerson: false,
@@ -498,7 +489,6 @@ export default function VillaViewer({
     };
     renderer.domElement.addEventListener('webglcontextrestored', contextRestored);
     orbitControls.addEventListener('change', requestRender);
-    pointerLockControls?.addEventListener('change', requestRender);
     runtimeRef.current = runtime;
 
     setModelState('loading');
@@ -575,20 +565,13 @@ export default function VillaViewer({
       element: renderer.domElement,
       windowTarget: window,
       documentTarget: document,
-      onInteract: () => setHasInteracted(true)
+      onInteract: () => setHasInteracted(true),
+      onPause: () => setHasInteracted(false)
     });
 
-    /** Request desktop pointer lock only when Explore has a valid camera and desktop controls. */
-    const lockFirstPerson = () => {
-      if (!runtime.isExplore || !runtime.firstPersonAvailable || !runtime.pointerLockControls) return;
-      setHasInteracted(true);
-      renderer.domElement.focus({ preventScroll: true });
-      runtime.pointerLockControls.lock();
-    };
-
-    /** Capture one primary touch pointer for look-around in a valid Explore view. */
+    /** Capture one primary pointer for mouse or touch look-around without browser pointer lock. */
     const pointerDown = (event) => {
-      if (!runtime.isTouchDevice || !runtime.isExplore || !runtime.firstPersonAvailable
+      if (!runtime.isExplore || !runtime.firstPersonAvailable
         || runtime.touchLook.active || event.button !== 0) return;
       setHasInteracted(true);
       renderer.domElement.focus({ preventScroll: true });
@@ -599,7 +582,7 @@ export default function VillaViewer({
       renderer.domElement.setPointerCapture?.(event.pointerId);
     };
 
-    /** Apply the captured touch pointer's movement to yaw and bounded pitch, then request a frame. */
+    /** Apply the captured pointer's movement to yaw and bounded pitch, then request a frame. */
     const pointerMove = (event) => {
       const touchLook = runtime.touchLook;
       if (!runtime.isExplore || !runtime.firstPersonAvailable
@@ -623,7 +606,6 @@ export default function VillaViewer({
       runtime.touchLook.pointerId = null;
     };
 
-    renderer.domElement.addEventListener('click', lockFirstPerson);
     renderer.domElement.addEventListener('pointerdown', pointerDown);
     renderer.domElement.addEventListener('pointermove', pointerMove);
     renderer.domElement.addEventListener('pointerup', pointerUp);
@@ -664,8 +646,7 @@ export default function VillaViewer({
       if (runtime.orbitControls?.enabled) runtime.orbitControls.update();
       runtime.drone.update(delta);
 
-      const desktopCanWalk = runtime.isExplore && runtime.firstPersonAvailable
-        && Boolean(runtime.pointerLockControls?.isLocked);
+      const desktopCanWalk = canUseWalkthroughKeyboard(runtime, renderer.domElement, document);
       const touchCanWalk = Boolean(
         runtime.isTouchDevice && runtime.isExplore && runtime.firstPersonAvailable
       );
@@ -761,17 +742,13 @@ export default function VillaViewer({
       disposeKeyboard();
       runtime.drone.dispose();
       renderer.domElement.removeEventListener('webglcontextrestored', contextRestored);
-      renderer.domElement.removeEventListener('click', lockFirstPerson);
       renderer.domElement.removeEventListener('pointerdown', pointerDown);
       renderer.domElement.removeEventListener('pointermove', pointerMove);
       renderer.domElement.removeEventListener('pointerup', pointerUp);
       renderer.domElement.removeEventListener('pointercancel', pointerUp);
       renderer.domElement.removeEventListener('lostpointercapture', pointerUp);
       runtime.orbitControls?.removeEventListener('change', requestRender);
-      runtime.pointerLockControls?.removeEventListener('change', requestRender);
       runtime.orbitControls?.dispose();
-      runtime.pointerLockControls?.unlock();
-      runtime.pointerLockControls?.dispose();
       mobileMotionRef.current = { forward: 0, right: 0 };
       if (runtime.interiorLightGroup) scene.remove(runtime.interiorLightGroup);
       if (runtime.villaRoot) {
@@ -879,7 +856,7 @@ export default function VillaViewer({
         <p>
           {droneMode ? 'Drag to look · move freely, inside and outside' : isFirstPerson
             ? isExplore
-              ? 'Look around. Follow the spaces at your own pace.'
+              ? 'Drag to look around. Walk through the connected spaces.'
               : 'Follow the arrows, or explore at your own pace.'
             : 'Drag to orbit · choose Drone flight to move freely'}
         </p>
@@ -988,11 +965,11 @@ export default function VillaViewer({
 
             {isExplore && !hasInteracted && (
               <div className="walkthrough-onboarding" role="status">
-                <strong>{isTouchUi ? 'Drag to look' : 'Click the view to look around'}</strong>
+                <strong>{isTouchUi ? 'Drag to look' : 'Drag the view to look around'}</strong>
                 <span>
                   {isTouchUi
                     ? 'Use the movement pad to walk.'
-                    : 'WASD to move · Shift to move faster · Esc releases the cursor.'}
+                    : 'Click the view, then use WASD or arrow keys to walk · Shift speeds up · Esc pauses.'}
                 </span>
               </div>
             )}
