@@ -65,6 +65,8 @@ try {
   await waitStop('master');
   report.checks.push('Floor plan opens the selected room in the studio');
 
+  check(await page.getByRole('radio', { name: 'Kitchen design', exact: true }).isChecked(), 'Kitchen should be the starting project type');
+  await page.getByRole('radio', { name: 'Villa architecture', exact: true }).check();
   await page.getByLabel('Location', { exact: false }).fill('Lisbon');
   await page.getByLabel('Approximate area', { exact: false }).fill('320');
   await page.getByLabel('Where shall we begin?', { exact: false }).selectOption('New villa concept');
