@@ -175,7 +175,7 @@ async function verifyGallery(page) {
 async function verifyProjectBrief(page, label) {
   const brief = page.locator('#brief');
   const notes = 'A quiet kitchen with an island.\nKeep the garden view.';
-  await brief.getByText('Kitchen design', { exact: true }).click();
+  await brief.getByRole('radio', { name: 'Kitchen design', exact: true }).check();
   check(await brief.getByRole('radio', { name: 'Kitchen design', exact: true }).isChecked(), 'Project type selection did not update');
   await brief.getByRole('textbox', { name: /What do you have in mind/ }).fill(notes);
   const expectedMaterial = (await page.locator('.material-switcher__options button[aria-pressed="true"] strong').innerText()).trim();

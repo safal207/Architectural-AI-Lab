@@ -163,7 +163,7 @@ try {
   report.webglUnavailable.galleryStillWorks = 'PASS';
   await unavailable.locator('.material-switcher').getByRole('button', { name: /Sandstone Warmth/ }).click();
   const fallbackNotes = 'Plan a kitchen around the garden view.';
-  await unavailable.locator('#brief').getByText('Kitchen design', { exact: true }).click();
+  await unavailable.locator('#brief').getByRole('radio', { name: 'Kitchen design', exact: true }).check();
   await unavailable.locator('#brief').getByRole('textbox', { name: /What do you have in mind/ }).fill(fallbackNotes);
   const fallbackBrief = await downloadBrief(unavailable, 'webgl-unavailable-brief');
   check(fallbackBrief.includes('Project: Kitchen design'), 'Fallback brief lost the chosen project type');
