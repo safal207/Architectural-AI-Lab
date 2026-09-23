@@ -9,8 +9,10 @@ export default function ResidenceFilm() {
 
   /** Start sound and motion only after an explicit visitor action; native video controls remain available. */
   async function playFilm() {
-    try { await player.current?.play(); }
-    catch { player.current?.focus(); }
+    const video = player.current;
+    video?.focus({ preventScroll: true });
+    try { await video?.play(); }
+    catch { video?.focus(); }
   }
 
   return (
@@ -28,6 +30,7 @@ export default function ResidenceFilm() {
             ref={player}
             className="residence-film__player"
             controls
+            tabIndex={0}
             playsInline
             preload="none"
             width="1280"
