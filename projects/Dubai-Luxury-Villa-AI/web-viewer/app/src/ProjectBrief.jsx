@@ -31,6 +31,13 @@ const OPTIONAL_IDEAS = [
 const CONTACT_EMAIL = 'safal0645@gmail.com';
 const CONTACT_TELEGRAM = 'https://t.me/Alexfox14';
 
+function formatArea(area) {
+  const value = Number(area);
+  return area !== '' && Number.isFinite(value) && value > 0 && value <= 100000
+    ? `${value} m²`
+    : 'To be measured.';
+}
+
 /** Use one text source for the download, email draft and copy action. */
 function createBrief({ projectType, location, area, scope, priorities, optionalIdeas, notes, category, material, lighting, inspirationSpace }) {
   const selectedPriorities = PRIORITIES.filter((priority) => priorities.includes(priority));
@@ -40,7 +47,7 @@ function createBrief({ projectType, location, area, scope, priorities, optionalI
     `Project: ${projectType}`,
     `Location: ${location.trim() || 'To be defined.'}`,
     `Scope: ${scope || 'To be defined.'}`,
-    `Approximate area: ${area ? `${Number(area)} m²` : 'To be measured.'}`,
+    `Approximate area: ${formatArea(area)}`,
     `Area reference: ${category.areaHint}`,
     `Priorities: ${selectedPriorities.length ? selectedPriorities.join('; ') : 'To be discussed.'}`,
     `Optional ideas to discuss: ${selectedIdeas.length ? selectedIdeas.join('; ') : 'None selected.'}`,
@@ -227,7 +234,7 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
             <div><dt>Project</dt><dd>{projectType}</dd></div>
             {location.trim() && <div><dt>Location</dt><dd>{location.trim()}</dd></div>}
             <div><dt>Starting point</dt><dd>{scope || 'To be discussed'}</dd></div>
-            <div><dt>Area</dt><dd>{area && Number(area) > 0 ? `${Number(area)} m²` : 'To be measured'}</dd></div>
+            <div><dt>Area</dt><dd>{formatArea(area)}</dd></div>
             <div><dt>Priorities</dt><dd>{priorities.length ? PRIORITIES.filter((priority) => priorities.includes(priority)).join(', ') : 'To be discussed'}</dd></div>
             <div><dt>Ideas to discuss</dt><dd>{selectedIdeas.length ? selectedIdeas.map((idea) => idea.label).join(', ') : 'None selected'}</dd></div>
           </dl>

@@ -73,9 +73,13 @@ try {
   check(fileContent === normalizedClipboard, 'Downloaded brief differs from copied text');
   await brief.getByRole('status').filter({ hasText: 'Your brief is ready.' }).waitFor();
 
-  await brief.getByLabel('Approximate area', { exact: false }).fill('-2');
-  await brief.getByRole('status').filter({ hasText: 'Includes your selected materials and atmosphere.' }).waitFor();
-  check(!await brief.getByLabel('Approximate area', { exact: false }).evaluate((field) => field.checkValidity()), 'Invalid area accepted');
+  for (const invalidArea of ['0', '-2', '100001']) {
+    await brief.getByLabel('Approximate area', { exact: false }).fill(invalidArea);
+    await brief.getByRole('status').filter({ hasText: 'Includes your selected materials and atmosphere.' }).waitFor();
+    check(!await brief.getByLabel('Approximate area', { exact: false }).evaluate((field) => field.checkValidity()), `Invalid area ${invalidArea} accepted`);
+    check((await summary.locator('dd').allTextContents()).includes('To be measured.'), `Summary shows invalid area ${invalidArea}`);
+    check((await summary.locator('pre').textContent()).includes('Approximate area: To be measured.'), `Full preview shows invalid area ${invalidArea}`);
+  }
   await email.click();
   check(!await brief.getByRole('status').innerText().then((text) => text.includes('Review it and press Send')), 'Invalid area opened an email draft');
 
