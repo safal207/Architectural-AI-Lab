@@ -43,6 +43,7 @@ export default function Dashboard() {
   const viewerSectionRef = useRef(null);
   const activeLighting = lightingModes[lightingMode] ?? lightingModes.day;
   const currentStop = TOUR_STOPS.find((stop) => stop.id === (tourMode ? activeTourStopId : 'overview')) ?? TOUR_STOPS[0];
+  const inspirationStop = activeTourStopId === 'overview' ? null : TOUR_STOPS.find((stop) => stop.id === activeTourStopId);
   const detailRoom = tourMode && ['living', 'master', 'pool'].includes(activeTourStopId) ? selectedRoom : null;
   useEffect(() => {
     const section = viewerSectionRef.current;
@@ -160,7 +161,7 @@ export default function Dashboard() {
         <div className="experience-status"><span>Lighting: {activeLighting.name}</span><span>Material: {material?.name ?? 'Original hero materials'}</span><a href="#journey">Explore the floor plan <span aria-hidden="true">↓</span></a></div>
       </section>
       <section className="journey-section section-wrap" aria-label="Floor plan and route"><TourExperience activeStopId={activeTourStopId} onSelectStop={selectTourStop} tourMode={tourMode && !droneMode} onToggleTourMode={toggleTourMode} onViewStop={enterSpace} /></section>
-      <ProjectBrief material={material} lighting={activeLighting.name} inspirationSpace={tourMode ? currentStop.title : null} />
+      <ProjectBrief material={material} lighting={activeLighting.name} inspirationSpace={inspirationStop?.title ?? null} />
       <section className="contact-section section-wrap" id="contact" aria-labelledby="contact-title">
         <div>
           <p className="eyebrow">06 / Start a conversation</p>

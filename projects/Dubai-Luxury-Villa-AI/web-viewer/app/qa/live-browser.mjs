@@ -116,10 +116,7 @@ async function verifyPublishedAsset(page) {
 
 /** Verify the residence hero, decoded source image, space stories and local-brief entry points. */
 async function verifyPortfolio(page) {
-  const heading = page.getByRole('heading', { level: 1 });
-  await heading.waitFor();
-  check(/design|visual|architect|interior|kitchen|villa|space|home|project/i.test(await heading.innerText()),
-    'Hero heading does not explain the design service');
+  await page.getByRole('heading', { level: 1, name: 'See your space come to life.', exact: true }).waitFor();
 
   const heroImage = page.locator('.hero-image img');
   await heroImage.waitFor({ state: 'visible' });
@@ -183,6 +180,7 @@ async function verifyProjectBrief(page, label) {
   await brief.getByRole('textbox', { name: /What do you have in mind/ }).fill(notes);
   const expectedMaterial = (await page.locator('.material-switcher__options button[aria-pressed="true"] strong').innerText()).trim();
   const expectedLighting = (await page.locator('nav[aria-label="Lighting mode"] button[aria-pressed="true"]').innerText()).trim();
+  const exploredSpace = (await brief.locator('.brief-inspiration strong').innerText()).trim();
 
   const downloadPromise = page.waitForEvent('download');
   await brief.getByRole('button', { name: 'Download my brief', exact: true }).click();
@@ -197,6 +195,7 @@ async function verifyProjectBrief(page, label) {
     'Project: Kitchen design',
     `Material direction: ${expectedMaterial}`,
     `Preferred atmosphere: ${expectedLighting}`,
+    `Space explored in 3D: ${exploredSpace}`,
     notes,
     'Concept planning brief. Not construction documentation.'
   ]) {

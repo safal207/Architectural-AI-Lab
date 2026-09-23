@@ -151,10 +151,7 @@ try {
   const fallback = unavailable.locator('.scene-unavailable');
   await fallback.getByRole('heading', { name: "The 3D view couldn't open.", exact: true }).waitFor({ timeout: 120_000 });
   await fallback.getByRole('button', { name: 'Try the 3D view again', exact: true }).waitFor();
-  const heroHeading = unavailable.getByRole('heading', { level: 1 });
-  await heroHeading.waitFor();
-  check(/design|visual|architect|interior|kitchen|villa|space|home|project/i.test(await heroHeading.innerText()),
-    'Fallback page lost its design service heading');
+  await unavailable.getByRole('heading', { level: 1, name: 'See your space come to life.', exact: true }).waitFor();
   await unavailable.waitForFunction(() => {
     const image = document.querySelector('.scene-unavailable img');
     return image?.complete && image.naturalWidth >= 800;
