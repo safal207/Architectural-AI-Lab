@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 
 const output = process.env.QA_OUTPUT ?? 'qa-design-studio-output';
 await mkdir(output, { recursive: true });
@@ -29,6 +30,7 @@ async function download(name) {
 }
 try {
   await page.goto(process.env.VILLA_URL ?? 'http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+  await revealViewer(page);
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.modelState === 'loaded', undefined, { timeout: 120_000 });
   const tabs = page.getByRole('tablist', { name: 'Architectural gestures' });
   check(await page.locator('.design-intent__diagram').getAttribute('data-projection') === 'orthographic', 'Study must use the current model projection');

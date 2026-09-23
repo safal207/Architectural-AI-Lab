@@ -37,6 +37,11 @@ jobs:
           QA_OUTPUT: qa-output
         run: node qa/live-browser.mjs
 
+      - name: Check project brief and contact handoff
+        env:
+          VILLA_URL: https://safal207.github.io/Architectural-AI-Lab/
+        run: node qa/project-brief-contact.mjs
+
       - name: Upload live QA evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-performance-baseline-output';
@@ -20,6 +21,7 @@ const report = {
   environment: 'github-actions-headless-software-webgl',
   claimBoundary: 'Resource delivery and persistence are product signals; stop-transition timings are CI software-render diagnostics, not end-user GPU latency.',
   modelReadyMs: null,
+  modelRequestsBeforeReveal: null,
   modelRequests: 0,
   modelResponses: [],
   resourceSummary: {},
@@ -43,8 +45,14 @@ try {
     }
   });
 
-  const start = Date.now();
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await page.waitForLoadState('networkidle', { timeout: 120_000 });
+  report.modelRequestsBeforeReveal = report.modelRequests;
+  check(report.modelRequestsBeforeReveal === 0, 'Top-of-page visit requested villa.glb before the viewer was revealed');
+  check(await page.locator('.three-canvas canvas').count() === 0,
+    'Top-of-page visit constructed a WebGL canvas before the viewer was revealed');
+  const start = Date.now();
+  await revealViewer(page);
   await page.locator('.three-canvas canvas').waitFor({ state: 'visible', timeout: 120_000 });
   await page.waitForFunction(
     () => document.querySelector('.three-canvas')?.dataset.modelState === 'loaded',

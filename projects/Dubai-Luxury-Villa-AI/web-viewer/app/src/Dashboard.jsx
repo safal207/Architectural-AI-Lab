@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import roomsData from '../data/rooms.json';
 import DeveloperCase from './DeveloperCase';
 import DesignIntent from './DesignIntent';
@@ -39,14 +39,33 @@ export default function Dashboard() {
   const [droneMode, setDroneMode] = useState(false);
   const [activeTourStopId, setActiveTourStopId] = useState('overview');
   const [viewRequestId, setViewRequestId] = useState(0);
+  const [viewerActivated, setViewerActivated] = useState(false);
+  const viewerSectionRef = useRef(null);
   const activeLighting = lightingModes[lightingMode] ?? lightingModes.day;
   const currentStop = TOUR_STOPS.find((stop) => stop.id === (tourMode ? activeTourStopId : 'overview')) ?? TOUR_STOPS[0];
   const detailRoom = tourMode && ['living', 'master', 'pool'].includes(activeTourStopId) ? selectedRoom : null;
+  useEffect(() => {
+    const section = viewerSectionRef.current;
+    if (!section || viewerActivated) return undefined;
+    if (!('IntersectionObserver' in window)) {
+      setViewerActivated(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setViewerActivated(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '300px 0px' });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [viewerActivated]);
   /**
    * Leave drone mode and synchronize the stop, tour mode and room details.
    * Increment the view request even for the same stop so repeat selection resets its camera.
    */
   const selectTourStop = (stop) => {
+    setViewerActivated(true);
     setDroneMode(false);
     setViewRequestId((value) => value + 1);
     setActiveTourStopId(stop.id);
@@ -61,6 +80,7 @@ export default function Dashboard() {
   };
   /** Leave drone mode and request a fresh view; entering from overview selects the entry stop. */
   const toggleTourMode = (enabled) => {
+    if (enabled) setViewerActivated(true);
     setDroneMode(false);
     setViewRequestId((value) => value + 1);
     setTourMode(enabled);
@@ -89,7 +109,7 @@ export default function Dashboard() {
       <DesignIntent onEnterSpace={enterSpace} />
       <SpaceStories onEnter={enterSpace} />
       <ResidenceFilm />
-      <section className="experience-section" id="viewer" aria-labelledby="experience-title">
+      <section className="experience-section" id="viewer" ref={viewerSectionRef} aria-labelledby="experience-title">
         <header className="viewer-toolbar">
           <div><p className="eyebrow">03 / The residence studio</p><h2 id="experience-title" tabIndex={-1}>Make yourself <em>at home.</em></h2><p>Move between rooms. Compare finishes. See the light change.</p></div>
           <div className="lighting-control"><span className="control-label">The time of day</span><nav aria-label="Lighting mode">
@@ -105,9 +125,24 @@ export default function Dashboard() {
           </aside>
           <div className="residence-workbench">
             <article className="viewer-panel">
-              <SceneBoundary><Suspense fallback={<div className="scene-placeholder" role="status"><span className="eyebrow">Preparing your visit</span><p>Opening the residence…</p></div>}>
-                <VillaViewer droneMode={droneMode} setDroneMode={setDroneMode} viewRequestId={viewRequestId} selectedRoom={selectedRoom} lightingMode={activeLighting} material={material} tourMode={tourMode} activeTourStopId={activeTourStopId} onSelectTourStop={selectTourStop} onExitTour={() => toggleTourMode(false)} />
-              </Suspense></SceneBoundary>
+              {viewerActivated ? (
+                <SceneBoundary><Suspense fallback={<div className="scene-placeholder" role="status"><span className="eyebrow">Preparing your visit</span><p>Opening the residence…</p></div>}>
+                  <VillaViewer droneMode={droneMode} setDroneMode={setDroneMode} viewRequestId={viewRequestId} selectedRoom={selectedRoom} lightingMode={activeLighting} material={material} tourMode={tourMode} activeTourStopId={activeTourStopId} onSelectTourStop={selectTourStop} onExitTour={() => toggleTourMode(false)} />
+                </Suspense></SceneBoundary>
+              ) : (
+                <div className="viewer-preview">
+                  <img className="viewer-preview__image" src={`${import.meta.env.BASE_URL}editorial/residence-800.webp`} alt="Preview of the residence beside its pool" width="800" height="450" loading="lazy" />
+                  <div className="viewer-preview__content">
+                    <p className="eyebrow">Interactive residence</p>
+                    <h3>Explore the spaces for yourself.</h3>
+                    <p>Move through the rooms, compare finishes and see how the light changes.</p>
+                    <button className="viewer-preview__open" type="button" onClick={() => {
+                      document.getElementById('experience-title')?.focus({ preventScroll: true });
+                      setViewerActivated(true);
+                    }}>Open the interactive residence <span aria-hidden="true">↗</span></button>
+                  </div>
+                </div>
+              )}
             </article>
             <aside className="material-story material-study" aria-labelledby="material-title">
               <div className="material-study__intro"><p className="eyebrow">Finish study</p><h3 id="material-title">One house.<br /><em>Three expressions.</em></h3><p>Choose a palette to see stone, plaster, timber and decking change together.</p></div>
@@ -125,7 +160,7 @@ export default function Dashboard() {
         <div className="experience-status"><span>Lighting: {activeLighting.name}</span><span>Material: {material?.name ?? 'Original hero materials'}</span><a href="#journey">Explore the floor plan <span aria-hidden="true">↓</span></a></div>
       </section>
       <section className="journey-section section-wrap" aria-label="Floor plan and route"><TourExperience activeStopId={activeTourStopId} onSelectStop={selectTourStop} tourMode={tourMode && !droneMode} onToggleTourMode={toggleTourMode} onViewStop={enterSpace} /></section>
-      <ProjectBrief material={material} lighting={activeLighting.name} />
+      <ProjectBrief material={material} lighting={activeLighting.name} inspirationSpace={tourMode ? currentStop.title : null} />
       <section className="contact-section section-wrap" id="contact" aria-labelledby="contact-title">
         <div>
           <p className="eyebrow">06 / Start a conversation</p>

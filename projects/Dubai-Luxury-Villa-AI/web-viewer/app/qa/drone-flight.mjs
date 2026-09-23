@@ -1,6 +1,7 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 const url = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const out = process.env.QA_OUTPUT ?? 'qa-drone-flight-output';
 await mkdir(out, { recursive: true });
@@ -36,6 +37,7 @@ async function start(page) {
   page.on('pageerror', error=>report.errors.push(String(error)));
   page.on('console', msg=>{if(msg.type()==='error')report.errors.push(msg.text());});
   await page.goto(url+'?lighting=day', { waitUntil:'domcontentloaded' });
+  await revealViewer(page);
   await page.waitForFunction(()=>document.querySelector('.three-canvas')?.dataset.modelState==='loaded',null,{timeout:120000});
   await page.locator('.three-canvas').scrollIntoViewIfNeeded();
   await page.waitForFunction(()=>Boolean(document.querySelector('.three-canvas')?.dataset.cameraPosition));

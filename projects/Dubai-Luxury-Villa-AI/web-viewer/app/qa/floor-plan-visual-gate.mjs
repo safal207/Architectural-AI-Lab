@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-floor-plan-output';
@@ -57,6 +58,7 @@ try {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1100 }, deviceScaleFactor: 1 });
   observe(desktop);
   await desktop.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
+  await revealViewer(desktop);
   await waitForModel(desktop);
   const tour = await openFloorTwo(desktop);
 
@@ -88,6 +90,7 @@ try {
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   observe(mobile);
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
+  await revealViewer(mobile);
   await waitForModel(mobile);
   const mobileTour = await openFloorTwo(mobile);
   await fastClick(mobileTour.locator('.client-graph li').filter({ hasText: 'Upper landing' }).getByRole('button'));

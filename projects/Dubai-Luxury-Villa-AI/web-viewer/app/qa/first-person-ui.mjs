@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-first-person-output';
@@ -109,6 +110,7 @@ try {
   });
 
   await desktop.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
+  await revealViewer(desktop);
   await waitForModel(desktop);
   await enterHouse(desktop);
 
@@ -242,6 +244,7 @@ try {
   });
 
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
+  await revealViewer(mobile);
   await waitForModel(mobile);
   await enterHouse(mobile);
 
