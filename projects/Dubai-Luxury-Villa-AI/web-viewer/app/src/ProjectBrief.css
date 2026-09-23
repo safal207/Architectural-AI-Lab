@@ -56,8 +56,46 @@
 .project-brief .brief-priorities__options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 14px; }
 .project-brief .brief-priorities__options label { display: flex; align-items: center; gap: 9px; min-height: 35px; color: #625e53; font-size: 11px; cursor: pointer; }
 .project-brief .brief-priorities__options input { flex: 0 0 auto; width: 14px; height: 14px; margin: 0; accent-color: #454b3d; cursor: pointer; }
+.project-brief fieldset.brief-optional-ideas { margin: 0 0 24px; }
+.project-brief .brief-optional-ideas legend { margin-bottom: 7px; }
+.project-brief .brief-optional-ideas legend > span { padding-left: 10px; color: var(--muted, #756e62); font-size: 9px; }
+.project-brief .brief-optional-ideas__intro { margin: 0 0 13px; color: var(--muted, #756e62); font-size: 10px; line-height: 1.6; }
+.project-brief .brief-optional-ideas__options { display: grid; gap: 8px; }
+.project-brief .brief-optional-ideas__options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 13px;
+  border: 1px solid #c4bfaf;
+  color: var(--ink, #292923);
+  cursor: pointer;
+}
+.project-brief .brief-optional-ideas__options label:has(input:checked) { border-color: #454b3d; background: #edece3; }
+.project-brief .brief-optional-ideas__options input { flex: 0 0 auto; width: 15px; height: 15px; margin: 2px 0 0; accent-color: #454b3d; cursor: pointer; }
+.project-brief .brief-optional-ideas__options strong { display: block; font-size: 11px; font-weight: 600; line-height: 1.4; }
+.project-brief .brief-optional-ideas__options small { display: block; margin-top: 3px; color: #56584f; font-size: 10px; line-height: 1.45; }
+.project-brief .brief-optional-ideas__options input:focus-visible { outline: 2px solid #936349; outline-offset: 3px; }
 .project-brief .brief-inspiration { margin: -12px 0 24px; color: var(--muted, #756e62); font-size: 10px; line-height: 1.5; }
 .project-brief .brief-inspiration strong { color: var(--ink, #292923); font-weight: 500; }
+
+.project-brief .brief-summary { margin: 23px 0 17px; padding: 19px 20px; background: #e9e7db; }
+.project-brief .brief-summary__header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.project-brief .brief-summary h3,
+.project-brief .brief-next-steps h3 { margin: 0 0 14px; color: var(--ink, #292923); font-size: 13px; font-weight: 600; }
+.project-brief .brief-summary__header button { flex: 0 0 auto; padding: 0; border: 0; border-bottom: 1px solid currentColor; background: transparent; color: #454b3d; font: inherit; font-size: 10px; cursor: pointer; }
+.project-brief .brief-summary__header button:focus-visible { outline: 2px solid #936349; outline-offset: 3px; }
+.project-brief .brief-summary dl { display: grid; gap: 8px; margin: 0; }
+.project-brief .brief-summary dl > div { display: grid; grid-template-columns: minmax(90px, 33%) minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.project-brief .brief-summary dt { color: #56584f; font-size: 11px; }
+.project-brief .brief-summary dd { margin: 0; overflow-wrap: anywhere; color: var(--ink, #292923); font-size: 11px; line-height: 1.5; }
+.project-brief .brief-summary p { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid #cac7ba; color: #56584f; font-size: 11px; line-height: 1.55; }
+.project-brief .brief-full-preview { margin-top: 15px; border-top: 1px solid #cac7ba; padding-top: 12px; }
+.project-brief .brief-full-preview summary { width: fit-content; color: #454b3d; font-size: 11px; cursor: pointer; }
+.project-brief .brief-full-preview summary:focus-visible { outline: 2px solid #936349; outline-offset: 3px; }
+.project-brief .brief-full-preview pre { margin: 13px 0 0; color: var(--ink, #292923); font: inherit; font-size: 11px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.project-brief .brief-next-steps { margin: 0 0 20px; }
+.project-brief .brief-next-steps h3 { margin-bottom: 6px; }
+.project-brief .brief-next-steps p { margin: 0; color: var(--muted, #756e62); font-size: 10px; line-height: 1.6; }
 
 .project-brief .brief-actions { display: grid; gap: 12px; }
 .project-brief .brief-email {
@@ -110,5 +148,7 @@
   .project-brief .brief-priorities__options { gap: 2px 10px; }
   .project-brief .brief-priorities__options label { gap: 7px; min-height: 38px; font-size: 10px; }
   .project-brief .brief-selected { flex-wrap: wrap; gap: 8px; }
+  .project-brief .brief-summary { padding: 17px 16px; }
+  .project-brief .brief-summary dl > div { grid-template-columns: minmax(80px, 32%) minmax(0, 1fr); }
   .project-brief .brief-other-actions { grid-template-columns: minmax(0, 1fr); }
 }

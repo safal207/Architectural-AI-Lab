@@ -36,6 +36,7 @@ export default function DeveloperCase({ onEnter }) {
             <a className="sales-hero__primary" href="#brief">Start your project <span aria-hidden="true">↗</span></a>
             <a className="sales-hero__secondary" href="#film"><span aria-hidden="true">▷</span> Watch the 18-second film</a>
           </div>
+          <p className="sales-hero__process">Choose your space · Add the views you need · Send a brief</p>
         </div>
       </div>
       <div className="hero-image">

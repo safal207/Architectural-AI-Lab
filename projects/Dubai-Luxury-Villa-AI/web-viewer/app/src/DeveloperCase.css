@@ -25,6 +25,7 @@
 .sales-hero__primary:hover, .sales-hero__primary:focus-visible { background: #4b563e; color: #fff; }
 .sales-hero__secondary { display: inline-flex; align-items: center; gap: 8px; border-bottom: 1px solid #bdb5a4; padding: 10px 0; font-size: 12px; }
 .sales-hero__secondary:hover { color: var(--accent); }
+.sales-hero--service .sales-hero__process { margin-top: 16px; color: var(--muted); font-size: 11px; line-height: 1.5; }
 .sales-hero--service .hero-index span:first-child { max-width: 55%; }
 .sales-hero--service .hero-image__caption > span:last-child { max-width: 17ch; }
 .sales-hero--service .hero-foot { gap: 18px; }

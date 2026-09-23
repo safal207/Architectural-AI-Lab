@@ -25,7 +25,16 @@ try {
   await brief.getByLabel('Approximate area', { exact: false }).fill('24.5');
   await brief.getByLabel('Where shall we begin?', { exact: false }).selectOption('Layout and storage');
   await brief.getByRole('checkbox', { name: 'Natural light' }).check();
+  const extraViews = brief.getByRole('checkbox', { name: /Additional room views/ });
+  const walkthrough = brief.getByRole('checkbox', { name: /Interactive 3D walkthrough/ });
+  check(!await extraViews.isChecked() && !await walkthrough.isChecked(), 'Optional scope ideas were preselected');
+  await extraViews.check();
+  await walkthrough.check();
   await brief.getByLabel('What do you have in mind?', { exact: false }).fill('Warm timber & garden views?\nSpace for family breakfasts.');
+  const summary = brief.locator('.brief-summary');
+  for (const detail of ['Kitchen design', 'Layout and storage', '24.5 m²', 'Additional room views', 'Interactive 3D walkthrough']) {
+    check((await summary.innerText()).includes(detail), `Enquiry summary is missing ${detail}`);
+  }
 
   const href = await email.getAttribute('href');
   const draft = new URL(href);
@@ -35,8 +44,13 @@ try {
   for (const detail of [
     'Project: Kitchen design', 'Location: Porto', 'Scope: Layout and storage',
     'Approximate area: 24.5 m²', 'Priorities: Natural light',
+    'Optional ideas to discuss: Additional room views; Interactive 3D walkthrough',
     'Warm timber & garden views?\r\nSpace for family breakfasts.'
   ]) check(body.includes(detail), `Email draft is missing ${detail}`);
+  await summary.getByText('Preview the full message', { exact: true }).click();
+  check((await summary.locator('pre').textContent()) === body.replace(/\r\n/g, '\n'), 'Full message preview differs from email body');
+  await summary.getByRole('button', { name: 'Edit choices' }).click();
+  check(await brief.getByRole('radio', { name: 'Villa architecture' }).evaluate((field) => field === document.activeElement), 'Edit choices did not return focus to the project options');
 
   // Let the user-action handler run without asking the test machine to launch an email app.
   await email.evaluate((element) => element.addEventListener('click', (event) => event.preventDefault(), { once: true, capture: true }));
