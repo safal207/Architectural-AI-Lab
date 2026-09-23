@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-visual-gates-output';
@@ -92,6 +93,7 @@ try {
   page.on('pageerror', (error) => report.pageErrors.push(String(error)));
 
   await page.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
+  await revealViewer(page);
   await waitForModel(page);
 
   await captureViewer(page, '01-exterior-overview');

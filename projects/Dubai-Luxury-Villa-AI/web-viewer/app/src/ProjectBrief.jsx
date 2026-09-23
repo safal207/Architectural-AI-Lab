@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './ProjectBrief.css';
 
 const PROJECT_TYPES = {
@@ -23,13 +23,43 @@ const PROJECT_TYPES = {
 };
 
 const PRIORITIES = ['Natural light', 'Generous storage', 'Natural materials', 'Easy upkeep'];
+const CONTACT_EMAIL = 'safal0645@gmail.com';
+const CONTACT_TELEGRAM = 'https://t.me/Alexfox14';
+
+/** Use one text source for the download, email draft and copy action. */
+function createBrief({ projectType, location, area, scope, priorities, notes, category, material, lighting, inspirationSpace }) {
+  const selectedPriorities = PRIORITIES.filter((priority) => priorities.includes(priority));
+  return [
+    'ARCHITECTURAL AI LAB / PROJECT BRIEF', '',
+    `Project: ${projectType}`,
+    `Location: ${location.trim() || 'To be defined.'}`,
+    `Scope: ${scope || 'To be defined.'}`,
+    `Approximate area: ${area ? `${Number(area)} m²` : 'To be measured.'}`,
+    `Area reference: ${category.areaHint}`,
+    `Priorities: ${selectedPriorities.length ? selectedPriorities.join('; ') : 'To be discussed.'}`, '',
+    'Reference: Dubai residence — Desert, distilled.',
+    ...(inspirationSpace ? [`Space explored in 3D: ${inspirationSpace}`] : []),
+    `Material direction: ${material?.name ?? 'Original villa materials'}`,
+    'Palette status: Concept reference only; not a material specification.',
+    `Preferred atmosphere: ${lighting}`, '',
+    'Your ideas:', notes.trim() || 'To be discussed.', '',
+    'Next details to define:',
+    ...(!location.trim() ? ['Project location'] : []),
+    category.nextDetail,
+    ...(!scope ? ['Project scope and required spaces'] : []),
+    'Household needs and daily routines',
+    'Budget range and target date',
+    'Reference images and preferred materials', '',
+    'Concept planning brief. Not construction documentation.',
+  ].join('\n');
+}
 
 /**
- * Collect shared project details and category-specific area/scope for a local text download.
- * Invalidate the prepared status when inputs, palette or lighting change; nothing is submitted.
+ * Collect shared project details and category-specific area/scope for a local brief.
+ * The visitor explicitly opens their email app or copies the text; this site stores and sends nothing.
  */
-export default function ProjectBrief({ material, lighting }) {
-  const [projectType, setProjectType] = useState('Villa architecture');
+export default function ProjectBrief({ material, lighting, inspirationSpace = null }) {
+  const [projectType, setProjectType] = useState('Kitchen design');
   const [location, setLocation] = useState('');
   const [detailsByType, setDetailsByType] = useState(() => Object.fromEntries(
     Object.keys(PROJECT_TYPES).map((type) => [type, { area: '', scope: '' }])
@@ -37,11 +67,17 @@ export default function ProjectBrief({ material, lighting }) {
   const [priorities, setPriorities] = useState([]);
   const [notes, setNotes] = useState('');
   const [prepared, setPrepared] = useState(false);
+  const [contactNotice, setContactNotice] = useState('');
+  const notesRef = useRef(null);
   const category = PROJECT_TYPES[projectType];
   const { area, scope } = detailsByType[projectType];
+  const briefContent = createBrief({ projectType, location, area, scope, priorities, notes, category, material, lighting, inspirationSpace });
+  const emailSubjectHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Project enquiry — ${projectType}`)}`;
+  const emailHref = `${emailSubjectHref}&body=${encodeURIComponent(briefContent.replace(/\n/g, '\r\n'))}`;
+  const emailNeedsCopy = emailHref.length > 1800;
 
-  useEffect(() => setPrepared(false), [
-    projectType, location, area, scope, priorities, notes, material?.id, material?.name, lighting
+  useEffect(() => { setPrepared(false); setContactNotice(''); }, [
+    projectType, location, area, scope, priorities, notes, material?.id, material?.name, lighting, inspirationSpace
   ]);
 
   /** Update one detail in the active project category while retaining the other categories' drafts. */
@@ -59,6 +95,49 @@ export default function ProjectBrief({ material, lighting }) {
       : [...current, priority]);
   }
 
+  /** Keep contact actions useful and prevent a blank or invalid request from opening. */
+  function validateContact(event) {
+    if (!event.currentTarget.closest('form')?.reportValidity()) {
+      event.preventDefault();
+      return false;
+    }
+    if (!location.trim() && !area && !scope && priorities.length === 0 && !notes.trim()) {
+      event.preventDefault();
+      setContactNotice('Add one detail about your project before opening a message.');
+      notesRef.current?.focus();
+      return false;
+    }
+    return true;
+  }
+
+  /** Copy the complete brief for a Telegram message or an email that exceeds safe URL length. */
+  async function copyBrief(event, destination = 'Telegram') {
+    if (!validateContact(event)) return;
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+      await navigator.clipboard.writeText(briefContent);
+    } catch {
+      const fallback = document.createElement('textarea');
+      fallback.value = briefContent;
+      fallback.setAttribute('readonly', '');
+      fallback.style.position = 'fixed';
+      fallback.style.opacity = '0';
+      document.body.appendChild(fallback);
+      fallback.select();
+      let copied = false;
+      try { copied = document.execCommand?.('copy') === true; }
+      catch { copied = false; }
+      finally { fallback.remove(); }
+      if (!copied) {
+        setContactNotice(`Copy is unavailable here. Download the brief and paste its text into ${destination}.`);
+        return;
+      }
+    }
+    setContactNotice(destination === 'email'
+      ? 'Brief copied. Open the email draft, paste the full text and press Send there.'
+      : 'Brief copied. Open Telegram and paste it into your message to @Alexfox14.');
+  }
+
   /**
    * Validate the form, download the current brief as UTF-8 text and mark it prepared.
    * Create a temporary object URL and revoke it after the browser has started the download.
@@ -66,40 +145,18 @@ export default function ProjectBrief({ material, lighting }) {
   function downloadBrief(event) {
     event.preventDefault();
     if (!event.currentTarget.reportValidity()) return;
-    const selectedPriorities = PRIORITIES.filter((priority) => priorities.includes(priority));
-    const content = [
-      'ARCHITECTURAL AI LAB / PROJECT BRIEF', '',
-      `Project: ${projectType}`,
-      `Location: ${location.trim() || 'To be defined.'}`,
-      `Scope: ${scope || 'To be defined.'}`,
-      `Approximate area: ${area ? `${Number(area)} m²` : 'To be measured.'}`,
-      `Area reference: ${category.areaHint}`,
-      `Priorities: ${selectedPriorities.length ? selectedPriorities.join('; ') : 'To be discussed.'}`, '',
-      `Reference: Dubai residence — Desert, distilled.`,
-      `Material direction: ${material?.name ?? 'Original villa materials'}`,
-      'Palette status: Concept reference only; not a material specification.',
-      `Preferred atmosphere: ${lighting}`, '',
-      'Your ideas:', notes.trim() || 'To be discussed.', '',
-      'Next details to define:',
-      ...(!location.trim() ? ['Project location'] : []),
-      category.nextDetail,
-      ...(!scope ? ['Project scope and required spaces'] : []),
-      'Household needs and daily routines',
-      'Budget range and target date',
-      'Reference images and preferred materials', '',
-      'Concept planning brief. Not construction documentation.',
-    ].join('\n');
-    const url = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' }));
+    const url = URL.createObjectURL(new Blob([briefContent], { type: 'text/plain;charset=utf-8' }));
     const link = document.createElement('a');
     link.href = url;
     link.download = 'architectural-ai-lab-project-brief.txt';
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setContactNotice('');
     setPrepared(true);
   }
   return (
     <section className="project-brief section-wrap" id="brief" aria-labelledby="brief-title">
-      <div><p className="eyebrow">05 / Your next space</p><h2 id="brief-title">Every home starts<br />with <em>a feeling.</em></h2><p>A villa, a kitchen, a room to call your own. Capture a direction for your project, starting with what speaks to you here.</p><span className="brief-note">Your brief downloads to your device. Nothing is submitted.</span></div>
+      <div><p className="eyebrow">05 / Your next space</p><h2 id="brief-title">Every home starts<br />with <em>a feeling.</em></h2><p>Start a custom concept and 3D visualization for a villa, kitchen or home interior. Tell us what you have in mind so we can discuss the scope and visual direction.</p><span className="brief-note">Your answers stay in this browser until you choose to email, copy or download them. No account is needed.</span></div>
       <form onSubmit={downloadBrief}>
         <fieldset><legend>What would you like to create?</legend><div className="brief-types">{Object.keys(PROJECT_TYPES).map((type) => <label key={type}><input type="radio" name="project-type" value={type} checked={projectType === type} onChange={() => setProjectType(type)} /><span>{type}</span></label>)}</div></fieldset>
         <div className="brief-project-fields">
@@ -132,10 +189,25 @@ export default function ProjectBrief({ material, lighting }) {
           </div>
         </fieldset>
         <label className="brief-label" htmlFor="project-notes">What do you have in mind? <span>Optional</span></label>
-        <textarea id="project-notes" rows="3" maxLength={3000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="A place, a mood, the way you want to live…" />
+        <textarea id="project-notes" ref={notesRef} rows="3" maxLength={3000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="A place, a mood, the way you want to live…" />
         <div className="brief-selected"><span>Selected palette · Concept</span><strong>{material?.name ?? 'Original villa materials'}</strong></div>
-        <button className="brief-download" type="submit">Download my brief <span aria-hidden="true">↓</span></button>
-        <p className="brief-result" role="status">{prepared ? 'Your brief is ready. Check your downloads.' : 'Includes your selected materials and atmosphere.'}</p>
+        {inspirationSpace && <p className="brief-inspiration">Space explored in 3D: <strong>{inspirationSpace}</strong></p>}
+        <div className="brief-actions">
+          {emailNeedsCopy ? <>
+            <button className="brief-email" type="button" onClick={(event) => copyBrief(event, 'email')}>Copy full brief for email <span aria-hidden="true">↗</span></button>
+            <p className="brief-action-note">This detailed brief is too long for a reliable email link. Copy it, open a draft to {CONTACT_EMAIL}, paste the text and send it there.</p>
+            <a className="brief-download" href={emailSubjectHref} onClick={validateContact}>Open email draft <span aria-hidden="true">↗</span></a>
+          </> : <>
+            <a className="brief-email" href={emailHref} onClick={(event) => { if (validateContact(event)) setContactNotice('Your email app should open a draft with this brief. Review it and press Send there.'); }}>Email my project brief <span aria-hidden="true">↗</span></a>
+            <p className="brief-action-note">Opens your email app with the brief addressed to {CONTACT_EMAIL}. Review and send it there.</p>
+          </>}
+          <div className="brief-other-actions">
+            <button type="button" onClick={(event) => copyBrief(event)}>Copy brief for Telegram</button>
+            <a href={CONTACT_TELEGRAM} target="_blank" rel="noopener noreferrer">Open @Alexfox14 <span aria-hidden="true">↗</span></a>
+          </div>
+          <button className="brief-download" type="submit">Download my brief <span aria-hidden="true">↓</span></button>
+        </div>
+        <p className="brief-result" role="status">{contactNotice || (prepared ? 'Your brief is ready. Check your downloads.' : 'Includes your selected materials and atmosphere.')}</p>
       </form>
     </section>
   );

@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 
 const output = process.env.QA_OUTPUT ?? 'qa-design-studio-output';
 await mkdir(output, { recursive: true });
@@ -29,6 +30,7 @@ async function download(name) {
 }
 try {
   await page.goto(process.env.VILLA_URL ?? 'http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+  await revealViewer(page);
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.modelState === 'loaded', undefined, { timeout: 120_000 });
   const tabs = page.getByRole('tablist', { name: 'Architectural gestures' });
   check(await page.locator('.design-intent__diagram').getAttribute('data-projection') === 'orthographic', 'Study must use the current model projection');
@@ -63,6 +65,8 @@ try {
   await waitStop('master');
   report.checks.push('Floor plan opens the selected room in the studio');
 
+  check(await page.getByRole('radio', { name: 'Kitchen design', exact: true }).isChecked(), 'Kitchen should be the starting project type');
+  await page.getByRole('radio', { name: 'Villa architecture', exact: true }).check();
   await page.getByLabel('Location', { exact: false }).fill('Lisbon');
   await page.getByLabel('Approximate area', { exact: false }).fill('320');
   await page.getByLabel('Where shall we begin?', { exact: false }).selectOption('New villa concept');

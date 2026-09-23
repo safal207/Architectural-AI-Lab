@@ -56,6 +56,52 @@
 .project-brief .brief-priorities__options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 14px; }
 .project-brief .brief-priorities__options label { display: flex; align-items: center; gap: 9px; min-height: 35px; color: #625e53; font-size: 11px; cursor: pointer; }
 .project-brief .brief-priorities__options input { flex: 0 0 auto; width: 14px; height: 14px; margin: 0; accent-color: #454b3d; cursor: pointer; }
+.project-brief .brief-inspiration { margin: -12px 0 24px; color: var(--muted, #756e62); font-size: 10px; line-height: 1.5; }
+.project-brief .brief-inspiration strong { color: var(--ink, #292923); font-weight: 500; }
+
+.project-brief .brief-actions { display: grid; gap: 12px; }
+.project-brief .brief-email {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 50px;
+  width: 100%;
+  padding: 15px 20px;
+  border: 0;
+  color: #f5f2eb;
+  background: #444b3c;
+  font-size: 12px;
+  text-decoration: none;
+  text-align: left;
+}
+.project-brief .brief-email:hover { background: #292f23; }
+.project-brief .brief-action-note { margin: -5px 0 4px; color: var(--muted, #756e62); font-size: 10px; line-height: 1.6; overflow-wrap: anywhere; }
+.project-brief .brief-other-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.project-brief .brief-other-actions button,
+.project-brief .brief-other-actions a,
+.project-brief .brief-download {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #989486;
+  color: var(--ink, #292923);
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.project-brief .brief-other-actions button:hover,
+.project-brief .brief-other-actions a:hover,
+.project-brief .brief-download:hover { background: #e8e4d9; }
+.project-brief .brief-actions :is(button, a):focus-visible { outline: 2px solid #936349; outline-offset: 3px; }
 
 @media (max-width: 500px) {
   .project-brief .brief-project-fields { grid-template-columns: minmax(0, 1fr); gap: 17px; }
@@ -64,4 +110,5 @@
   .project-brief .brief-priorities__options { gap: 2px 10px; }
   .project-brief .brief-priorities__options label { gap: 7px; min-height: 38px; font-size: 10px; }
   .project-brief .brief-selected { flex-wrap: wrap; gap: 8px; }
+  .project-brief .brief-other-actions { grid-template-columns: minmax(0, 1fr); }
 }

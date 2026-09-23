@@ -1,6 +1,7 @@
 import { chromium } from 'playwright';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'https://safal207.github.io/Architectural-AI-Lab/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-output';
@@ -115,10 +116,7 @@ async function verifyPublishedAsset(page) {
 
 /** Verify the residence hero, decoded source image, space stories and local-brief entry points. */
 async function verifyPortfolio(page) {
-  await page.getByRole('heading', {
-    level: 1,
-    name: /^Desert,\s*distilled\.$/
-  }).waitFor();
+  await page.getByRole('heading', { level: 1, name: 'See your space come to life.', exact: true }).waitFor();
 
   const heroImage = page.locator('.hero-image img');
   await heroImage.waitFor({ state: 'visible' });
@@ -131,8 +129,8 @@ async function verifyPortfolio(page) {
   await page.getByRole('button', { name: /Enter the residence/ }).waitFor({ state: 'visible' });
 
   const stories = page.locator('.space-stories');
-  await stories.getByRole('heading', { level: 3, name: 'The heart of the home.', exact: true }).waitFor();
-  await stories.getByRole('heading', { level: 3, name: 'Life, open to the sky.', exact: true }).waitFor();
+  await stories.getByRole('heading', { level: 3, name: 'The everyday, reimagined.', exact: true }).waitFor();
+  await stories.getByRole('heading', { level: 3, name: 'Evenings open to the sky.', exact: true }).waitFor();
   await stories.getByRole('button', { name: 'Explore the kitchen', exact: true }).waitFor();
   await stories.getByRole('button', { name: 'Explore the terrace', exact: true }).waitFor();
   check(await stories.locator('.space-story__image img').count() === 2, 'Expected kitchen and terrace image stories');
@@ -159,7 +157,7 @@ async function verifyGallery(page) {
     return image?.complete && image.naturalWidth > 0 && image.currentSrc.includes('/residence-');
   });
   await page.keyboard.press('ArrowLeft');
-  await gallery.getByRole('img', { name: /Fluted timber kitchen island/ }).waitFor();
+  await gallery.getByRole('img', { name: /fluted timber kitchen island/i }).waitFor();
   await page.keyboard.press('Escape');
   await gallery.waitFor({ state: 'hidden' });
   check(await openGallery.evaluate((button) => button === document.activeElement), 'Closing the gallery did not return focus to its trigger');
@@ -182,6 +180,7 @@ async function verifyProjectBrief(page, label) {
   await brief.getByRole('textbox', { name: /What do you have in mind/ }).fill(notes);
   const expectedMaterial = (await page.locator('.material-switcher__options button[aria-pressed="true"] strong').innerText()).trim();
   const expectedLighting = (await page.locator('nav[aria-label="Lighting mode"] button[aria-pressed="true"]').innerText()).trim();
+  const exploredSpace = (await brief.locator('.brief-inspiration strong').innerText()).trim();
 
   const downloadPromise = page.waitForEvent('download');
   await brief.getByRole('button', { name: 'Download my brief', exact: true }).click();
@@ -196,6 +195,7 @@ async function verifyProjectBrief(page, label) {
     'Project: Kitchen design',
     `Material direction: ${expectedMaterial}`,
     `Preferred atmosphere: ${expectedLighting}`,
+    `Space explored in 3D: ${exploredSpace}`,
     notes,
     'Concept planning brief. Not construction documentation.'
   ]) {
@@ -341,6 +341,7 @@ try {
   await verifyPortfolio(desktop);
   await verifyGallery(desktop);
   report.desktop.gallery = 'PASS';
+  await revealViewer(desktop);
   await waitForModel(desktop);
   report.desktop.asset = await verifyPublishedAsset(desktop);
   console.log('Desktop model and asset verified');
@@ -414,6 +415,7 @@ try {
   await verifyPortfolio(mobile);
   await verifyGallery(mobile);
   report.mobile.gallery = 'PASS';
+  await revealViewer(mobile);
   await waitForModel(mobile);
   await verifyMobileTour(mobile);
   report.mobile.housePlan = 'PASS';

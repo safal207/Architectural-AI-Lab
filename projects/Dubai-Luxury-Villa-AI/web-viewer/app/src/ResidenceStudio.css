@@ -34,7 +34,7 @@
   .experience-section .residence-workbench { display: flex; flex-direction: column; }
   .experience-section .material-study { order: -1; gap: 14px; padding: 18px; }
   .material-study__intro { display: none; }
-  .material-study__brief { display: none; }
+  .material-study__brief { margin-top: 4px; padding-top: 12px; }
 }
 @media (max-width: 700px) {
   .project-chapters { min-height: 52px; padding-inline: 20px; gap: 0; }

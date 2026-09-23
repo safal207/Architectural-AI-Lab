@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-material-microcontrast-output';
@@ -74,6 +75,7 @@ try {
   const captureUrl = new URL(baseUrl);
   captureUrl.searchParams.set('qaCapture', '1');
   await page.goto(captureUrl.toString(), { waitUntil: 'networkidle', timeout: 120_000 });
+  await revealViewer(page);
   await waitForModel(page);
 
   const tour = page.locator('.tour-experience');

@@ -1,0 +1,79 @@
+.sales-hero--service .sales-hero__copy {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr);
+  align-items: end;
+  gap: clamp(28px, 4vw, 72px);
+  padding-block: clamp(40px, 5vw, 76px) 42px;
+}
+.sales-hero--service .sales-hero__main { min-width: 0; }
+.sales-hero--service .sales-hero__kicker { margin-bottom: 22px; color: #675f50; }
+.sales-hero--service h1 {
+  font-size: clamp(53px, 5.5vw, 95px);
+  line-height: .98;
+  white-space: normal;
+  text-wrap: balance;
+}
+.sales-hero--service h1 span, .sales-hero--service h1 em { display: block; }
+.sales-hero--service h1 em { margin-left: 0; }
+.sales-hero--service .hero-aside { width: 100%; padding-bottom: 6px; }
+.sales-hero--service .sales-hero__lead { max-width: 430px; font-size: clamp(15px, 1.2vw, 19px); line-height: 1.5; color: var(--ink); }
+.sales-hero--service .sales-hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 24px; margin-top: 28px; }
+.sales-hero__primary {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 28px;
+  padding: 16px 18px; background: #343b2e; color: #fff; font-size: 13px; line-height: 1.2;
+}
+.sales-hero__primary:hover, .sales-hero__primary:focus-visible { background: #4b563e; color: #fff; }
+.sales-hero__secondary { display: inline-flex; align-items: center; gap: 8px; border-bottom: 1px solid #bdb5a4; padding: 10px 0; font-size: 12px; }
+.sales-hero__secondary:hover { color: var(--accent); }
+.sales-hero--service .hero-index span:first-child { max-width: 55%; }
+.sales-hero--service .hero-image__caption > span:last-child { max-width: 17ch; }
+.sales-hero--service .hero-foot { gap: 18px; }
+.sales-hero--service .hero-foot > span:first-child { text-transform: none; letter-spacing: 0; font-size: 11px; }
+.sales-hero--service .hero-foot a { margin-left: auto; }
+.service-offer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(36px, 8vw, 150px);
+  padding: clamp(65px, 8vw, 130px) 0;
+  scroll-margin-top: 72px;
+}
+.service-offer__intro h2 { font-size: clamp(42px, 4.2vw, 70px); }
+.service-offer__intro h2 em { color: #81775f; }
+.service-offer__intro > p:last-child { margin-top: 26px; max-width: 450px; color: var(--muted); font-size: 14px; }
+.service-offer__details { min-width: 0; align-self: center; }
+.service-offer__steps { border-top: 1px solid var(--line); }
+.service-offer__step { display: grid; grid-template-columns: 35px minmax(0,1fr); gap: 18px; padding: 19px 0; border-bottom: 1px solid var(--line); }
+.service-offer__step > span { color: var(--accent); font-size: 10px; padding-top: 6px; }
+.service-offer__step h3 { font-family: Georgia, serif; font-size: clamp(23px, 2vw, 31px); line-height: 1.2; letter-spacing: -.035em; }
+.service-offer__step p { color: var(--muted); font-size: 12px; max-width: 380px; margin-top: 7px; }
+.service-offer__scope { color: var(--muted); font-size: 11px; margin-top: 17px; }
+.service-offer__link { display: inline-flex; gap: 32px; justify-content: space-between; border-bottom: 1px solid #bdb5a4; padding: 8px 0; margin-top: 18px; font-size: 12px; }
+.service-offer__link:hover { color: var(--accent); }
+@media (max-width: 1000px) {
+  .sales-hero--service .sales-hero__copy { grid-template-columns: 1fr; gap: 26px; padding-top: 38px; }
+  .sales-hero--service h1 { font-size: clamp(58px, 8.6vw, 90px); }
+  .sales-hero--service .hero-aside { max-width: 680px; }
+  .sales-hero--service .sales-hero__lead { max-width: 620px; }
+  .service-offer { gap: 38px; }
+}
+@media (max-width: 700px) {
+  .sales-hero--service .sales-hero__copy { display: grid; gap: 22px; padding: 31px 0 31px; }
+  .sales-hero--service .hero-index span:first-child { max-width: 52%; }
+  .sales-hero--service .sales-hero__kicker { margin-bottom: 17px; }
+  .sales-hero--service h1 { font-size: clamp(46px, 10.5vw, 74px); line-height: 1; }
+  .sales-hero--service .hero-aside { display: block; margin-top: 0; }
+  .sales-hero--service .sales-hero__lead { font-size: 14px; max-width: 38ch; }
+  .sales-hero--service .sales-hero__actions { margin-top: 18px; gap: 8px 19px; }
+  .sales-hero__primary { padding: 14px 15px; font-size: 12px; }
+  .sales-hero__secondary { font-size: 11px; }
+  .sales-hero--service .hero-image__caption > span:last-child { max-width: 15ch; }
+  .sales-hero--service .hero-foot > span:first-child { font-size: 9px; max-width: 260px; }
+  .service-offer { grid-template-columns: 1fr; gap: 28px; padding: 66px 0; scroll-margin-top: 60px; }
+  .service-offer__intro h2 { font-size: clamp(40px, 10vw, 56px); }
+  .service-offer__intro > p:last-child { font-size: 12px; margin-top: 20px; }
+}
+@media (max-width: 400px) {
+  .sales-hero--service h1 { font-size: clamp(42px, 10.5vw, 52px); }
+  .sales-hero--service .sales-hero__actions { align-items: stretch; flex-direction: column; }
+  .sales-hero__primary, .sales-hero__secondary { width: fit-content; }
+}

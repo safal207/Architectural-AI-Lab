@@ -1,0 +1,13 @@
+.spaces-next {
+  display: flex; align-items: end; justify-content: space-between; gap: 24px;
+  border-top: 1px solid var(--line); margin-top: 72px; padding-top: 28px;
+}
+.spaces-next .eyebrow { margin-bottom: 10px; }
+.spaces-next p:last-child { max-width: 670px; color: var(--muted); font-size: 14px; }
+.spaces-next a { flex-shrink: 0; display: inline-flex; justify-content: space-between; gap: 32px; border-bottom: 1px solid #bdb5a4; padding-bottom: 8px; font-size: 12px; }
+.spaces-next a:hover { color: var(--accent); }
+@media (max-width: 700px) {
+  .spaces-next { display: block; margin-top: 44px; padding-top: 23px; }
+  .spaces-next p:last-child { font-size: 12px; }
+  .spaces-next a { margin-top: 18px; }
+}

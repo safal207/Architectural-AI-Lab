@@ -67,7 +67,7 @@ async function measure(page, label) {
       '.viewer-toolbar',
       '.app-grid',
       '.viewer-panel',
-      '.three-canvas',
+      '.viewer-preview',
       '.material-story',
       '.material-switcher',
       '.project-brief',
@@ -152,9 +152,10 @@ try {
 
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.locator('.sales-hero h1').waitFor({ state: 'visible', timeout: 30_000 });
-  // Measure the completed presentation, not the intentional image entrance
-  // scale or the Suspense placeholder for the separately loaded 3D module.
-  await page.locator('.three-canvas').waitFor({ state: 'visible', timeout: 60_000 });
+  // The first screen should render its poster without constructing WebGL.
+  await page.locator('.viewer-preview').waitFor({ state: 'visible', timeout: 60_000 });
+  check(await page.locator('.three-canvas canvas').count() === 0,
+    'Mobile first screen constructed the 3D viewer before it was requested');
   await page.locator('.hero-image img').evaluate((image) =>
     Promise.all(image.getAnimations().map((animation) => animation.finished))
   );
@@ -190,7 +191,9 @@ try {
   desktop.on('pageerror', (error) => report.pageErrors.push(String(error)));
   await desktop.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await desktop.addStyleTag({ content: 'html { scrollbar-gutter: stable; }' });
-  await desktop.locator('.three-canvas').waitFor({ state: 'visible', timeout: 60_000 });
+  await desktop.locator('.viewer-preview').waitFor({ state: 'visible', timeout: 60_000 });
+  check(await desktop.locator('.three-canvas canvas').count() === 0,
+    'Desktop first screen constructed the 3D viewer before it was requested');
   await desktop.locator('.hero-image img').evaluate((image) =>
     Promise.all(image.getAnimations().map((animation) => animation.finished))
   );

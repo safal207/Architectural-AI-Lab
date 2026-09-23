@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-editorial-resilience-output';
@@ -146,10 +147,11 @@ try {
     };
   });
   await unavailable.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+  await revealViewer(unavailable);
   const fallback = unavailable.locator('.scene-unavailable');
   await fallback.getByRole('heading', { name: "The 3D view couldn't open.", exact: true }).waitFor({ timeout: 120_000 });
   await fallback.getByRole('button', { name: 'Try the 3D view again', exact: true }).waitFor();
-  await unavailable.getByRole('heading', { level: 1, name: /^Desert,\s*distilled\.$/ }).waitFor();
+  await unavailable.getByRole('heading', { level: 1, name: 'See your space come to life.', exact: true }).waitFor();
   await unavailable.waitForFunction(() => {
     const image = document.querySelector('.scene-unavailable img');
     return image?.complete && image.naturalWidth >= 800;
