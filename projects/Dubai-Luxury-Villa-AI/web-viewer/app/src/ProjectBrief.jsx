@@ -41,6 +41,10 @@ function formatArea(area) {
   return hasValidArea(area) ? `${Number(area)} m²` : 'To be measured.';
 }
 
+function hasTargetTimeline(timeline) {
+  return Boolean(timeline) && timeline !== 'Exploring options';
+}
+
 /** Use one text source for the download, email draft and copy action. */
 function createBrief({ projectType, location, area, scope, budget, timeline, priorities, optionalIdeas, notes, category, material, lighting, inspirationSpace }) {
   const selectedPriorities = PRIORITIES.filter((priority) => priorities.includes(priority));
@@ -68,7 +72,7 @@ function createBrief({ projectType, location, area, scope, budget, timeline, pri
     category.nextDetail,
     ...(!scope ? ['Project scope and required spaces'] : []),
     ...(!budget.trim() ? ['Budget range'] : []),
-    ...(!timeline ? ['Target timing'] : []),
+    ...(!hasTargetTimeline(timeline) ? ['Target timing'] : []),
     'Household needs and daily routines',
     'Reference images and preferred materials', '',
     'Concept planning brief. Not construction documentation.',
@@ -106,7 +110,7 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
     hasValidArea(area),
     Boolean(scope),
     Boolean(budget.trim()),
-    Boolean(timeline),
+    hasTargetTimeline(timeline),
   ].filter(Boolean).length;
   const readinessMessage = readinessCount === 5
     ? 'Ready for a focused first conversation.'
@@ -259,7 +263,7 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
         <textarea id="project-notes" ref={notesRef} rows="3" maxLength={3000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="A place, a mood, the way you want to live…" />
         <div className="brief-selected"><span>Selected palette · Concept</span><strong>{material?.name ?? 'Original villa materials'}</strong></div>
         {inspirationSpace && <p className="brief-inspiration">Space explored in 3D: <strong>{inspirationSpace}</strong></p>}
-        <div className="brief-readiness" aria-label={`Brief readiness ${readinessCount} of 5 practical details`}>
+        <div className="brief-readiness" role="status" aria-live="polite" aria-atomic="true" aria-label={`Brief readiness ${readinessCount} of 5 practical details`}>
           <div><span>Brief readiness</span><strong>{readinessCount}/5 practical details</strong></div>
           <span className="brief-readiness__bar" aria-hidden="true"><span style={{ width: `${readinessCount * 20}%` }} /></span>
           <p>{readinessMessage}</p>
