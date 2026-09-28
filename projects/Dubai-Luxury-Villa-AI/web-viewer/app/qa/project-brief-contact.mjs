@@ -24,6 +24,8 @@ try {
   await brief.getByLabel('Location', { exact: false }).fill('Porto');
   await brief.getByLabel('Approximate area', { exact: false }).fill('24.5');
   await brief.getByLabel('Where shall we begin?', { exact: false }).selectOption('Layout and storage');
+  await brief.getByLabel('Budget range', { exact: false }).fill('€20k–30k');
+  await brief.getByLabel('Target timing', { exact: false }).selectOption('Within 3 months');
   await brief.getByRole('checkbox', { name: 'Natural light' }).check();
   const extraViews = brief.getByRole('checkbox', { name: /Additional room views/ });
   const walkthrough = brief.getByRole('checkbox', { name: /Interactive 3D walkthrough/ });
@@ -32,9 +34,10 @@ try {
   await walkthrough.check();
   await brief.getByLabel('What do you have in mind?', { exact: false }).fill('Warm timber & garden views?\nSpace for family breakfasts.');
   const summary = brief.locator('.brief-summary');
-  for (const detail of ['Kitchen design', 'Layout and storage', '24.5 m²', 'Additional room views', 'Interactive 3D walkthrough']) {
+  for (const detail of ['Kitchen design', 'Layout and storage', '24.5 m²', '€20k–30k', 'Within 3 months', 'Additional room views', 'Interactive 3D walkthrough']) {
     check((await summary.innerText()).includes(detail), `Enquiry summary is missing ${detail}`);
   }
+  check((await brief.locator('.brief-readiness strong').innerText()).includes('5/5'), 'Brief readiness did not reach 5/5 with all practical details');
 
   const href = await email.getAttribute('href');
   const draft = new URL(href);
@@ -43,7 +46,8 @@ try {
   const body = draft.searchParams.get('body');
   for (const detail of [
     'Project: Kitchen design', 'Location: Porto', 'Scope: Layout and storage',
-    'Approximate area: 24.5 m²', 'Priorities: Natural light',
+    'Approximate area: 24.5 m²', 'Budget range: €20k–30k', 'Target timing: Within 3 months',
+    'Priorities: Natural light',
     'Optional ideas to discuss: Additional room views; Interactive 3D walkthrough',
     'Warm timber & garden views?\r\nSpace for family breakfasts.'
   ]) check(body.includes(detail), `Email draft is missing ${detail}`);
@@ -75,7 +79,7 @@ try {
 
   for (const invalidArea of ['0', '-2', '100001']) {
     await brief.getByLabel('Approximate area', { exact: false }).fill(invalidArea);
-    await brief.getByRole('status').filter({ hasText: 'Includes your selected materials and atmosphere.' }).waitFor();
+    await brief.getByRole('status').filter({ hasText: 'Includes scope, budget, timing, materials and atmosphere' }).waitFor();
     check(!await brief.getByLabel('Approximate area', { exact: false }).evaluate((field) => field.checkValidity()), `Invalid area ${invalidArea} accepted`);
     check((await summary.locator('dd').allTextContents()).includes('To be measured.'), `Summary shows invalid area ${invalidArea}`);
     check((await summary.locator('pre').textContent()).includes('Approximate area: To be measured.'), `Full preview shows invalid area ${invalidArea}`);
