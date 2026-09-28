@@ -40,7 +40,7 @@ async function downloadBrief(page, filename) {
 /** Wait for the unprepared status and reject a stale download-ready claim after preferences change. */
 async function assertBriefNeedsDownload(page) {
   await page.locator('#brief').getByRole('status')
-    .filter({ hasText: 'Includes your selected materials and atmosphere.' }).waitFor();
+    .filter({ hasText: 'Includes scope, budget, timing, materials and atmosphere' }).waitFor();
   check(!await page.locator('#brief').getByRole('status').innerText().then((text) => text.includes('Your brief is ready.')),
     'Brief still claims it is prepared after preferences changed');
 }
