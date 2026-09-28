@@ -37,7 +37,20 @@ try {
   for (const detail of ['Kitchen design', 'Layout and storage', '24.5 m²', '€20k–30k', 'Within 3 months', 'Additional room views', 'Interactive 3D walkthrough']) {
     check((await summary.innerText()).includes(detail), `Enquiry summary is missing ${detail}`);
   }
-  check((await brief.locator('.brief-readiness strong').innerText()).includes('5/5'), 'Brief readiness did not reach 5/5 with all practical details');
+  const readiness = brief.locator('.brief-readiness');
+  check((await readiness.locator('strong').innerText()).includes('5/5'), 'Brief readiness did not reach 5/5 with all practical details');
+  check(await readiness.getAttribute('role') === 'status', 'Brief readiness is not exposed as a live status');
+  check(await readiness.getAttribute('aria-live') === 'polite' && await readiness.getAttribute('aria-atomic') === 'true', 'Brief readiness live-region semantics changed');
+
+  await brief.getByLabel('Target timing', { exact: false }).selectOption('Exploring options');
+  check((await readiness.locator('strong').innerText()).includes('4/5'), 'Exploring options incorrectly counted as a target timeline');
+  await summary.getByText('Preview the full message', { exact: true }).click();
+  const exploringPreview = await summary.locator('pre').textContent();
+  check(exploringPreview.includes('Target timing: Exploring options'), 'Exploration timing context was lost from the brief');
+  check(exploringPreview.includes('Next details to define:\n') && exploringPreview.includes('\nTarget timing\n'), 'Exploring options incorrectly removed target timing from next details');
+  await summary.getByText('Preview the full message', { exact: true }).click();
+  await brief.getByLabel('Target timing', { exact: false }).selectOption('Within 3 months');
+  check((await readiness.locator('strong').innerText()).includes('5/5'), 'Brief readiness did not return to 5/5 after a concrete target was restored');
 
   const href = await email.getAttribute('href');
   const draft = new URL(href);
