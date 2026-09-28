@@ -98,7 +98,7 @@ try {
     check((await summary.locator('pre').textContent()).includes('Approximate area: To be measured.'), `Full preview shows invalid area ${invalidArea}`);
   }
   await email.click();
-  check(!await brief.getByRole('status').innerText().then((text) => text.includes('Review it and press Send')), 'Invalid area opened an email draft');
+  check(!await brief.locator('.brief-result').innerText().then((text) => text.includes('Review it and press Send')), 'Invalid area opened an email draft');
 
   await brief.getByLabel('Approximate area', { exact: false }).fill('24.5');
   await brief.getByRole('radio', { name: 'Villa architecture' }).check();
