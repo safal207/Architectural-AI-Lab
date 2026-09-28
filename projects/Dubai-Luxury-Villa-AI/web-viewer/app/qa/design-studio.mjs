@@ -83,7 +83,7 @@ try {
   // Field edits invalidate the prepared status in a React effect after render.
   // Observe both states instead of sampling text before the effect has run.
   await page.locator('#brief').getByRole('status')
-    .filter({ hasText: /^Includes your selected materials and atmosphere\.$/ }).waitFor();
+    .filter({ hasText: /^Includes scope, budget, timing, materials and atmosphere when provided\.$/ }).waitFor();
   await page.getByRole('radio', { name: 'Villa architecture', exact: true }).check();
   check(await page.locator('#project-area').inputValue() === '320', 'Villa area was not remembered');
   check(await page.locator('#project-scope').inputValue() === 'New villa concept', 'Villa scope was not remembered');
