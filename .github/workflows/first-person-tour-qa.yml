@@ -38,6 +38,7 @@ jobs:
           node qa/pool-presentation.mjs
           node qa/drone-controls.mjs
           node qa/design-study.mjs
+          node qa/frame-pacer.mjs
 
       - name: Build viewer
         run: npm run build

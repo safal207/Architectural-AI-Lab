@@ -5,6 +5,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createScene } from './three/scene';
 import { createCamera, OVERVIEW_POSITION, OVERVIEW_TARGET, updateOverviewProjection } from './three/camera';
 import { createRenderer } from './three/renderer';
+import { createFramePacer } from './three/framePacer';
 import { createLights } from './three/lights';
 import { createInteriorLights } from './three/interiorLights';
 import { applyStairPresentation } from './three/stairPresentation';
@@ -469,6 +470,7 @@ export default function VillaViewer({
     updateOverviewProjection(camera);
 
     const renderer = createRenderer(THREE, container);
+    const framePacer = createFramePacer(renderer.getContext());
     renderer.shadowMap.enabled = true;
     renderer.domElement.style.touchAction = 'none';
     renderer.domElement.tabIndex = 0;
@@ -477,6 +479,7 @@ export default function VillaViewer({
     renderer.domElement.setAttribute('aria-describedby', viewerNoteId);
 
     const { ambient, hemisphere, sun, fill, environment } = createLights(THREE, scene, renderer);
+    if (container.clientWidth < 640) sun.shadow.mapSize.set(1024, 1024);
     const orbitControls = new OrbitControls(camera, renderer.domElement);
     orbitControls.enableDamping = true;
     orbitControls.target.fromArray(OVERVIEW_TARGET);
@@ -529,6 +532,7 @@ export default function VillaViewer({
     });
     /** Invalidate cached shadows and the presentation frame after Three.js restores GPU resources. */
     const contextRestored = () => {
+      framePacer.restored();
       // Three rebuilds GPU resources, so both cached shadows and the idle
       // presentation frame must be drawn again after context recovery.
       renderer.shadowMap.needsUpdate = true;
@@ -714,10 +718,13 @@ export default function VillaViewer({
 
       // A resting, hidden scene must not spend frames on weather effects.
       if (document.hidden || !runtime.visible) return;
+      // Keep at most one frame in flight so a slow GPU cannot block page input
+      // behind an ever-growing queue of weather renders. Dirty state is retained.
+      const canSubmitFrame = framePacer.ready();
       if (latestPropsRef.current.motion && runtime.atmosphere) {
         runtime.atmosphereDelta += delta;
         const frameBudget = runtime.isTouchDevice ? 1 / 24 : 1 / 30;
-        if (runtime.atmosphereDelta >= frameBudget) {
+        if (canSubmitFrame && runtime.atmosphereDelta >= frameBudget) {
           const step = Math.min(runtime.atmosphereDelta, 0.08);
           runtime.atmosphereDelta = 0;
           runtime.elapsed += step;
@@ -814,14 +821,18 @@ export default function VillaViewer({
         }
       }
 
-      if (runtime.needsRender) {
+      if (runtime.needsRender && canSubmitFrame) {
         renderer.render(scene, camera);
+        framePacer.submitted();
         // Mark the mode of this rendered frame, not only React's requested mode.
         // Browser QA must not sample the previous camera while a new frame is pending.
         container.dataset.renderedInteractionMode = runtime.isDrone ? 'drone' : runtime.isFirstPerson ? (runtime.isExplore ? 'explore' : 'guided') : 'orbit';
         container.dataset.cameraPosition = camera.position.toArray().map((value) => value.toFixed(3)).join(',');
         container.dataset.cameraDirection = camera.getWorldDirection(new THREE.Vector3()).toArray().map((value) => value.toFixed(3)).join(',');
         container.dataset.atmosphereTime = runtime.elapsed.toFixed(3);
+        container.dataset.renderedWeather = latestPropsRef.current.weather;
+        container.dataset.renderedLighting = latestPropsRef.current.lightingMode?.name ?? '';
+        container.dataset.renderedMotion = latestPropsRef.current.motion ? 'running' : 'paused';
         runtime.needsRender = false;
       }
     };
@@ -830,6 +841,7 @@ export default function VillaViewer({
     return () => {
       runtime.disposed = true;
       if (runtime.frameId) cancelAnimationFrame(runtime.frameId);
+      framePacer.dispose();
       window.removeEventListener('resize', resize);
       resizeObserver?.disconnect();
       visibilityObserver?.disconnect();

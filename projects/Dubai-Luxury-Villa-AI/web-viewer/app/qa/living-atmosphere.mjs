@@ -94,7 +94,15 @@ async function frame(page, name) {
 }
 
 async function renderFrame(page) {
-  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  // GPU pacing can defer drawing for several animation callbacks. Wait for the
+  // actual submitted frame to match all requested controls, not merely two rAFs.
+  await page.waitForFunction(() => {
+    const view = document.querySelector('.three-canvas');
+    return Boolean(view?.dataset.renderedWeather)
+      && view.dataset.renderedWeather === view.dataset.weather
+      && view.dataset.renderedLighting === view.dataset.lightingMode
+      && view.dataset.renderedMotion === view.dataset.atmosphereMotion;
+  });
 }
 
 async function studioCapture(page, name) {

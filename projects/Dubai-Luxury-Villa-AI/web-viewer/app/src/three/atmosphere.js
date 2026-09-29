@@ -81,28 +81,36 @@ const SKY_FRAGMENT = /* glsl */ `
     float daylight = mix(1.0, 0.38, uNight) * (1.0 - uRain * 0.94);
     color += uSunColor * (halo * 0.20 + disc * 1.55) * daylight;
 
-    // Anisotropic noise produces long wisps rather than round smoke puffs.
-    vec2 cloudUv = d.xz / (0.30 + height);
-    cloudUv *= vec2(1.85, 3.75);
-    cloudUv += vec2(uTime * uWind * 0.0030, uTime * uWind * 0.0012);
-    float soft = cloudNoise(cloudUv);
-    float detail = cloudNoise(cloudUv * vec2(1.1, 2.9) + vec2(13.0, 3.0));
-    float density = mix(soft * 0.62 + detail * 0.38, soft, uRain);
-    float coverage = smoothstep(mix(0.48, 0.24, uRain), mix(0.70, 0.66, uRain), density);
-    coverage *= smoothstep(-0.015, 0.09, d.y);
-    coverage *= mix(0.76, 0.93, uRain);
-    vec3 cloudColor = uCloud * (0.78 + density * 0.37);
-    cloudColor += uSunColor * halo * 0.13 * (1.0 - uRain) * (1.0 - uNight);
-    color = mix(color, cloudColor, coverage);
+    // Below this horizon fade, cloud coverage is exactly zero. Skip both FBM
+    // evaluations there, including during the transmission and PMREM passes.
+    float coverage = 0.0;
+    if (d.y > -0.015) {
+      // Anisotropic noise produces long wisps rather than round smoke puffs.
+      vec2 cloudUv = d.xz / (0.30 + height);
+      cloudUv *= vec2(1.85, 3.75);
+      cloudUv += vec2(uTime * uWind * 0.0030, uTime * uWind * 0.0012);
+      float soft = cloudNoise(cloudUv);
+      float detail = cloudNoise(cloudUv * vec2(1.1, 2.9) + vec2(13.0, 3.0));
+      float density = mix(soft * 0.62 + detail * 0.38, soft, uRain);
+      coverage = smoothstep(mix(0.48, 0.24, uRain), mix(0.70, 0.66, uRain), density);
+      coverage *= smoothstep(-0.015, 0.09, d.y);
+      coverage *= mix(0.76, 0.93, uRain);
+      vec3 cloudColor = uCloud * (0.78 + density * 0.37);
+      cloudColor += uSunColor * halo * 0.13 * (1.0 - uRain) * (1.0 - uNight);
+      color = mix(color, cloudColor, coverage);
+    }
 
     // A sparse stable star field fades out naturally through cloud cover.
-    vec2 starsUv = vec2(atan(d.z, d.x) / 6.2831853, asin(clamp(d.y, -1.0, 1.0)) / 3.1415927);
-    vec2 starCell = starsUv * vec2(750.0, 375.0);
-    float starSeed = hash21(floor(starCell));
-    vec2 starDelta = fract(starCell) - vec2(0.5);
-    float star = (1.0 - smoothstep(0.03, 0.16, length(starDelta))) * step(0.993, starSeed);
-    color += vec3(0.60, 0.72, 0.88) * star * uNight * (1.0 - uRain) * (1.0 - coverage)
-      * smoothstep(0.06, 0.35, d.y);
+    // Night and rain uniforms are binary: every skipped contribution was zero.
+    if (uNight > 0.5 && uRain < 0.5 && d.y > 0.06) {
+      vec2 starsUv = vec2(atan(d.z, d.x) / 6.2831853, asin(clamp(d.y, -1.0, 1.0)) / 3.1415927);
+      vec2 starCell = starsUv * vec2(750.0, 375.0);
+      float starSeed = hash21(floor(starCell));
+      vec2 starDelta = fract(starCell) - vec2(0.5);
+      float star = (1.0 - smoothstep(0.03, 0.16, length(starDelta))) * step(0.993, starSeed);
+      color += vec3(0.60, 0.72, 0.88) * star * uNight * (1.0 - uRain) * (1.0 - coverage)
+        * smoothstep(0.06, 0.35, d.y);
+    }
 
     gl_FragColor = vec4(color, 1.0);
     #include <tonemapping_fragment>
@@ -287,7 +295,9 @@ export function createAtmosphere(THREE, { scene, renderer, camera, root, quality
   const sky = new THREE.Mesh(geometry, material);
   sky.name = 'runtime_procedural_sky';
   sky.frustumCulled = false;
-  sky.renderOrder = -1000;
+  // Draw after opaque architecture: the far-plane depth test rejects hidden
+  // pixels before the expensive sky shader. Transmission/transparent draws follow.
+  sky.renderOrder = 1000;
   sky.position.copy(camera.position);
   // Camera changes also draw the sky correctly when environmental motion is paused.
   sky.onBeforeRender = (_renderer, _scene, renderCamera) => {

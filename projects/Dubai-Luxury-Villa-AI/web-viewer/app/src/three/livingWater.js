@@ -61,7 +61,9 @@ export function createLivingWater(THREE, { scene, root, renderer, quality = 'hig
       uniform vec2 uPoolCenter;
       uniform vec2 uPoolSize;
       vec2 poolHash(vec2 p) {
-        return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453);
+        vec3 h = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+        h += dot(h, h.yzx + 33.33);
+        return fract((h.xx + h.yz) * h.zy);
       }
       vec2 poolSlope(vec2 p) {
         float t = uPoolTime;

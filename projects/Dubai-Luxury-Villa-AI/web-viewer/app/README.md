@@ -66,6 +66,7 @@ The scene now shares one time-of-day and weather state across sky, light, water 
 - `three/livingWater.js`: a transmissive surface fitted to the repaired pool, wind ripples and rain rings. The original GLB and its source provenance remain intact.
 - `three/livingDetails.js`: planted foliage with matching shadow deformation, cabinet pulls, timber joints, ceramics and warm fixture details. Rain changes exposed coping and terrace roughness while retaining the selected palette.
 - `VillaViewer.jsx`: visible-only effect updates, capped animation cadence, cached static fixture shadows and bounded foliage shadow updates. One loaded model is reused across weather, palette and navigation changes.
+- `three/framePacer.js`: a nonblocking GPU fence keeps at most one scene frame in flight, so slow graphics cannot build an input-blocking render queue. Compact displays use a smaller refraction pass and shadow map; the sky skips pixels already covered by the house.
 
 The pool remains the shallow concept geometry from the source model. Sky reflection is an environment approximation, not a ray-traced reflection of the villa; caustics and rainfall are presentation effects. No external weather, image service or new runtime dependency is required.
 

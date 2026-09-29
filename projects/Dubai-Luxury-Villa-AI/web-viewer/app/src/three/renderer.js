@@ -16,7 +16,11 @@ export function createRenderer(THREE, container) {
     preserveDrawingBuffer: qaCapture
   });
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  const compact = container.clientWidth < 640 || window.matchMedia('(pointer: coarse)').matches;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, compact ? 1 : 1.5));
+  // Refraction is deliberately soft: a smaller shared glass/water pass leaves
+  // room for responsive input on mobile GPUs while keeping the main image sharp.
+  renderer.transmissionResolutionScale = compact ? 0.5 : 0.75;
   // CSS owns the display size; resizing only updates the drawing buffer.
   renderer.setSize(
     container.clientWidth,
