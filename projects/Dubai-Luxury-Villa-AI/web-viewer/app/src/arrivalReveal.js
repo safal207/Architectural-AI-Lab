@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { placeFirstPersonCamera } from './walkthroughEngine.js';
 
 export const ARRIVAL_CLEARANCE = 0.18;
+export const ARRIVAL_ENTRY_OFFSET_LOCAL = [0.2, 0, 0];
 
 /** Nine double-sided ray probes around the camera path; not a human collision system. */
 export function checkArrivalClearance(root, from, to) {
@@ -34,7 +35,7 @@ export function checkArrivalClearance(root, from, to) {
   } finally { material.dispose(); }
 }
 
-/** Use real authored eye points; compose the final view toward the existing infinity edge. */
+/** Compose an arrival-only eye point beside the stair guard; leave navigation anchors unchanged. */
 export function buildArrivalRoute(root, aspect = 16 / 9) {
   for (const name of ['tour_entry', 'tour_living', 'infinity_lip']) {
     if (!root?.getObjectByName(name)) throw new Error(`Arrival requires ${name}`);
@@ -44,6 +45,11 @@ export function buildArrivalRoute(root, aspect = 16 / 9) {
   if (!placeFirstPersonCamera(entry, root, 'entry') || !placeFirstPersonCamera(living, root, 'living')) {
     throw new Error('Arrival eye points are unavailable');
   }
+  // The canonical entry is close to the stair glass. Offset this presentation
+  // camera only, then test the entire segment with the unchanged nine-ray guard.
+  entry.position.add(new THREE.Vector3(...ARRIVAL_ENTRY_OFFSET_LOCAL)
+    .applyQuaternion(root.getWorldQuaternion(new THREE.Quaternion())));
+  entry.lookAt(living.position);
   if (Math.abs(entry.position.y - living.position.y) > 0.5) throw new Error('Arrival must stay on the ground floor');
   const water = root.getObjectByName('infinity_lip').getWorldPosition(new THREE.Vector3());
   water.y = Math.max(water.y, living.position.y - 0.4);
