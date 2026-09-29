@@ -6,7 +6,9 @@ import { revealViewer } from './reveal-viewer.mjs';
 
 const output = process.env.QA_OUTPUT ?? 'qa-arrival-output';
 await mkdir(output, { recursive: true });
-const report = { status: 'RUNNING', prHeadSha: process.env.PR_HEAD_SHA ?? null,
+// Motion/control sampling uses a bounded raster budget; full-resolution visual gates stay separate.
+const motionPixelRatio = 0.5;
+const report = { status: 'RUNNING', rasterBoundary: 'Functional camera/control QA at DPR 0.5; not full-resolution visual quality or device performance.', prHeadSha: process.env.PR_HEAD_SHA ?? null,
   checkoutSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), scenarios: [] };
 const browser = await chromium.launch({ headless: true, args: [
   '--disable-background-timer-throttling',
@@ -66,9 +68,9 @@ async function observeArrival(page) {
 
 try {
   for (const [name, width, reducedMotion] of [['desktop', 1440, 'no-preference'], ['mobile', 390, 'no-preference'], ['reduced', 320, 'reduce']]) {
-    const scenario = { name, width, checks: [], errors: [], modelRequests: 0 };
+    const scenario = { name, width, deviceScaleFactor: motionPixelRatio, checks: [], errors: [], modelRequests: 0 };
     report.scenarios.push(scenario);
-    const page = await browser.newPage({ viewport: { width, height: 1000 }, hasTouch: width < 700, isMobile: width < 700, reducedMotion });
+    const page = await browser.newPage({ viewport: { width, height: 1000 }, deviceScaleFactor: motionPixelRatio, hasTouch: width < 700, isMobile: width < 700, reducedMotion });
     page.setDefaultTimeout(30_000);
     page.on('pageerror', e => scenario.errors.push(String(e)));
     page.on('request', request => { if (new URL(request.url()).pathname.endsWith('/villa.glb')) scenario.modelRequests++; });
@@ -79,6 +81,12 @@ try {
       const controls = page.getByRole('region', { name: 'Arrival preview' });
       await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.modelState === 'loaded', null, { timeout: 120_000 });
       assert.equal(await controls.getAttribute('data-phase'), 'idle', 'Preview started without a click');
+      scenario.raster = await canvas.evaluate(element => ({
+        devicePixelRatio: window.devicePixelRatio, cssWidth: element.clientWidth,
+        pixelWidth: element.querySelector('canvas').width
+      }));
+      assert.equal(scenario.raster.devicePixelRatio, motionPixelRatio);
+      assert(Math.abs(scenario.raster.pixelWidth - scenario.raster.cssWidth * motionPixelRatio) <= 1);
       await observeArrival(page);
       await page.bringToFront();
       await controls.getByRole('button', { name: 'Play arrival' }).click();
