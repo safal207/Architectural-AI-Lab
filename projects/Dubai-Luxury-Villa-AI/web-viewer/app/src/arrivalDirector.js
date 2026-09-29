@@ -1,9 +1,15 @@
 export const ARRIVAL_HOLD_SECONDS = 2;
 export const ARRIVAL_MOVE_SECONDS = 6;
 
-/** Deterministic, pausable director driven by the existing viewer render loop. */
-export function createArrivalDirector({ camera, route, reducedMotion = false, onChange = () => {}, onFinish = () => {} }) {
+/**
+ * Advance the presentation by active monotonic time, not the walking physics delta.
+ * Slow frames must not stretch an eight-second film into minutes. Pause/resume
+ * starts a new clock segment, so time spent hidden or paused is never caught up.
+ * The injected millisecond clock makes the same behavior deterministic in tests.
+ */
+export function createArrivalDirector({ camera, route, reducedMotion = false, onChange = () => {}, onFinish = () => {}, now = () => performance.now() }) {
   let elapsed = 0;
+  let lastTick = now();
   let phase = reducedMotion ? 'still' : 'threshold';
   let previousPhase = phase;
   let ended = false;
@@ -29,7 +35,13 @@ export function createArrivalDirector({ camera, route, reducedMotion = false, on
     get progress() { return Math.min(1, Math.max(0, (elapsed - ARRIVAL_HOLD_SECONDS) / ARRIVAL_MOVE_SECONDS)); },
     update(delta) {
       if (ended || !['threshold', 'moving'].includes(phase) || !Number.isFinite(delta) || delta <= 0) return false;
-      elapsed += Math.min(delta, 0.05);
+      const tick = now();
+      if (!Number.isFinite(tick)) { lastTick = null; return false; }
+      if (!Number.isFinite(lastTick) || tick < lastTick) { lastTick = tick; return false; }
+      const activeSeconds = (tick - lastTick) / 1000;
+      lastTick = tick;
+      if (activeSeconds <= 0) return false;
+      elapsed = Math.min(ARRIVAL_HOLD_SECONDS + ARRIVAL_MOVE_SECONDS, elapsed + activeSeconds);
       const progress = Math.min(1, Math.max(0, (elapsed - ARRIVAL_HOLD_SECONDS) / ARRIVAL_MOVE_SECONDS));
       apply(progress);
       const next = progress > 0 ? 'moving' : 'threshold';
@@ -43,8 +55,12 @@ export function createArrivalDirector({ camera, route, reducedMotion = false, on
       phase = 'paused';
       notify();
     },
-    resume() { if (!ended && phase === 'paused') { phase = previousPhase; notify(); } },
-    reduceMotion() { if (!ended) { elapsed = 0; apply(0); phase = 'still'; notify(); } },
+    resume() {
+      if (!ended && phase === 'paused') { lastTick = now(); phase = previousPhase; notify(); }
+    },
+    reduceMotion() {
+      if (!ended) { elapsed = 0; lastTick = now(); apply(0); phase = 'still'; notify(); }
+    },
     finish,
     cancel(notifyChange = true) {
       if (ended) return;

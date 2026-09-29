@@ -8,14 +8,21 @@ function fixture(reducedMotion = false) {
   const living = { position: point(4), quaternion: point(1) };
   const phases = [];
   const finished = [];
+  let milliseconds = 0;
   const camera = {
     position: { x: NaN, lerpVectors(a, b, t) { this.x = a.x + (b.x - a.x) * t; } },
     quaternion: { x: NaN, slerpQuaternions(a, b, t) { this.x = t; } }
   };
   const director = createArrivalDirector({ camera, route: { entry, living }, reducedMotion,
+    now: () => milliseconds,
     onChange: (value) => phases.push(value), onFinish: (value) => finished.push(value) });
-  const tick = (count) => { for (let i = 0; i < count; i++) director.update(1 / 60); };
-  return { camera, director, phases, finished, tick, entry, living };
+  const advance = (seconds) => {
+    milliseconds += seconds * 1000;
+    return director.update(Math.min(seconds, 0.05)); // The real viewer caps walking physics.
+  };
+  const tick = (count) => { for (let i = 0; i < count; i++) advance(1 / 60); };
+  return { camera, director, phases, finished, tick, advance, entry, living,
+    setClock: (value) => { milliseconds = value; } };
 }
 const checks = [];
 {
@@ -59,9 +66,14 @@ const checks = [];
 {
   const f = fixture();
   for (const delta of [NaN, Infinity, -1, 0]) assert.equal(f.director.update(delta), false);
-  for (let i = 0; i < 20; i++) f.director.update(1000);
   assert.equal(f.camera.position.x, 0);
-  checks.push('Invalid deltas ignored and background-sized frame gaps capped');
+  f.advance(4);
+  const position = f.camera.position.x;
+  f.setClock(NaN); assert.equal(f.director.update(0.05), false);
+  f.setClock(10000); assert.equal(f.director.update(0.05), false);
+  f.setClock(9000); assert.equal(f.director.update(0.05), false);
+  assert.equal(f.camera.position.x, position);
+  checks.push('Invalid deltas and invalid/backward clock samples cannot move the camera');
 }
 {
   const f = fixture(true); f.tick(1000);
@@ -80,5 +92,29 @@ const checks = [];
   assert.equal(f.director.phase, 'still');
   assert.equal(f.camera.position.x, 0);
   checks.push('Enabling reduced motion during playback cancels automatic movement');
+}
+{
+  for (const fps of [60, 10, 1]) {
+    const f = fixture();
+    for (let i = 0; i < 4 * fps; i++) f.advance(1 / fps);
+    assert(Math.abs(f.director.progress - 1 / 3) < 1e-10, `${fps} FPS changed progress at four active seconds`);
+    for (let i = 0; i < 4 * fps + 1; i++) f.advance(1 / fps);
+    assert.equal(f.director.phase, 'complete', `${fps} FPS stretched the arrival`);
+    assert.equal(f.finished.length, 1);
+  }
+  checks.push('60, 10 and 1 FPS have identical active-time progress despite capped physics deltas');
+}
+{
+  const f = fixture();
+  f.advance(4);
+  const progress = f.director.progress;
+  const position = f.camera.position.x;
+  f.director.pause();
+  f.advance(3600);
+  assert.equal(f.camera.position.x, position);
+  f.director.resume();
+  f.advance(0.1);
+  assert(Math.abs(f.director.progress - progress - 0.1 / 6) < 1e-10, 'Resume caught up paused time');
+  checks.push('One hour paused adds zero playback time on resume');
 }
 console.log(JSON.stringify({ status: 'PASS', checks }, null, 2));
