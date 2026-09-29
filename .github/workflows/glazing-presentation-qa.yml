@@ -1,0 +1,70 @@
+name: Living Glazing QA
+on:
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - '.github/workflows/glazing-presentation-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  glazing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+    env:
+      QA_OUTPUT: qa-glazing-output
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - name: Scope and shared-material negative controls
+        run: node qa/glazing-materials.mjs
+      - name: Build same-head before and after controls
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          import assert from 'node:assert/strict';
+          const path = 'src/three/interiorLights.js';
+          const original = readFileSync(path, 'utf8');
+          const hook = '  applyLivingGlazingPresentation(THREE, root);';
+          assert.equal(original.split(hook).length, 2, 'Glazing hook is not unique');
+          try {
+            writeFileSync(path, original.replace(hook, '  // Reference control: leave exported smoke glazing unchanged.'));
+            execFileSync('npm', ['run', 'build', '--', '--outDir', 'dist-glazing-reference'], { stdio: 'inherit' });
+          } finally { writeFileSync(path, original); }
+          assert.equal(readFileSync(path, 'utf8'), original);
+          execFileSync('npm', ['run', 'build', '--', '--outDir', 'dist-glazing-current'], { stdio: 'inherit' });
+          NODE
+          git diff --exit-code -- src
+      - name: Install pinned browser dependency
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve local comparisons
+        run: |
+          python3 -m http.server 4181 --bind 127.0.0.1 --directory dist-glazing-reference > /tmp/glazing-before.log 2>&1 &
+          python3 -m http.server 4182 --bind 127.0.0.1 --directory dist-glazing-current > /tmp/glazing-after.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4181/ >/dev/null && curl -fsS http://127.0.0.1:4182/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/glazing-before.log /tmp/glazing-after.log
+          exit 1
+      - name: Native-resolution desktop and mobile comparisons
+        run: node qa/glazing-browser.mjs
+      - name: Upload comparison evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: living-glazing-before-after
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-glazing-output
+          if-no-files-found: warn
+          retention-days: 14

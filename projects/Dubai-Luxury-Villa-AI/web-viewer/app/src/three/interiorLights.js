@@ -1,3 +1,5 @@
+import { applyLivingGlazingPresentation } from './glazingPresentation.js';
+
 const FIXTURE_GROUPS = [
   {
     names: ['living_downlight_v04_00', 'living_downlight_v04_01', 'living_downlight_v04_02'],
@@ -71,6 +73,9 @@ function addPointFromNode(THREE, group, root, definition, nodeName, multiplier) 
  * control of exposure and mode transitions.
  */
 export function createInteriorLights(THREE, scene, root, multiplier = 1) {
+  // Prepare pane response before the first cached shadow render. Fixture
+  // positions, intensities and day/evening/night exposure remain unchanged.
+  applyLivingGlazingPresentation(THREE, root);
   const group = new THREE.Group();
   group.name = 'runtime_interior_lights';
   scene.add(group);
