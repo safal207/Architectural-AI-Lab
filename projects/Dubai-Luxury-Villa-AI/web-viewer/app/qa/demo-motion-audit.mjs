@@ -18,6 +18,13 @@ function summarize(samples, observedMs) {
     gapP50Ms: percentile(0.5), gapP95Ms: percentile(0.95), gapMaxMs: gaps.at(-1),
     trailingNoNewTimelineMs: observedMs - last.wallMs };
 }
+function classifyRenderer(renderer) {
+  const value = String(renderer ?? '').toLowerCase();
+  if (!value) return 'unreported';
+  if (value.includes('swiftshader')) return 'software-swiftshader';
+  if (value.includes('llvmpipe') || value.includes('softpipe') || value.includes('software')) return 'software-other';
+  return 'non-software-or-unknown';
+}
 const url = process.env.VILLA_URL || 'http://127.0.0.1:4173/';
 const output = process.env.QA_OUTPUT_DIR || 'qa-output';
 const sampleMs = 20000;
@@ -27,6 +34,7 @@ const report = {
   artifactRun: process.env.VILLA_ARTIFACT_RUN || null,
   sampleMs, profiles: {}, pageErrors: [], failedResponses: [],
   productAcceptance: 'NOT_PROVEN',
+  acceptanceReason: 'This CI diagnostic forces a software renderer. It can expose cadence pathologies but cannot establish physical-device or native-GPU smoothness.',
   boundary: 'Desktop DPR 1 diagnostic with default environmental motion enabled. Mutation timestamps observe submitted film-time updates; held camera poses may repeat. Not GPU completion, presentation or physical-device FPS. Each mode is sampled for up to 20 seconds, not the complete route.'
 };
 await mkdir(output, { recursive: true });
@@ -91,6 +99,7 @@ try {
       }, ms);
     }), requestedMs);
     // Preserve raw evidence even when a following assertion fails.
+    observation.rendererClass = classifyRenderer(observation.renderer);
     report.profiles[mode] = observation;
     assert.equal(observation.dpr, 1);
     assert.ok(observation.css[0] > 300 && observation.css[1] > 200);
@@ -110,6 +119,7 @@ try {
   }
   assert.deepEqual(report.pageErrors, []);
   assert.deepEqual(report.failedResponses, []);
+  report.measurementEnvironment = [...new Set(Object.values(report.profiles).map(profile => profile.rendererClass))];
   report.result = 'MEASURED'; // Never equate a successful diagnostic with product acceptance.
 } catch (error) {
   report.result = 'INCOMPLETE'; report.error = String(error); process.exitCode = 1;
