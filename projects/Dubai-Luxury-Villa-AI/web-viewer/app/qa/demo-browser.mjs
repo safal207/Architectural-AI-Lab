@@ -81,6 +81,8 @@ try {
     await panel.getByRole('button', { name: 'Drone orbit only', exact: true }).click();
     await renderedDemo(page);
     if (name === 'desktop') {
+      const orbitStarted = await snapshot(page);
+      assert.equal(orbitStarted.demoState, 'playing', 'Orbit demo must not self-pause immediately after its start scroll');
       await overlay.getByRole('button', { name: 'Pause tour', exact: true }).click();
       await renderedDemo(page);
     }

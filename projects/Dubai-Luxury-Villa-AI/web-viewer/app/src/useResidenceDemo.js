@@ -85,6 +85,12 @@ export function useResidenceDemo({ runtimeRef, modelState, onRestore, onLighting
       runtime.isDrone = false; runtime.isFirstPerson = false; runtime.isExplore = false;
       active = true; reason = ''; lastLightingStop = null;
       container.scrollIntoView({ block: 'center', behavior: 'instant' });
+      // scrollIntoView updates layout synchronously, but IntersectionObserver reports later.
+      // Refresh the cached visibility now so a just-started demo cannot self-pause on stale offscreen state.
+      const visibleBounds = container.getBoundingClientRect();
+      runtime.visible = visibleBounds.bottom >= -80 && visibleBounds.top <= window.innerHeight + 80
+        && visibleBounds.right >= -80 && visibleBounds.left <= window.innerWidth + 80;
+      runtime.lastFrameTime = performance.now();
       clock = createDemoFrameClock(board.duration); clock.start(preference.matches);
       container.dataset.demoReport = JSON.stringify(board.report);
       apply(true); notify(true);
