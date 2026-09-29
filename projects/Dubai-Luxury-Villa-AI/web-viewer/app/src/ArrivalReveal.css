@@ -1,0 +1,25 @@
+.arrival-reveal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  padding: 18px 20px;
+  margin: 0 0 14px;
+  border: 1px solid #c5bcaa;
+  background: #ebe6d9;
+  color: #30362c;
+}
+.arrival-reveal__copy { min-width: 0; }
+.arrival-reveal__copy h3 { margin: 0; font-family: Georgia, serif; font-size: 23px; line-height: 1.2; font-weight: 400; }
+.arrival-reveal__copy p { margin: 5px 0 0; font-size: 11px; line-height: 1.5; }
+.arrival-reveal__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.arrival-reveal button { min-height: 44px; padding: 11px 15px; border: 1px solid #454b3d; background: #454b3d; color: #fff; font: inherit; font-size: 12px; cursor: pointer; }
+.arrival-reveal button:hover:not(:disabled) { background: #30362c; }
+.arrival-reveal button:focus-visible { outline: 2px solid #936349; outline-offset: 3px; }
+.arrival-reveal button:disabled { opacity: .5; cursor: wait; }
+.arrival-reveal__secondary { background: transparent !important; color: #30362c !important; }
+@media (max-width: 700px) {
+  .arrival-reveal { flex-direction: column; align-items: stretch; gap: 12px; padding: 15px; }
+  .arrival-reveal__actions { width: 100%; }
+  .arrival-reveal button { flex: 1 1 auto; }
+}

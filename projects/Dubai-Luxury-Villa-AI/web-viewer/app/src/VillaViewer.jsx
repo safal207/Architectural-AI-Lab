@@ -22,6 +22,8 @@ import {
   updateTourCameraProjection
 } from './walkthroughEngine';
 import './Walkthrough.css';
+import { buildArrivalRoute, createArrivalDirector } from './arrivalReveal.js';
+import './ArrivalReveal.css';
 
 const MATERIAL_FAMILY_BY_NAME = {
   M4_OrganicWarmLimestone: 'stone',
@@ -265,6 +267,8 @@ export default function VillaViewer({
   const mobileMotionRef = useRef({ forward: 0, right: 0 });
   const latestPropsRef = useRef(null);
 
+  const [arrivalPhase, setArrivalPhase] = useState('idle');
+  const [arrivalError, setArrivalError] = useState('');
   const [modelState, setModelState] = useState('loading');
   const [modelProgress, setModelProgress] = useState(null);
   const [modelLoadCount, setModelLoadCount] = useState(0);
@@ -294,7 +298,8 @@ export default function VillaViewer({
     tourMode,
     activeTourStopId,
     interactionMode,
-    droneMode
+    droneMode,
+    onSelectTourStop
   };
 
   /** Apply the latest atmosphere and current room's lighting profile to the existing lights and request a frame. */
@@ -340,12 +345,17 @@ export default function VillaViewer({
   const syncView = () => {
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
+    runtime.arrival?.cancel();
+    runtime.arrival = null;
+    const landingPose = runtime.arrivalLandingPose;
+    runtime.arrivalLandingPose = null;
     runtime.needsRender = true;
 
     const current = latestPropsRef.current;
     const isFirstPerson = !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
     const isExplore = isFirstPerson && current.interactionMode === 'explore';
     const wasFirstPerson = runtime.isFirstPerson;
+    if (!isFirstPerson || current.activeTourStopId !== 'entry') runtime.arrivalRequested = false;
 
     runtime.isFirstPerson = isFirstPerson;
     runtime.isExplore = isExplore;
@@ -375,6 +385,10 @@ export default function VillaViewer({
         current.activeTourStopId,
         { presentation: !isExplore }
       );
+      if (landingPose && !isExplore && current.activeTourStopId === 'living') {
+        runtime.camera.position.copy(landingPose.position);
+        runtime.camera.quaternion.copy(landingPose.quaternion);
+      }
       runtime.firstPersonAvailable = tourPlaced;
       setFirstPersonReady(tourPlaced);
       if (tourPlaced && isExplore) {
@@ -399,6 +413,27 @@ export default function VillaViewer({
 
       syncLighting();
       if (!wasFirstPerson || !isExplore) setHasInteracted(false);
+      if (runtime.arrivalRequested && !isExplore && tourPlaced) {
+        runtime.arrivalRequested = false;
+        try {
+          const route = buildArrivalRoute(runtime.villaRoot, runtime.camera.aspect);
+          mountRef.current.dataset.arrivalClearance = JSON.stringify({ ...route.clearance, from: route.entry.position.toArray(), to: route.living.position.toArray(), water: route.water.toArray() });
+          runtime.arrival = createArrivalDirector({
+            camera: runtime.camera, route,
+            reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+            onChange: (phase) => { setArrivalPhase(phase); runtime.needsRender = true; },
+            onFinish: (pose) => {
+              runtime.arrivalLandingPose = pose;
+              runtime.arrival = null;
+              latestPropsRef.current.onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'living'));
+            }
+          });
+        } catch (error) {
+          setArrivalError('The moving preview is unavailable. You can still explore each room.');
+          setArrivalPhase('blocked');
+          mountRef.current.dataset.arrivalClearance = JSON.stringify({ clear: false, reason: String(error.message) });
+        }
+      }
       return;
     }
 
@@ -645,6 +680,7 @@ export default function VillaViewer({
 
       if (runtime.orbitControls?.enabled) runtime.orbitControls.update();
       runtime.drone.update(delta);
+      if (runtime.arrival?.update(delta)) runtime.needsRender = true;
 
       const desktopCanWalk = canUseWalkthroughKeyboard(runtime, renderer.domElement, document);
       const touchCanWalk = Boolean(
@@ -729,6 +765,8 @@ export default function VillaViewer({
         container.dataset.renderedInteractionMode = runtime.isDrone ? 'drone' : runtime.isFirstPerson ? (runtime.isExplore ? 'explore' : 'guided') : 'orbit';
         container.dataset.cameraPosition = camera.position.toArray().map((value) => value.toFixed(3)).join(',');
         container.dataset.cameraDirection = camera.getWorldDirection(new THREE.Vector3()).toArray().map((value) => value.toFixed(3)).join(',');
+        container.dataset.arrivalPhase = runtime.arrival?.phase ?? 'idle';
+        container.dataset.arrivalProgress = String(runtime.arrival?.progress ?? 0);
         runtime.needsRender = false;
       }
     };
@@ -736,6 +774,8 @@ export default function VillaViewer({
 
     return () => {
       runtime.disposed = true;
+      runtime.arrival?.cancel(false);
+      runtime.arrival = null;
       if (runtime.frameId) cancelAnimationFrame(runtime.frameId);
       window.removeEventListener('resize', resize);
       resizeObserver?.disconnect();
@@ -780,6 +820,47 @@ export default function VillaViewer({
     setDroneMode(false);
     setHasInteracted(false);
   }, [tourMode, activeTourStopId, viewRequestId]);
+
+  useEffect(() => {
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const pause = () => runtimeRef.current?.arrival?.pause();
+    const visibility = () => { if (document.hidden) pause(); };
+    const escape = (event) => { if (event.key === 'Escape') pause(); };
+    const reduce = () => { if (motion.matches) runtimeRef.current?.arrival?.reduceMotion(); };
+    document.addEventListener('visibilitychange', visibility);
+    window.addEventListener('blur', pause);
+    window.addEventListener('keydown', escape);
+    motion.addEventListener('change', reduce);
+    const canvas = runtimeRef.current?.renderer.domElement;
+    canvas?.addEventListener('webglcontextlost', pause);
+    return () => {
+      document.removeEventListener('visibilitychange', visibility);
+      window.removeEventListener('blur', pause);
+      window.removeEventListener('keydown', escape);
+      motion.removeEventListener('change', reduce);
+      canvas?.removeEventListener('webglcontextlost', pause);
+    };
+  }, []);
+
+  const startArrival = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime?.villaRoot || modelState !== 'loaded') return;
+    setArrivalError('');
+    runtime.arrivalRequested = true;
+    setInteractionMode('guided');
+    setDroneMode(false);
+    onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'entry'));
+  };
+  const arrivalActive = ['threshold', 'moving', 'paused', 'still'].includes(arrivalPhase);
+  const arrivalMessages = {
+    idle: 'An eight-second introduction: entry, living room, water.',
+    threshold: '01 / At the threshold. A moment to arrive.',
+    moving: '02 / The living room opens toward the water.',
+    paused: 'Paused. Continue when you are ready.',
+    still: 'Reduced motion: first view. Choose when to reveal the water.',
+    complete: 'The view is yours. Continue exploring at your own pace.',
+    blocked: arrivalError
+  };
 
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
   const isFirstPerson = !droneMode && tourMode && activeTourStopId !== 'overview';
@@ -867,6 +948,15 @@ export default function VillaViewer({
         <button type="button" aria-pressed={droneMode} onClick={() => setDroneMode(true)} disabled={modelState !== 'loaded'}>Drone flight</button>
         <button type="button" onClick={() => { setDroneMode(false); onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'entry')); }} disabled={modelState !== 'loaded'}>Go inside <span aria-hidden="true">↗</span></button>
       </div>
+      <section className="arrival-reveal" aria-label="Arrival preview" data-phase={arrivalPhase}>
+        <div className="arrival-reveal__copy"><h3>From shade to water.</h3><p role="status" aria-live="polite" aria-atomic="true">{arrivalMessages[arrivalPhase]}</p></div>
+        <div className="arrival-reveal__actions">
+          {!arrivalActive && <button type="button" onClick={startArrival} disabled={modelState !== 'loaded' || !onSelectTourStop}>Play arrival</button>}
+          {['threshold', 'moving'].includes(arrivalPhase) && <button type="button" onClick={() => runtimeRef.current?.arrival?.pause()}>Pause arrival</button>}
+          {arrivalPhase === 'paused' && <button type="button" onClick={() => runtimeRef.current?.arrival?.resume()}>Resume arrival</button>}
+          {arrivalActive && <button className="arrival-reveal__secondary" type="button" onClick={() => runtimeRef.current?.arrival?.finish()}>Show water view</button>}
+        </div>
+      </section>
       <div className="three-canvas-shell">
         <div
           ref={mountRef}
