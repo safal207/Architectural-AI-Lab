@@ -344,8 +344,7 @@ export default function VillaViewer({
 
     const raining = current.weather === 'rain';
     const mode = current.lightingMode?.name?.toLowerCase() ?? 'evening';
-    const demoActive = runtime.demoSession?.active === true;
-    const state = { mode, weather: current.weather, wind: current.wind, motion: current.motion && !demoActive };
+    const state = { mode, weather: current.weather, wind: current.wind, motion: current.motion };
     runtime.atmosphere?.setState(state);
     runtime.water?.setState(state);
     runtime.details?.setState(state);
@@ -734,8 +733,7 @@ export default function VillaViewer({
       // Keep at most one frame in flight so a slow GPU cannot block page input
       // behind an ever-growing queue of weather renders. Dirty state is retained.
       const canSubmitFrame = framePacer.ready();
-      const environmentMotion = latestPropsRef.current.motion && !runtime.demoSession?.active;
-      if (environmentMotion && runtime.atmosphere) {
+      if (latestPropsRef.current.motion && runtime.atmosphere) {
         runtime.atmosphereDelta += delta;
         const frameBudget = runtime.isTouchDevice ? 1 / 24 : 1 / 30;
         if (canSubmitFrame && framePacer.canAnimate() && runtime.atmosphereDelta >= frameBudget) {
@@ -847,7 +845,7 @@ export default function VillaViewer({
         container.dataset.atmosphereTime = runtime.elapsed.toFixed(3);
         container.dataset.renderedWeather = latestPropsRef.current.weather;
         container.dataset.renderedLighting = latestPropsRef.current.lightingMode?.name ?? '';
-        container.dataset.renderedMotion = environmentMotion ? 'running' : runtime.demoSession?.active ? 'paused-for-demo' : 'paused';
+        container.dataset.renderedMotion = latestPropsRef.current.motion ? 'running' : 'paused';
         runtime.needsRender = false;
       }
     };
