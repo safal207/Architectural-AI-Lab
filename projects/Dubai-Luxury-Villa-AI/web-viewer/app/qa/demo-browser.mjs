@@ -51,6 +51,10 @@ try {
     assert.equal(current.viewMode, 'demo');
     if (name === 'desktop') {
       await page.waitForFunction(() => Number(document.querySelector('.three-canvas')?.dataset.renderedDemoTime) > 2.1, null, { timeout: 120000 });
+      const paced = await snapshot(page);
+      const clockLead = Number(paced.demoTime) - Number(paced.renderedDemoTime);
+      assert.ok(clockLead >= -0.002 && clockLead <= 0.252,
+        `Film clock led the last rendered pose by ${clockLead.toFixed(3)}s; expected at most one capped pose step`);
       await overlay.getByRole('button', { name: 'Pause tour', exact: true }).click();
       await renderedDemo(page);
       const paused = await snapshot(page);
