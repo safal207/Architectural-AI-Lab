@@ -1,11 +1,13 @@
-name: Native Render Profile
+name: Render Investigation (manual)
 on:
-  pull_request:
-    paths:
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/render-profile.mjs'
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/three/**'
-      - '.github/workflows/render-profile-qa.yml'
   workflow_dispatch:
+    inputs:
+      experiment:
+        description: Measurement to reproduce (diagnostic, not a release gate)
+        required: true
+        default: completed-work
+        type: choice
+        options: [completed-work, cold, candidates]
 permissions:
   contents: read
 jobs:
@@ -18,39 +20,50 @@ jobs:
         working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
     env:
       VILLA_URL: http://127.0.0.1:4173/
-      QA_OUTPUT: qa-render-profile-output
-      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      QA_OUTPUT: qa-render-investigation-output
+      EXPERIMENT: ${{ inputs.experiment }}
+      PR_HEAD_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
       - run: npm ci --no-audit --no-fund
-      - name: Build instrumented copy and restore production sources
+      - name: Build diagnostic copy; verify product sources were restored
         run: |
-          node --check qa/render-profile.mjs
-          node qa/render-profile.mjs --build
+          case "$EXPERIMENT" in
+            completed-work|candidates) node qa/render-profile.mjs --build ;;
+            cold) node qa/render-cold-profile.mjs --build ;;
+            *) echo "Unknown experiment"; exit 1 ;;
+          esac
           git diff --exit-code -- src public package.json package-lock.json
-      - name: Install browser
+      - name: Install pinned browser
         run: |
           npm install --no-save --package-lock=false playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Serve instrumented build
+      - name: Serve diagnostic build
         run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 --directory dist-render-profile > /tmp/render-profile.log 2>&1 &
+          DIR=dist-render-profile
+          if [ "$EXPERIMENT" = cold ]; then DIR=dist-cold-profile; fi
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory "$DIR" > /tmp/render-investigation.log 2>&1 &
           for i in {1..60}; do
             if curl -fsS "$VILLA_URL" >/dev/null; then exit 0; fi
             sleep 1
           done
-          cat /tmp/render-profile.log
+          cat /tmp/render-investigation.log
           exit 1
-      - name: Profile fixed entry and living poses at native DPR 1
-        run: node qa/render-profile.mjs
-      - name: Upload measurements including partial failures
+      - name: Run selected measurement
+        run: |
+          case "$EXPERIMENT" in
+            completed-work) node qa/render-profile.mjs ;;
+            cold) node qa/render-cold-profile.mjs ;;
+            candidates) node qa/render-candidate.mjs ;;
+          esac
+      - name: Upload measurements even on failure
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: native-render-profile
-          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-render-profile-output
+          name: render-investigation-${{ inputs.experiment }}
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-render-investigation-output
           if-no-files-found: warn
           retention-days: 14
