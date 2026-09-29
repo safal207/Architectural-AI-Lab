@@ -7,7 +7,17 @@ const output = process.env.QA_OUTPUT ?? 'qa-arrival-output';
 await mkdir(output, { recursive: true });
 const report = { status: 'RUNNING', prHeadSha: process.env.PR_HEAD_SHA ?? null,
   checkoutSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), scenarios: [] };
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({
+  headless: true,
+  // This test validates the foreground arrival experience. Headless Chromium can
+  // otherwise freeze requestAnimationFrame at phase=threshold without emitting
+  // a window blur event, which is not representative of an active viewer tab.
+  args: [
+    '--disable-background-timer-throttling',
+    '--disable-backgrounding-occluded-windows',
+    '--disable-renderer-backgrounding'
+  ]
+});
 try {
   for (const [name, width, reducedMotion] of [['desktop', 1440, 'no-preference'], ['mobile', 390, 'no-preference'], ['reduced', 320, 'reduce']]) {
     const scenario = { name, width, checks: [], errors: [], modelRequests: 0 };
