@@ -14,6 +14,8 @@ import { createAtmosphere } from './three/atmosphere';
 import { createLivingWater } from './three/livingWater';
 import { createLivingDetails } from './three/livingDetails';
 import AtmosphereControls from './AtmosphereControls';
+import { useResidenceDemo } from './useResidenceDemo';
+import ResidenceDemoControls from './ResidenceDemoControls';
 import { TOUR_STOPS } from './tourData';
 import { createDroneFlight } from './droneFlight';
 import './DroneFlight.css';
@@ -305,6 +307,12 @@ export default function VillaViewer({
     edgeType: null
   });
 
+  const demo = useResidenceDemo({
+    runtimeRef, modelState,
+    onRestore: () => { syncView(); syncLighting(); },
+    onLighting: () => syncLighting()
+  });
+
   latestPropsRef.current = {
     selectedRoom,
     lightingMode,
@@ -325,12 +333,13 @@ export default function VillaViewer({
     runtime.needsRender = true;
     const current = latestPropsRef.current;
     const isFirstPerson = !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
+    const demoStop = runtime.demoSession?.active ? runtime.demoSession.stopId : null;
     const lighting = resolveRuntimeLighting(
       current.lightingMode,
-      current.interactionMode === 'explore' && runtime.isExplore
+      demoStop ?? (current.interactionMode === 'explore' && runtime.isExplore
         ? (runtime.lightingStopId ?? current.activeTourStopId)
-        : current.activeTourStopId,
-      isFirstPerson
+        : current.activeTourStopId),
+      demoStop ? INTERIOR_TOUR_STOPS.has(demoStop) : isFirstPerson
     );
 
     const raining = current.weather === 'rain';
@@ -381,6 +390,7 @@ export default function VillaViewer({
   const syncView = () => {
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
+    runtime.demoSession?.stop(false);
     runtime.needsRender = true;
 
     const current = latestPropsRef.current;
@@ -691,7 +701,9 @@ export default function VillaViewer({
       const height = Math.max(container.clientHeight, 1);
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
-      if (runtime.isDrone) {
+      if (runtime.demoSession?.active) {
+        runtime.demoSession.resize();
+      } else if (runtime.isDrone) {
         camera.fov = camera.aspect < 1 ? 72 : 60;
         camera.updateProjectionMatrix();
       } else if (runtime.isFirstPerson) {
@@ -826,9 +838,10 @@ export default function VillaViewer({
         framePacer.submitted();
         // Mark the mode of this rendered frame, not only React's requested mode.
         // Browser QA must not sample the previous camera while a new frame is pending.
-        container.dataset.renderedInteractionMode = runtime.isDrone ? 'drone' : runtime.isFirstPerson ? (runtime.isExplore ? 'explore' : 'guided') : 'orbit';
+        container.dataset.renderedInteractionMode = runtime.demoSession?.active ? 'demo' : runtime.isDrone ? 'drone' : runtime.isFirstPerson ? (runtime.isExplore ? 'explore' : 'guided') : 'orbit';
         container.dataset.cameraPosition = camera.position.toArray().map((value) => value.toFixed(3)).join(',');
         container.dataset.cameraDirection = camera.getWorldDirection(new THREE.Vector3()).toArray().map((value) => value.toFixed(3)).join(',');
+        container.dataset.renderedDemoTime = runtime.demoSession?.active ? runtime.demoSession.elapsed.toFixed(3) : '';
         container.dataset.atmosphereTime = runtime.elapsed.toFixed(3);
         container.dataset.renderedWeather = latestPropsRef.current.weather;
         container.dataset.renderedLighting = latestPropsRef.current.lightingMode?.name ?? '';
@@ -898,8 +911,8 @@ export default function VillaViewer({
   const isExplore = isFirstPerson && interactionMode === 'explore';
   const runtimeLightingProfile = resolveRuntimeLighting(
     lightingMode,
-    isExplore ? (walkStatus.stopId ?? activeTourStopId) : activeTourStopId,
-    isFirstPerson
+    demo.active ? demo.stopId : isExplore ? (walkStatus.stopId ?? activeTourStopId) : activeTourStopId,
+    demo.active ? demo.interior : isFirstPerson
   ).profile;
 
   const guidedStops = TOUR_STOPS.filter((stop) => stop.id !== 'overview');
@@ -916,6 +929,7 @@ export default function VillaViewer({
 
   /** Leave Drone mode and request the exterior stop through the parent's shared navigation state. */
   const returnToOverview = () => {
+    demo.stop();
     setDroneMode(false);
     onSelectTourStop?.(TOUR_STOPS[0]);
   };
@@ -963,10 +977,10 @@ export default function VillaViewer({
       <div className="viewer-heading">
         <div>
           <p className="eyebrow">Your own perspective</p>
-          <h2>{droneMode ? 'Fly through the residence' : isFirstPerson ? activeStop.title : 'The residence, in 3D'}</h2>
+          <h2>{demo.active ? demo.title : droneMode ? 'Fly through the residence' : isFirstPerson ? activeStop.title : 'The residence, in 3D'}</h2>
         </div>
         <p>
-          {droneMode ? 'Drag to look · move freely, inside and outside' : isFirstPerson
+          {demo.active ? 'A guided journey through the house and around its architecture.' : droneMode ? 'Drag to look · move freely, inside and outside' : isFirstPerson
             ? isExplore
               ? 'Drag to look around. Walk through the connected spaces.'
               : 'Follow the arrows, or explore at your own pace.'
@@ -975,12 +989,21 @@ export default function VillaViewer({
       </div>
 
       <div className="scene-navigation" role="group" aria-label="Scene navigation">
-        <button type="button" aria-pressed={!droneMode && !isFirstPerson} onClick={returnToOverview} disabled={modelState !== 'loaded'}>Orbit overview</button>
-        <button type="button" aria-pressed={droneMode} onClick={() => setDroneMode(true)} disabled={modelState !== 'loaded'}>Drone flight</button>
+        <button type="button" aria-pressed={!demo.active && !droneMode && !isFirstPerson} onClick={returnToOverview} disabled={modelState !== 'loaded'}>Orbit overview</button>
+        <button type="button" aria-pressed={!demo.active && droneMode} onClick={() => { demo.stop(); setDroneMode(true); }} disabled={modelState !== 'loaded'}>Drone flight</button>
         <button type="button" onClick={() => { setDroneMode(false); onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'entry')); }} disabled={modelState !== 'loaded'}>Go inside <span aria-hidden="true">↗</span></button>
       </div>
+      <ResidenceDemoControls demo={demo} ready={modelState === 'loaded'} />
       <AtmosphereControls weather={weather} setWeather={setWeather} wind={wind} setWind={setWind} motion={motion} setMotion={setMotion} />
       <div className="three-canvas-shell">
+        <div className="residence-demo-shade" aria-hidden="true" />
+        {demo.active && <div className="residence-demo-overlay" role="group" aria-label="In-view demo controls">
+          <span>{demo.title}</span>
+          {demo.state === 'playing' ? <button type="button" onClick={demo.pause}>Pause tour</button>
+            : !demo.reduced && demo.state === 'paused' ? <button type="button" onClick={demo.resume}>Resume tour</button> : null}
+          {demo.reduced && <button type="button" disabled={demo.chapter >= demo.chapters - 1} onClick={demo.next}>Next scene</button>}
+          <button type="button" onClick={demo.stop} aria-label="Exit demo view">Exit</button>
+        </div>}
         <div
           ref={mountRef}
           className="three-canvas"
@@ -991,8 +1014,8 @@ export default function VillaViewer({
           data-model-progress={modelProgress ?? ''}
           data-model-load-count={modelLoadCount}
           data-viewer-runtime={VIEWER_RUNTIME_PROFILE}
-          data-view-mode={droneMode ? 'drone' : isFirstPerson ? 'first-person' : 'orbit'}
-          data-interaction-mode={droneMode ? 'drone' : isFirstPerson ? interactionMode : 'orbit'}
+          data-view-mode={demo.active ? 'demo' : droneMode ? 'drone' : isFirstPerson ? 'first-person' : 'orbit'}
+          data-interaction-mode={demo.active ? 'demo' : droneMode ? 'drone' : isFirstPerson ? interactionMode : 'orbit'}
           data-tour-stop={activeTourStopId}
           data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
           data-interior-light-count={interiorLightCount}
@@ -1023,7 +1046,7 @@ export default function VillaViewer({
           </div>
         )}
 
-        {droneMode && <>
+        {droneMode && !demo.active && <>
           <div className="drone-help"><strong>Free flight</strong><span>{isTouchUi ? 'Drag to look. Hold a control to move.' : 'Drag to look · WASD to move · E up / Q down'}</span><small>Fly freely through the concept model.</small></div>
           <button className="drone-inside" type="button" onClick={flyInside}>Fly inside ↗</button>
           <div className="drone-pad" role="group" aria-label="Drone movement controls">
@@ -1035,7 +1058,7 @@ export default function VillaViewer({
             <button type="button" aria-label="Ascend" {...droneButtonProps('up', 1)}>+</button>
           </div>
         </>}
-        {isFirstPerson && (
+        {isFirstPerson && !demo.active && (
           <>
             <div className="first-person-hud" aria-live="polite">
               <strong>{walkStatus.label || activeStop.title}</strong>
@@ -1153,7 +1176,7 @@ export default function VillaViewer({
       </div>
 
       <p className="viewer-note" id={viewerNoteId}>
-        Explore the villa, change the weather, or pause to study the light. Drone flight moves freely; Go inside starts the room-by-room tour.
+        Play the house + drone demo, or take control yourself. Drone flight moves freely; Go inside starts the room-by-room tour. Demo playback pauses when you leave the view.
       </p>
     </section>
   );

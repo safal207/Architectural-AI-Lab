@@ -1,0 +1,24 @@
+.residence-demo { margin: 0 0 1rem; padding: clamp(.85rem, 2.2vw, 1.4rem); border: 1px solid #d9d1c3; background: #f0ebe1; color: #332f27; border-radius: .7rem; }
+.residence-demo__intro { display: flex; align-items: end; justify-content: space-between; gap: 1.2rem; }
+.residence-demo__intro h3 { margin: .3rem 0 .8rem; font-size: clamp(1.2rem, 2vw, 1.7rem); font-weight: 500; line-height: 1.15; }
+.residence-demo__intro p { max-width: 22rem; font-size: .8rem; line-height: 1.6; margin: 0 0 .8rem; }
+.residence-demo__actions, .residence-demo__transport { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+.residence-demo button { min-height: 44px; padding: .65rem .9rem; border: 1px solid #b7aa96; border-radius: .35rem; color: #332f27; background: #fbf8f1; font: inherit; font-size: .8rem; cursor: pointer; }
+.residence-demo button.residence-demo__play { background: #394b40; border-color: #394b40; color: #fffdf7; }
+.residence-demo button:disabled { opacity: .48; cursor: default; }
+.residence-demo button:focus-visible { outline: 3px solid #76562b; outline-offset: 3px; }
+.residence-demo__progress { display: flex; align-items: center; gap: .8rem; margin-top: .9rem; }
+.residence-demo progress { width: 100%; height: .38rem; accent-color: #526b58; }
+.residence-demo__progress span { white-space: nowrap; font: .75rem ui-monospace, monospace; }
+.residence-demo__status { min-height: 1.3em; margin: .65rem 0; font-size: .8rem; }
+.residence-demo__transport > span { font-size: .75rem; min-width: 3rem; text-align: center; }
+.residence-demo__note { margin: .8rem 0 0; color: #625c50; font-size: .72rem; line-height: 1.5; }
+.residence-demo-shade { position: absolute; inset: 0; z-index: 2; background: #171b18; opacity: 0; pointer-events: none; }
+@media (max-width: 600px) { .residence-demo__intro { display: block; } .residence-demo__actions > button { flex: 1 1 12rem; } }
+@media (prefers-reduced-motion: reduce) { .residence-demo-shade { display: none; } }
+
+.residence-demo-overlay { position: absolute; z-index: 5; inset: auto .75rem .75rem; display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; padding: .65rem; background: #26382ff0; color: #fffdf7; border: 1px solid #bbc9b95c; border-radius: .5rem; font-size: .76rem; }
+.residence-demo-overlay > span { flex: 1 1 8rem; }
+.residence-demo-overlay button { min-height: 44px; padding: .55rem .75rem; color: #fffdf7; background: #ffffff12; border: 1px solid #bbc9b9a0; border-radius: .3rem; font: inherit; cursor: pointer; }
+.residence-demo-overlay button:disabled { opacity: .5; }
+.residence-demo-overlay button:focus-visible { outline: 3px solid #e4ce9b; outline-offset: 2px; }
