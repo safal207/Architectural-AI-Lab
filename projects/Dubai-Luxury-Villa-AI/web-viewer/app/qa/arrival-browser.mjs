@@ -123,7 +123,15 @@ try {
         }
       }
       if (name !== 'desktop' && await controls.getAttribute('data-phase') !== 'complete') {
-        await controls.getByRole('button', { name: 'Show water view' }).click();
+        try {
+          await controls.getByRole('button', { name: 'Show water view' }).click({ timeout: 5_000 });
+        } catch (error) {
+          // Natural completion can replace the control between the phase read and
+          // Playwright's stability check. Accept only that exact terminal race;
+          // any other click failure is still a test failure.
+          if (await controls.getAttribute('data-phase') !== 'complete') throw error;
+          scenario.checks.push('Natural completion won the Show water view click race');
+        }
       }
       await page.waitForFunction(to => {
         const c = document.querySelector('.three-canvas');
