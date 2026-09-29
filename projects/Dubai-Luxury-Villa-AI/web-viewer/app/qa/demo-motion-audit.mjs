@@ -27,12 +27,14 @@ function classifyRenderer(renderer) {
 }
 const url = process.env.VILLA_URL || 'http://127.0.0.1:4173/';
 const output = process.env.QA_OUTPUT_DIR || 'qa-output';
+const requireHardwareGpu = process.env.VILLA_REQUIRE_HARDWARE_GPU === '1';
 const sampleMs = 20000;
 const report = {
   sourceHead: process.env.VILLA_SOURCE_HEAD || null,
   checkoutSha: process.env.GITHUB_SHA || null,
   artifactRun: process.env.VILLA_ARTIFACT_RUN || null,
   sampleMs, profiles: {}, pageErrors: [], failedResponses: [],
+  requestedRendererMode: requireHardwareGpu ? 'hardware-required' : 'software-diagnostic',
   productAcceptance: 'NOT_PROVEN',
   acceptanceReason: 'This CI diagnostic forces a software renderer. It can expose cadence pathologies but cannot establish physical-device or native-GPU smoothness.',
   boundary: 'Desktop DPR 1 diagnostic with default environmental motion enabled. Mutation timestamps observe submitted film-time updates; held camera poses may repeat. Not GPU completion, presentation or physical-device FPS. Each mode is sampled for up to 20 seconds, not the complete route.'
@@ -44,7 +46,9 @@ if (process.env.VILLA_ARTIFACT_ZIP) {
 }
 const browser = await chromium.launch({ headless: true,
   ...(process.env.CHROMIUM_EXECUTABLE ? { executablePath: process.env.CHROMIUM_EXECUTABLE } : {}),
-  args: ['--no-sandbox', '--enable-webgl', '--enable-unsafe-swiftshader', '--use-angle=swiftshader']
+  args: requireHardwareGpu
+    ? ['--no-sandbox', '--enable-webgl']
+    : ['--no-sandbox', '--enable-webgl', '--enable-unsafe-swiftshader', '--use-angle=swiftshader']
 });
 try {
   report.browser = browser.version();
@@ -100,6 +104,11 @@ try {
     }), requestedMs);
     // Preserve raw evidence even when a following assertion fails.
     observation.rendererClass = classifyRenderer(observation.renderer);
+    if (requireHardwareGpu) {
+      assert.notEqual(observation.rendererClass, 'unreported', 'Hardware GPU run must report a WebGL renderer');
+      assert.ok(!observation.rendererClass.startsWith('software-'),
+        `Hardware GPU run resolved to software renderer: ${observation.renderer ?? observation.rendererClass}`);
+    }
     report.profiles[mode] = observation;
     assert.equal(observation.dpr, 1);
     assert.ok(observation.css[0] > 300 && observation.css[1] > 200);
@@ -120,6 +129,8 @@ try {
   assert.deepEqual(report.pageErrors, []);
   assert.deepEqual(report.failedResponses, []);
   report.measurementEnvironment = [...new Set(Object.values(report.profiles).map(profile => profile.rendererClass))];
+  report.hardwareEnvironmentQualified = requireHardwareGpu
+    && report.measurementEnvironment.every(value => value !== 'unreported' && !value.startsWith('software-'));
   report.result = 'MEASURED'; // Never equate a successful diagnostic with product acceptance.
 } catch (error) {
   report.result = 'INCOMPLETE'; report.error = String(error); process.exitCode = 1;
