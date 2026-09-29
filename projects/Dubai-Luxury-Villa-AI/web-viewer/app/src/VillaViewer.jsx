@@ -724,7 +724,7 @@ export default function VillaViewer({
       if (latestPropsRef.current.motion && runtime.atmosphere) {
         runtime.atmosphereDelta += delta;
         const frameBudget = runtime.isTouchDevice ? 1 / 24 : 1 / 30;
-        if (canSubmitFrame && runtime.atmosphereDelta >= frameBudget) {
+        if (canSubmitFrame && framePacer.canAnimate() && runtime.atmosphereDelta >= frameBudget) {
           const step = Math.min(runtime.atmosphereDelta, 0.08);
           runtime.atmosphereDelta = 0;
           runtime.elapsed += step;

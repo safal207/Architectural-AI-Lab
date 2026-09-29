@@ -19,8 +19,11 @@ function check(condition, message) {
 }
 
 async function fastClick(locator) {
+  const started = Date.now();
+  console.log(`Starting control: ${locator}`);
   await locator.waitFor({ state: 'visible' });
   await locator.evaluate((element) => element.click());
+  console.log(`Control completed in ${Date.now() - started} ms: ${locator}`);
 }
 
 async function assertHeroContained(page, label) {
