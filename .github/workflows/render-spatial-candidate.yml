@@ -1,10 +1,5 @@
 name: Spatial Light Candidate (diagnostic)
 on:
-  push:
-    branches: ['feat/shade-to-water-arrival']
-    paths:
-      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/render-spatial-candidate.mjs'
-      - '.github/workflows/render-spatial-candidate.yml'
   workflow_dispatch:
 permissions:
   contents: read
