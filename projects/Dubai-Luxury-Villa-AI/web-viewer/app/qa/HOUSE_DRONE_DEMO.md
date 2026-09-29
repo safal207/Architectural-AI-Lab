@@ -87,5 +87,17 @@ The scene report discloses three cuts (two stair-guard crossings and the living-
 
 The first local diagnostic attempt on the matching CI build was blocked by Chromium with
 `ERR_BLOCKED_BY_ADMINISTRATOR` before loading the page. It supplies no motion measurements.
-Syntax and synthetic summary fixtures passed locally; the new diagnostic requires its own
-remote CI result. Do not promote the predecessor's green checks to this new QA revision.
+
+For current head `28887de09775df2ccfb3e6f1e7b1259b671fab22`, all 14 PR workflows completed
+successfully. Dedicated run [36628221567](https://github.com/safal207/Architectural-AI-Lab/actions/runs/36628221567)
+reported PASS for desktop and reduced-motion mobile functional smoke with no page errors or
+failed responses. Artifact `11061284159` has GitHub digest
+`sha256:31c2950b8162d2242eae45ecde38fd9572a91722a806d15578648c90e5900bf0`.
+Six saved still captures were reviewed; they confirm only the sampled house/orbit framing and
+controls, not full-motion acceptance.
+
+The native-motion diagnostic classified both samples as `software-swiftshader`; house
+submitted-timeline p95 was about 5.22 s and orbit p95 about 4.25 s.
+`hardwareEnvironmentQualified=false` and `productAcceptance=NOT_PROVEN` therefore remain
+the acceptance boundary. Keep this PR draft until a real hardware/native-resolution motion
+run is reviewed; hosted SwiftShader evidence alone is not a release approval.
