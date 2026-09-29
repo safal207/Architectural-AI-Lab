@@ -59,3 +59,33 @@ ownership/disposal. Missing or undersized furniture anchors are reported rather 
 Keep this PR unmerged until its dedicated workflow and existing relevant gates pass, actual
 scene-cut reports and screenshots are reviewed, and the new motion is evaluated at native
 resolution. The held arrival experiment in PR #16 is not imported or declared resolved.
+
+## Native-motion diagnostic
+
+`node qa/demo-motion-audit.mjs` adds a separate desktop DPR 1 observation with environmental
+motion left enabled. It uses a fresh page for the house and orbit modes, samples up to 20
+seconds per mode, validates native buffer dimensions, and retains raw wall-time/film-time,
+camera, direction and atmosphere samples in `qa-output/demo-native-motion.json`.
+The summary distinguishes submitted timeline updates from changed poses: a held camera can
+receive new film timestamps without moving. Wall-time gaps and trailing silence are recorded;
+the 250 ms film-clock cap must not be presented as a wall-time frame-rate measurement.
+
+A successful diagnostic reports `MEASURED`, with `productAcceptance: NOT_PROVEN`, not a
+smoothness PASS. Empty/invalid samples, paused effects, non-native buffers, page/resource
+errors or unexpected playback cancellation fail the diagnostic. These timestamps follow
+`renderer.render()` submissions, not GPU completion or physical presentation. Short samples
+are not full-route coverage and do not replace motion acceptance or physical-device checks.
+The existing browser assertions, timeouts and acceptance gates remain intact.
+
+For the preceding runtime head `7954e1cc482c3d8d53ae3d74250987c4169d3f2e`, all 14 PR workflows
+completed successfully. Dedicated run [36604459020](https://github.com/safal207/Architectural-AI-Lab/actions/runs/36604459020)
+checked merge snapshot `daf68b05c872fdbfe558762530ca5492e1ed890c`: 15 unit/geometry tests and
+desktop/mobile-still functional smoke passed. Downloaded artifact `11050980307` matched ZIP
+SHA-256 `ab0db0aa8430fc6f523171766f79ed3f0dcca1ee8f7d854884869fd7b9a49ca7`.
+The four saved house/orbit stills were inspected; they do not show all route transitions.
+The scene report discloses three cuts (two stair-guard crossings and the living-glass exit).
+
+The first local diagnostic attempt on the matching CI build was blocked by Chromium with
+`ERR_BLOCKED_BY_ADMINISTRATOR` before loading the page. It supplies no motion measurements.
+Syntax and synthetic summary fixtures passed locally; the new diagnostic requires its own
+remote CI result. Do not promote the predecessor's green checks to this new QA revision.

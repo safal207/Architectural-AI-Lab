@@ -42,6 +42,19 @@ jobs:
             sleep 1
           done
           node qa/demo-browser.mjs
+      - name: Audit native demo cadence (diagnostic, not release acceptance)
+        env:
+          VILLA_SOURCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          VILLA_ARTIFACT_RUN: ${{ github.run_id }}
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-demo-motion.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 60); do
+            curl --fail --silent http://127.0.0.1:4173/ > /dev/null && break
+            sleep 1
+          done
+          node qa/demo-motion-audit.mjs
       - name: Upload exact test evidence
         if: always()
         uses: actions/upload-artifact@v4
