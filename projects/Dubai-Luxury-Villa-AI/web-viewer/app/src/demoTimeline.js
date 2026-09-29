@@ -28,6 +28,35 @@ export function createDemoClock(duration, now = () => performance.now()) {
   };
 }
 
+/**
+ * Advance film time only when the viewer can prepare a new camera pose.
+ * Reads never spend GPU-wait time. Drop stall backlog rather than finishing off-screen.
+ * The 250 ms cap slows the film below 4 pose updates/s; it is not a smoothness guarantee.
+ */
+export function createDemoFrameClock(duration, now = () => performance.now()) {
+  let filmMilliseconds = 0;
+  let previous = null;
+  const clock = createDemoClock(duration, () => filmMilliseconds);
+  const rebase = () => { const time = now(); previous = Number.isFinite(time) ? time : null; };
+  return {
+    read: clock.read,
+    advance() {
+      if (clock.read().state !== 'playing') return clock.read();
+      const time = now();
+      if (Number.isFinite(time)) {
+        if (previous !== null) filmMilliseconds += Math.min(250, Math.max(0, time - previous));
+        previous = previous === null ? time : Math.max(previous, time);
+      }
+      return clock.read();
+    },
+    start(still = false) { filmMilliseconds = 0; rebase(); return clock.start(still); },
+    pause() { previous = null; return clock.pause(); },
+    resume() { if (clock.read().state === 'paused') rebase(); return clock.resume(); },
+    seek(value) { const result = clock.seek(value); previous = null; return result; },
+    stop() { previous = null; return clock.stop(); }
+  };
+}
+
 export function preparePolyline(points) {
   if (!Array.isArray(points) || points.length < 2) throw new Error('A route needs at least two points');
   const copy = points.map(point => {

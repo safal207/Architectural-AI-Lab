@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { createDemoClock } from './demoTimeline.js';
+import { createDemoFrameClock } from './demoTimeline.js';
 import { createResidenceStoryboard, applyResidenceFrame } from './residenceDemo.js';
 import { createInteriorAccessories } from './interiorAccessories.js';
 import { isInteractiveTarget } from './walkthroughInput.js';
@@ -38,10 +38,10 @@ export function useResidenceDemo({ runtimeRef, modelState, onRestore, onLighting
       setState({ ...EMPTY, ...sample, state: clockState.state, active, reduced: preference.matches, reason });
     }
     function cancelFrame() { if (frame !== null) cancelAnimationFrame(frame); frame = null; }
-    function apply(force = false) {
+    function apply(force = false, advance = false) {
       // Do not overwrite an unrendered camera pose while the viewer is waiting for its GPU fence.
       if (!active || !clock || (!force && runtime.needsRender)) return;
-      const progress = clock.read();
+      const progress = advance ? clock.advance() : clock.read();
       const previousStop = sample?.stopId;
       sample = applyResidenceFrame(runtime.camera, board, progress.seconds);
       container.dataset.demoTime = sample.seconds.toFixed(3);
@@ -61,7 +61,7 @@ export function useResidenceDemo({ runtimeRef, modelState, onRestore, onLighting
       if (document.hidden || !runtime.visible || runtime.renderer.getContext().isContextLost()) {
         pause('Paused while the view is unavailable'); return;
       }
-      apply();
+      apply(false, true);
       if (clock.read().state === 'playing') frame = requestAnimationFrame(tick);
       else { apply(true); notify(true); }
     }
@@ -85,7 +85,7 @@ export function useResidenceDemo({ runtimeRef, modelState, onRestore, onLighting
       runtime.isDrone = false; runtime.isFirstPerson = false; runtime.isExplore = false;
       active = true; reason = ''; lastLightingStop = null;
       container.scrollIntoView({ block: 'center', behavior: 'instant' });
-      clock = createDemoClock(board.duration); clock.start(preference.matches);
+      clock = createDemoFrameClock(board.duration); clock.start(preference.matches);
       container.dataset.demoReport = JSON.stringify(board.report);
       apply(true); notify(true);
       if (!preference.matches) frame = requestAnimationFrame(() => { frame = requestAnimationFrame(tick); });
