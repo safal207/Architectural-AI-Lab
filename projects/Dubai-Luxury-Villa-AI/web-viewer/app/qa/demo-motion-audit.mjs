@@ -4,8 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 // Diagnostic only: submitted camera poses are not GPU completion or displayed frames.
-// During authored demo playback, ambient weather motion is intentionally suspended so camera
-// frames get priority; the user's motion preference remains enabled and is restored on exit.
+// Run against an unmodified production build with environmental motion left enabled.
 function summarize(samples, observedMs) {
   assert.ok(samples.length >= 2, 'Insufficient submitted timeline updates');
   assert.ok(samples.every(s => Number.isFinite(s.wallMs) && Number.isFinite(s.filmSeconds)));
@@ -36,7 +35,7 @@ const report = {
   sampleMs, profiles: {}, pageErrors: [], failedResponses: [],
   productAcceptance: 'NOT_PROVEN',
   acceptanceReason: 'This CI diagnostic forces a software renderer. It can expose cadence pathologies but cannot establish physical-device or native-GPU smoothness.',
-  boundary: 'Desktop DPR 1 diagnostic with the user motion preference enabled but ambient weather animation suspended during authored demo playback so camera frames have priority. Mutation timestamps observe submitted film-time updates; held camera poses may repeat. Not GPU completion, presentation or physical-device FPS. Each mode is sampled for up to 20 seconds, not the complete route.'
+  boundary: 'Desktop DPR 1 diagnostic with default environmental motion enabled. Mutation timestamps observe submitted film-time updates; held camera poses may repeat. Not GPU completion, presentation or physical-device FPS. Each mode is sampled for up to 20 seconds, not the complete route.'
 };
 await mkdir(output, { recursive: true });
 if (process.env.VILLA_ARTIFACT_ZIP) {
@@ -109,8 +108,7 @@ try {
     assert.equal(observation.visibility, 'visible');
     assert.equal(observation.finalState, 'playing', 'A paused or completed sample is not a playing-motion audit');
     assert.ok(observation.samples.length >= 2, 'Insufficient submitted poses; do not report an empty sample as success');
-    assert.ok(observation.samples.every(s => s.state === 'playing' && s.motion === 'paused-for-demo' && Number.isFinite(s.filmSeconds)),
-      'Authored demo playback must reserve frame budget by suspending ambient weather animation');
+    assert.ok(observation.samples.every(s => s.state === 'playing' && s.motion === 'running' && Number.isFinite(s.filmSeconds)));
     observation.summary = summarize(observation.samples, observation.observedMs);
     assert.ok(observation.summary.filmProgressSeconds > 0);
     await page.getByRole('group', { name: 'In-view demo controls', exact: true }).getByRole('button', { name: 'Pause tour', exact: true }).click();
