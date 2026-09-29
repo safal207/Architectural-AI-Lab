@@ -79,11 +79,12 @@ try {
     await overlay.getByRole('button', { name: 'Exit demo view', exact: true }).click();
     await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.renderedInteractionMode === 'orbit', null, { timeout: 120000 });
     await panel.getByRole('button', { name: 'Drone orbit only', exact: true }).click();
-    await renderedDemo(page);
     if (name === 'desktop') {
+      await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.demoState === 'playing', null, { timeout: 120000 });
       await overlay.getByRole('button', { name: 'Pause tour', exact: true }).click();
-      await renderedDemo(page);
     }
+    await renderedDemo(page);
+    if (name === 'desktop') assert.equal((await snapshot(page)).demoState, 'paused');
     current = await snapshot(page);
     const orbit = JSON.parse(current.demoReport);
     assert.equal(orbit.mode, 'orbit');
