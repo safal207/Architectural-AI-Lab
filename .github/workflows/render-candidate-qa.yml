@@ -1,0 +1,49 @@
+name: Render Candidate Comparison
+on:
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/render-candidate.mjs'
+      - '.github/workflows/render-candidate-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+    env:
+      VILLA_URL: http://127.0.0.1:4173/
+      QA_OUTPUT: qa-render-candidate-output
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - run: |
+          node --check qa/render-candidate.mjs
+          node qa/render-profile.mjs --build
+          git diff --exit-code -- src public package.json package-lock.json
+      - run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory dist-render-profile > /tmp/candidate.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS "$VILLA_URL" >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - run: node qa/render-candidate.mjs
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: render-candidate-comparison
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-render-candidate-output
+          if-no-files-found: warn
+          retention-days: 14
