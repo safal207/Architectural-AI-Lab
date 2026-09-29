@@ -22,20 +22,47 @@ try {
     const controls = page.getByRole('region', { name: 'Arrival preview' });
     await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.modelState === 'loaded', null, { timeout: 120_000 });
     assert.equal(await controls.getAttribute('data-phase'), 'idle', 'Preview started without a click');
+    await page.bringToFront();
     await controls.getByRole('button', { name: 'Play arrival' }).click();
-    await page.waitForFunction(() => ['threshold', 'moving', 'still', 'blocked'].includes(document.querySelector('.arrival-reveal')?.dataset.phase));
+    await page.waitForFunction(() => ['threshold', 'moving', 'paused', 'still', 'blocked'].includes(document.querySelector('.arrival-reveal')?.dataset.phase));
     const route = JSON.parse(await canvas.getAttribute('data-arrival-clearance'));
     scenario.route = route;
     assert.equal(route.clear, true, JSON.stringify(route));
     const position = async () => (await canvas.getAttribute('data-camera-position')).split(',').map(Number);
     const flush = () => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const resumeAfterHarnessPause = async () => {
+      const phase = await controls.getAttribute('data-phase');
+      if (phase !== 'paused') return false;
+      await page.bringToFront();
+      const resume = controls.getByRole('button', { name: 'Resume arrival' });
+      await resume.waitFor({ state: 'visible' });
+      await resume.click();
+      await page.waitForFunction(() => ['threshold', 'moving', 'complete'].includes(document.querySelector('.arrival-reveal')?.dataset.phase));
+      scenario.harnessPauseRecoveries = (scenario.harnessPauseRecoveries ?? 0) + 1;
+      return true;
+    };
+    const waitForProgress = async (minimum, timeoutMs = 120_000) => {
+      const deadline = Date.now() + timeoutMs;
+      while (Date.now() < deadline) {
+        if (Number(await canvas.getAttribute('data-arrival-progress')) > minimum) return;
+        const phase = await controls.getAttribute('data-phase');
+        if (phase === 'blocked') throw new Error('Arrival became blocked after its clearance gate passed');
+        if (phase === 'complete') {
+          if (Number(await canvas.getAttribute('data-arrival-progress')) > minimum) return;
+          throw new Error('Arrival completed without advancing camera progress');
+        }
+        await resumeAfterHarnessPause();
+        await page.waitForTimeout(100);
+      }
+      throw new Error(`Arrival progress did not exceed ${minimum} within ${timeoutMs}ms; phase=${await controls.getAttribute('data-phase')}`);
+    };
     if (reducedMotion === 'reduce') {
       assert.equal(await controls.getAttribute('data-phase'), 'still');
       await flush(); const still = await position(); await page.waitForTimeout(300);
       assert.deepEqual(await position(), still);
       scenario.checks.push('Reduced motion: no automatic camera movement');
     } else {
-      await page.waitForFunction(() => Number(document.querySelector('.three-canvas')?.dataset.arrivalProgress) > 0.05, null, { timeout: 120_000 });
+      await waitForProgress(0.05);
       await controls.getByRole('button', { name: 'Pause arrival' }).click();
       await flush(); const paused = await position(); await page.waitForTimeout(300);
       assert.deepEqual(await position(), paused, 'Paused camera moved');
@@ -43,7 +70,7 @@ try {
       scenario.checks.push('Actual model camera moves, then pause freezes it');
       if (name === 'desktop') await page.locator('.three-canvas-shell').screenshot({ path: `${output}/midway.png`, animations: 'disabled' });
       await controls.getByRole('button', { name: 'Resume arrival' }).click();
-      await page.waitForFunction(p => Number(document.querySelector('.three-canvas')?.dataset.arrivalProgress) > p, priorProgress, { timeout: 60_000 });
+      await waitForProgress(priorProgress, 60_000);
       if (name === 'desktop') {
         await page.waitForFunction(() => document.querySelector('.arrival-reveal')?.dataset.phase === 'complete', null, { timeout: 240_000 });
         scenario.checks.push('Natural completion reaches the final view');
