@@ -1,0 +1,69 @@
+name: Spatial Light Candidate (diagnostic)
+on:
+  push:
+    branches: ['feat/shade-to-water-arrival']
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa/render-spatial-candidate.mjs'
+      - '.github/workflows/render-spatial-candidate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  spatial-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+    env:
+      VILLA_URL: http://127.0.0.1:4173/
+      QA_OUTPUT: qa-spatial-candidate-output
+      PR_HEAD_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Record integration boundary
+        run: |
+          mkdir -p "$QA_OUTPUT"
+          git rev-parse HEAD origin/main > "$QA_OUTPUT/branch-and-main.txt"
+          git diff --name-only HEAD...origin/main > "$QA_OUTPUT/main-changes.txt"
+          echo 'This diagnostic tests the branch snapshot, not a merge into current main.'
+      - run: npm ci --no-audit --no-fund
+      - name: Build isolated instrumented copy; keep product files unchanged
+        run: |
+          node --check qa/render-spatial-candidate.mjs
+          node qa/render-profile.mjs --build
+          git diff --exit-code -- src public package.json package-lock.json
+      - name: Install browser
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve diagnostic build
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory dist-render-profile > /tmp/spatial-profile.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS "$VILLA_URL" >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/spatial-profile.log
+          exit 1
+      - name: Identical-raster spatial mask experiment
+        run: node qa/render-spatial-candidate.mjs
+      - name: Save measurements and exact source snapshots
+        if: always()
+        run: |
+          git archive --format=tar.gz HEAD src qa package.json package-lock.json > "$QA_OUTPUT/tested-source.tar.gz"
+          git diff --exit-code -- src public package.json package-lock.json
+      - name: Upload evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: spatial-light-candidate
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-spatial-candidate-output
+          if-no-files-found: warn
+          retention-days: 14
