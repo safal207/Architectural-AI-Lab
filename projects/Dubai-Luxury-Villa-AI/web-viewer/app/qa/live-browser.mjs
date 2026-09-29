@@ -374,6 +374,7 @@ try {
   const lightingNav = desktop.locator('nav[aria-label="Lighting mode"]');
   await fastClick(lightingNav.getByRole('button', { name: 'Night', exact: true }));
   await desktop.getByText('Lighting: Night', { exact: true }).waitFor();
+  check(new URL(desktop.url()).searchParams.get('lighting') === 'night', 'Lighting selection should be reflected in the URL');
   await waitForModel(desktop);
 
   const materialPanel = desktop.locator('.material-switcher');

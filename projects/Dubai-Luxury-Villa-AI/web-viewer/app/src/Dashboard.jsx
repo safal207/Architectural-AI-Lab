@@ -73,6 +73,13 @@ export default function Dashboard() {
     setTourMode(stop.id !== 'overview');
     setSelectedRoom(rooms.find((item) => item.id === stop.roomId) ?? null);
   };
+  /** Keep the selected ambience in the shareable URL without navigating or adding history entries. */
+  const selectLightingMode = (key) => {
+    setLightingMode(key);
+    const url = new URL(window.location.href);
+    url.searchParams.set('lighting', key);
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  };
   /** Map a room shortcut to its authored tour stop; ignore rooms without a mapping. */
   const selectRoom = (room) => {
     const roomStops = { 'living-room': 'living', 'master-bedroom': 'master', 'pool-terrace': 'pool' };
@@ -114,7 +121,7 @@ export default function Dashboard() {
         <header className="viewer-toolbar">
           <div><p className="eyebrow">03 / The residence studio</p><h2 id="experience-title" tabIndex={-1}>Make yourself <em>at home.</em></h2><p>Move between rooms. Watch the light, water and weather change.</p></div>
           <div className="lighting-control"><span className="control-label">The time of day</span><nav aria-label="Lighting mode">
-            {Object.entries(lightingModes).map(([key, mode]) => <button key={key} type="button" className={lightingMode === key ? 'is-active' : ''} aria-pressed={lightingMode === key} onClick={() => setLightingMode(key)}><span className={`light-symbol light-symbol--${key}`} aria-hidden="true" />{mode.name}</button>)}
+            {Object.entries(lightingModes).map(([key, mode]) => <button key={key} type="button" className={lightingMode === key ? 'is-active' : ''} aria-pressed={lightingMode === key} onClick={() => selectLightingMode(key)}><span className={`light-symbol light-symbol--${key}`} aria-hidden="true" />{mode.name}</button>)}
           </nav></div>
         </header>
         <section className="app-grid">
