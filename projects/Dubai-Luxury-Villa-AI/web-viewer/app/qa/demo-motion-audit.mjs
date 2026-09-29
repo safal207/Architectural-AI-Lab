@@ -23,7 +23,9 @@ function classifyRenderer(renderer) {
   if (!value) return 'unreported';
   if (value.includes('swiftshader')) return 'software-swiftshader';
   if (value.includes('llvmpipe') || value.includes('softpipe') || value.includes('software')) return 'software-other';
-  return 'non-software-or-unknown';
+  if (['nvidia', 'geforce', 'quadro', 'amd', 'radeon', 'intel', 'apple', 'adreno', 'mali', 'powervr']
+    .some(marker => value.includes(marker))) return 'hardware-known';
+  return 'non-software-unknown';
 }
 const url = process.env.VILLA_URL || 'http://127.0.0.1:4173/';
 const output = process.env.QA_OUTPUT_DIR || 'qa-output';
@@ -105,9 +107,8 @@ try {
     // Preserve raw evidence even when a following assertion fails.
     observation.rendererClass = classifyRenderer(observation.renderer);
     if (requireHardwareGpu) {
-      assert.notEqual(observation.rendererClass, 'unreported', 'Hardware GPU run must report a WebGL renderer');
-      assert.ok(!observation.rendererClass.startsWith('software-'),
-        `Hardware GPU run resolved to software renderer: ${observation.renderer ?? observation.rendererClass}`);
+      assert.equal(observation.rendererClass, 'hardware-known',
+        `Hardware GPU run requires a recognized physical-GPU renderer: ${observation.renderer ?? observation.rendererClass}`);
     }
     report.profiles[mode] = observation;
     assert.equal(observation.dpr, 1);
@@ -130,7 +131,7 @@ try {
   assert.deepEqual(report.failedResponses, []);
   report.measurementEnvironment = [...new Set(Object.values(report.profiles).map(profile => profile.rendererClass))];
   report.hardwareEnvironmentQualified = requireHardwareGpu
-    && report.measurementEnvironment.every(value => value !== 'unreported' && !value.startsWith('software-'));
+    && report.measurementEnvironment.every(value => value === 'hardware-known');
   report.result = 'MEASURED'; // Never equate a successful diagnostic with product acceptance.
 } catch (error) {
   report.result = 'INCOMPLETE'; report.error = String(error); process.exitCode = 1;
