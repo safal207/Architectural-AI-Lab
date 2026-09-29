@@ -50,6 +50,8 @@ function addPointFromNode(THREE, group, root, definition, nodeName, multiplier) 
   const castShadow = definition.shadowNames?.includes(nodeName) ?? false;
   light.castShadow = castShadow;
   if (castShadow) {
+    light.shadow.autoUpdate = false;
+    light.shadow.needsUpdate = true;
     light.shadow.mapSize.set(512, 512);
     light.shadow.bias = -0.00035;
     light.shadow.normalBias = 0.03;

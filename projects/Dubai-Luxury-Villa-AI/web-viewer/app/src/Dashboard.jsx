@@ -112,7 +112,7 @@ export default function Dashboard() {
       <ResidenceFilm />
       <section className="experience-section" id="viewer" ref={viewerSectionRef} aria-labelledby="experience-title">
         <header className="viewer-toolbar">
-          <div><p className="eyebrow">03 / The residence studio</p><h2 id="experience-title" tabIndex={-1}>Make yourself <em>at home.</em></h2><p>Move between rooms. Compare finishes. See the light change.</p></div>
+          <div><p className="eyebrow">03 / The residence studio</p><h2 id="experience-title" tabIndex={-1}>Make yourself <em>at home.</em></h2><p>Move between rooms. Watch the light, water and weather change.</p></div>
           <div className="lighting-control"><span className="control-label">The time of day</span><nav aria-label="Lighting mode">
             {Object.entries(lightingModes).map(([key, mode]) => <button key={key} type="button" className={lightingMode === key ? 'is-active' : ''} aria-pressed={lightingMode === key} onClick={() => setLightingMode(key)}><span className={`light-symbol light-symbol--${key}`} aria-hidden="true" />{mode.name}</button>)}
           </nav></div>

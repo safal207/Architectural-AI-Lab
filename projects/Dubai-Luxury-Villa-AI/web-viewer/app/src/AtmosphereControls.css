@@ -1,0 +1,20 @@
+.atmosphere-controls { display:flex; align-items:center; gap:22px; flex-wrap:wrap; padding:16px 20px; border-top:1px solid #51574b; background:#30372f; color:#eeeadd; }
+.atmosphere-controls__weather { display:flex; flex:1; flex-wrap:wrap; align-items:center; gap:12px; }
+.atmosphere-controls__label { font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:#d0d3c5; }
+.atmosphere-controls__weather [role="group"] { display:flex; gap:4px; }
+.atmosphere-controls button { min-height:42px; padding:9px 12px; border:1px solid #697162; border-radius:3px; background:transparent; color:#eeeee3; font:inherit; font-size:11px; cursor:pointer; }
+.atmosphere-controls button span { margin-right:5px; }
+.atmosphere-controls button[aria-pressed="true"] { background:#e6dfcf; border-color:#e6dfcf; color:#293127; }
+.atmosphere-controls button:hover { border-color:#c4ceaf; }
+.atmosphere-controls button:focus-visible, .atmosphere-controls input:focus-visible { outline:2px solid #e8c995; outline-offset:4px; }
+.atmosphere-controls__wind { display:grid; gap:5px; width:116px; font-size:10px; }
+.atmosphere-controls__wind > span { display:flex; justify-content:space-between; gap:12px; }
+.atmosphere-controls__wind output { color:#cdd5be; }
+.atmosphere-controls__wind input { width:100%; margin:0; min-height:24px; accent-color:#d9c6a1; cursor:pointer; }
+.atmosphere-controls .atmosphere-controls__motion { font-size:10px; }
+@media(max-width:650px) {
+  .atmosphere-controls { gap:12px; padding:12px; }
+  .atmosphere-controls__weather { flex-basis:100%; justify-content:space-between; }
+  .atmosphere-controls__wind { flex:1; max-width:190px; }
+  .atmosphere-controls .atmosphere-controls__motion { margin-left:auto; min-height:44px; }
+}

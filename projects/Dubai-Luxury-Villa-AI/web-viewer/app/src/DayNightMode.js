@@ -14,13 +14,13 @@ export const lightingModes = {
   evening: {
     name: 'Evening',
     background: '#81766c',
-    exposure: 0.84,
-    ambient: 0.40,
+    exposure: 0.90,
+    ambient: 0.46,
     hemisphere: 0.42,
-    sun: 0.75,
+    sun: 0.90,
     sunColor: '#ffc58c',
-    fill: 0.20,
-    environment: 0.24,
+    fill: 0.28,
+    environment: 0.40,
     interior: 0.26
   },
   night: {

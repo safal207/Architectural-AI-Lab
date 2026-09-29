@@ -51,9 +51,22 @@ Build success does not imply a browser QA pass. The reviewed deployed baseline `
 
 - A persistent Three.js scene loads the GLB once.
 - Guided views use authored presentation cameras; Explore uses separate walk anchors and a bounded route.
-- Desktop Explore supports pointer-lock look, WASD/arrow movement and Esc to release the pointer; touch controls are also available.
+- Desktop Explore supports drag-to-look, WASD/arrow movement and Esc to pause; touch controls are also available.
 - Room selection, the floor plan and the tour route share navigation state.
 - Three.js owns day/evening/night lighting; this GLB contains no duplicate Blender punctual lights.
 - Material variants, local property information and investor summaries are presentation features.
 
 The floor plan is a navigation schematic. This portfolio prototype is not BIM, measured construction geometry, a full collision simulation, engineering documentation or a property valuation.
+
+## Living atmosphere
+
+The scene now shares one time-of-day and weather state across sky, light, water and planting. Day, evening and night each support clear sky or rain. Wind controls cloud drift, planted foliage and pool ripples. Pause motion freezes the effect clock, and the initial setting respects the system's reduced-motion preference.
+
+- `three/atmosphere.js`: procedural sky, roof-aware rain columns and 128 px sky reflections. Up to six reflection maps are cached by time/weather; moving the wind control does not create more maps.
+- `three/livingWater.js`: a transmissive surface fitted to the repaired pool, wind ripples and rain rings. The original GLB and its source provenance remain intact.
+- `three/livingDetails.js`: planted foliage with matching shadow deformation, cabinet pulls, timber joints, ceramics and warm fixture details. Rain changes exposed coping and terrace roughness while retaining the selected palette.
+- `VillaViewer.jsx`: visible-only effect updates, capped animation cadence, cached static fixture shadows and bounded foliage shadow updates. One loaded model is reused across weather, palette and navigation changes.
+
+The pool remains the shallow concept geometry from the source model. Sky reflection is an environment approximation, not a ray-traced reflection of the villa; caustics and rainfall are presentation effects. No external weather, image service or new runtime dependency is required.
+
+With Playwright Chromium installed and a local preview running, run `VILLA_URL=http://127.0.0.1:4173/ node qa/living-atmosphere.mjs`. The browser check covers all six time/weather combinations, real canvas changes, frozen pause frames, wind keyboard input, navigation, one model download, reduced motion and mobile overflow. Use `QA_SCREENSHOTS=1` to save rendered frames.

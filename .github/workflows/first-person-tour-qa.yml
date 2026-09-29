@@ -59,6 +59,13 @@ jobs:
           cat /tmp/villa-preview.log
           exit 1
 
+      - name: Check living atmosphere, water, motion preferences and navigation
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-first-person-output/atmosphere
+          QA_SCREENSHOTS: '1'
+        run: node qa/living-atmosphere.mjs
+
       - name: Check drone flight and repaired scene in browser
         env:
           VILLA_URL: http://127.0.0.1:4173/

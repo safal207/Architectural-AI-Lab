@@ -28,7 +28,7 @@ export function createRenderer(THREE, container) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.70;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   // Geometry and fixture positions stay fixed while touring; reuse their shadows.
   renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.needsUpdate = true;
