@@ -26,7 +26,7 @@ export function createLights(THREE, scene, renderer) {
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   // Cover the full house and pool, rather than Three's default 10 m square.
-  Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 18, bottom: -18, near: 0.5, far: 70 });
+  Object.assign(sun.shadow.camera, { left: -38, right: 30, top: 32, bottom: -32, near: 0.5, far: 115 });
   sun.shadow.camera.updateProjectionMatrix();
   sun.shadow.bias = -0.00018;
   sun.shadow.normalBias = 0.035;

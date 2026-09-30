@@ -14,6 +14,11 @@ import { createAtmosphere } from './three/atmosphere';
 import { createLivingWater } from './three/livingWater';
 import { createLivingDetails } from './three/livingDetails';
 import AtmosphereControls from './AtmosphereControls';
+import EstateControls from './EstateControls';
+import { createEstateAmenities } from './three/estateAmenities';
+import { createResidenceInteractions } from './three/residenceInteractions';
+import { createSurfaceMaterials } from './three/surfaceMaterials';
+import { createRainSurfaces } from './three/rainSurfaces';
 import { TOUR_STOPS } from './tourData';
 import { createDroneFlight } from './droneFlight';
 import './DroneFlight.css';
@@ -290,6 +295,12 @@ export default function VillaViewer({
   const [isTouchUi, setIsTouchUi] = useState(false);
   const [interactionMode, setInteractionMode] = useState('guided');
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [estateSelection, setEstateSelection] = useState(null);
+  const [destinations, setDestinations] = useState([]);
+  const [actions, setActions] = useState([]);
+  const [finishes, setFinishes] = useState({terrace:'stone',joints:'large',kitchenStyle:'walnut',furnitureStyle:'linen',carColor:'racing-green'});
+  const estateDestinationId = estateSelection?.key === viewRequestId && !droneMode ? estateSelection.id : null;
+  const estateDestination = destinations.find(place => place.id === estateDestinationId);
   const [weather, setWeather] = useState('clear');
   const [wind, setWind] = useState(0.35);
   const [motion, setMotion] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -313,9 +324,42 @@ export default function VillaViewer({
     activeTourStopId,
     interactionMode,
     droneMode,
+    estateDestinationId,
+    finishes,
     weather,
     wind,
     motion
+  };
+
+  const refreshActions = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime || runtime.disposed) return;
+    setActions([...(runtime.residence?.actions ?? []), ...(runtime.estate?.actions ?? [])].map(({id,label,type,state}) => ({id,label,type,state})));
+    const colors = {'#365b57':'racing-green','#c5c0b5':'silver','#832f30':'red'};
+    const kitchenStyle = runtime.residence?.report.kitchenStyle;
+    const furnitureStyle = runtime.residence?.report.furnitureStyle;
+    const reportedCarColor = runtime.estate?.report.carColor;
+    const carColor = ['racing-green','silver','red'].includes(reportedCarColor) ? reportedCarColor : colors[reportedCarColor];
+    setFinishes(previous => {
+      const next={...previous,...(kitchenStyle?{kitchenStyle}:{}),...(furnitureStyle?{furnitureStyle}:{}),...(carColor?{carColor}:{})};
+      return Object.keys(next).some(key=>next[key]!==previous[key])?next:previous;
+    });
+    runtime.needsRender = true;
+  };
+  const activateAction = (id) => {
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    const activated = runtime.residence?.activate(id) || runtime.estate?.activate(id);
+    if (activated) { runtime.renderer.shadowMap.needsUpdate = true; refreshActions(); }
+  };
+  const syncFinishes = () => {
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    const current = latestPropsRef.current;
+    runtime.surfaces?.setState({...current.finishes,stoneColor:current.material?.familyColors?.deck});
+    runtime.residence?.setState({...current.finishes,motion:current.motion});
+    runtime.estate?.setState(current.finishes);
+    refreshActions();
   };
 
   /** Apply the latest atmosphere and current room's lighting profile to the existing lights and request a frame. */
@@ -324,7 +368,7 @@ export default function VillaViewer({
     if (!runtime) return;
     runtime.needsRender = true;
     const current = latestPropsRef.current;
-    const isFirstPerson = !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
+    const isFirstPerson = !current.estateDestinationId && !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
     const lighting = resolveRuntimeLighting(
       current.lightingMode,
       current.interactionMode === 'explore' && runtime.isExplore
@@ -339,6 +383,9 @@ export default function VillaViewer({
     runtime.atmosphere?.setState(state);
     runtime.water?.setState(state);
     runtime.details?.setState(state);
+    runtime.estate?.setState(state);
+    runtime.residence?.setState(state);
+    runtime.rainSurfaces?.setState(state);
     if (runtime.atmosphere) {
       mountRef.current.dataset.atmosphereReport = JSON.stringify(runtime.atmosphere.report);
       mountRef.current.dataset.waterReport = JSON.stringify(runtime.water.report);
@@ -371,6 +418,7 @@ export default function VillaViewer({
     runtime.needsRender = true;
     const report = applyMaterialConcept(runtime.villaRoot, latestPropsRef.current.material);
     setMaterialResponse(report);
+    syncFinishes();
     syncLighting();
   };
 
@@ -384,7 +432,7 @@ export default function VillaViewer({
     runtime.needsRender = true;
 
     const current = latestPropsRef.current;
-    const isFirstPerson = !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
+    const isFirstPerson = !current.estateDestinationId && !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
     const isExplore = isFirstPerson && current.interactionMode === 'explore';
     const wasFirstPerson = runtime.isFirstPerson;
 
@@ -397,6 +445,7 @@ export default function VillaViewer({
 
     if (runtime.orbitControls) runtime.orbitControls.enabled = !isFirstPerson && !current.droneMode;
     runtime.isDrone = current.droneMode;
+    if(current.droneMode) runtime.residence?.setBathroomCutaway(false);
     if (current.droneMode) {
       runtime.camera.fov = runtime.camera.aspect < 1 ? 72 : 60;
       runtime.camera.updateProjectionMatrix();
@@ -406,6 +455,23 @@ export default function VillaViewer({
       return;
     }
     runtime.drone.disable();
+    const destination = runtime.destinations?.find(place => place.id === current.estateDestinationId);
+    runtime.residence?.setBathroomCutaway(destination?.id === 'bathroom');
+    if (destination) {
+      runtime.orbitControls.minDistance = destination.id === 'bathroom' ? 1.2 : 2;
+      runtime.camera.position.fromArray(destination.position);
+      runtime.camera.fov = runtime.camera.aspect < 1 ? 70 : 53;
+      runtime.camera.updateProjectionMatrix();
+      const damping=runtime.orbitControls.enableDamping;
+      runtime.orbitControls.enableDamping=false;
+      runtime.orbitControls.target.fromArray(destination.target);
+      runtime.orbitControls.update();
+      runtime.orbitControls.enableDamping=damping;
+      setFirstPersonReady(false);
+      syncLighting();
+      return;
+    }
+    runtime.orbitControls.minDistance = 8;
 
     if (isFirstPerson) {
       runtime.camera.fov = 64;
@@ -484,7 +550,7 @@ export default function VillaViewer({
     orbitControls.enableDamping = true;
     orbitControls.target.fromArray(OVERVIEW_TARGET);
     orbitControls.minDistance = 8;
-    orbitControls.maxDistance = 60;
+    orbitControls.maxDistance = 100;
     orbitControls.maxPolarAngle = Math.PI * 0.49;
 
     const isTouchDevice = window.matchMedia?.('(pointer: coarse)').matches ?? false;
@@ -592,9 +658,23 @@ export default function VillaViewer({
         runtime.villaRoot.updateMatrixWorld(true);
 
         const quality = runtime.isTouchDevice || container.clientWidth < 640 ? 'mobile' : 'desktop';
-        runtime.atmosphere = createAtmosphere(THREE, { scene, renderer, camera, root: runtime.villaRoot, quality });
         runtime.water = createLivingWater(THREE, { scene, renderer, root: runtime.villaRoot, quality });
         runtime.details = createLivingDetails(THREE, { scene, root: runtime.villaRoot, quality });
+        // Palette clones are finalized before shader layers and clickable materials.
+        setMaterialResponse(applyMaterialConcept(runtime.villaRoot, latestPropsRef.current.material));
+        runtime.estate = createEstateAmenities(THREE, {scene,root:runtime.villaRoot,quality});
+        runtime.residence = createResidenceInteractions(THREE, {scene,root:runtime.villaRoot,renderer,quality,onChange:refreshActions});
+        runtime.surfaces = createSurfaceMaterials(THREE, {root:runtime.villaRoot,surfaces:runtime.estate.wetSurfaces,renderer,onChange:requestRender});
+        const atmosphereRoot = {updateWorldMatrix:()=>scene.updateMatrixWorld(true),traverse:fn=>{runtime.villaRoot.traverse(fn);runtime.estate.group.traverse(fn);}};
+        runtime.atmosphere = createAtmosphere(THREE, {scene,renderer,camera,root:atmosphereRoot,quality,extraOccluders:runtime.estate.rainOccluders});
+        runtime.rainSurfaces = createRainSurfaces(THREE, {scene,root:runtime.villaRoot,quality,renderer});
+        for(const {mesh,kind} of runtime.estate.wetSurfaces) {
+          const rainKind=['paving','roof'].includes(kind)?'deck':kind;
+          if(['asphalt','deck','facade','glass'].includes(rainKind)) runtime.rainSurfaces.registerSurface(mesh,rainKind);
+        }
+        runtime.destinations = [...runtime.estate.destinations, ...Object.values(runtime.residence.destinations)];
+        setDestinations(runtime.destinations.map(({id,label,description,floor})=>({id,label,description,floor:floor ? `Level ${floor}` : undefined})));
+        refreshActions();
         container.dataset.atmosphereReport = JSON.stringify(runtime.atmosphere.report);
         container.dataset.waterReport = JSON.stringify(runtime.water.report);
         container.dataset.detailsReport = JSON.stringify(runtime.details.report);
@@ -643,7 +723,11 @@ export default function VillaViewer({
     });
 
     /** Capture one primary pointer for mouse or touch look-around without browser pointer lock. */
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let pickStart = null;
     const pointerDown = (event) => {
+      if(event.button === 0) pickStart = {id:event.pointerId,x:event.clientX,y:event.clientY,time:performance.now(),moved:false};
       if (!runtime.isExplore || !runtime.firstPersonAvailable
         || runtime.touchLook.active || event.button !== 0) return;
       setHasInteracted(true);
@@ -657,6 +741,7 @@ export default function VillaViewer({
 
     /** Apply the captured pointer's movement to yaw and bounded pitch, then request a frame. */
     const pointerMove = (event) => {
+      if(pickStart && Math.hypot(event.clientX-pickStart.x,event.clientY-pickStart.y)>7) pickStart.moved=true;
       const touchLook = runtime.touchLook;
       if (!runtime.isExplore || !runtime.firstPersonAvailable
         || !touchLook.active || touchLook.pointerId !== event.pointerId) return;
@@ -674,6 +759,16 @@ export default function VillaViewer({
     };
 
     const pointerUp = (event) => {
+      if(event.type === 'pointerup' && pickStart?.id === event.pointerId && !pickStart.moved && performance.now()-pickStart.time<600) {
+        const bounds=renderer.domElement.getBoundingClientRect();
+        pointer.set((event.clientX-bounds.left)/bounds.width*2-1,-(event.clientY-bounds.top)/bounds.height*2+1);
+        scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);raycaster.setFromCamera(pointer,camera);
+        // Closest visible geometry owns the click; no activation through walls.
+        const hits=raycaster.intersectObjects([runtime.villaRoot,runtime.estate?.group].filter(Boolean),true);
+        const hit=hits.find(item=>{let o=item.object;while(o){if(!o.visible)return false;o=o.parent;}return true;});
+        if(hit && (runtime.residence?.activateFromObject(hit.object) || runtime.estate?.activateFromObject(hit.object))) { renderer.shadowMap.needsUpdate=true;refreshActions(); }
+      }
+      pickStart=null;
       if (runtime.touchLook.pointerId !== event.pointerId) return;
       runtime.touchLook.active = false;
       runtime.touchLook.pointerId = null;
@@ -693,6 +788,9 @@ export default function VillaViewer({
       camera.aspect = width / height;
       if (runtime.isDrone) {
         camera.fov = camera.aspect < 1 ? 72 : 60;
+        camera.updateProjectionMatrix();
+      } else if (latestPropsRef.current.estateDestinationId) {
+        camera.fov=camera.aspect<1?70:53;
         camera.updateProjectionMatrix();
       } else if (runtime.isFirstPerson) {
         const stop = TOUR_STOPS.find((item) => item.id === latestPropsRef.current.activeTourStopId);
@@ -721,22 +819,25 @@ export default function VillaViewer({
       // Keep at most one frame in flight so a slow GPU cannot block page input
       // behind an ever-growing queue of weather renders. Dirty state is retained.
       const canSubmitFrame = framePacer.ready();
-      if (latestPropsRef.current.motion && runtime.atmosphere) {
+      if (runtime.atmosphere) {
         runtime.atmosphereDelta += delta;
         const frameBudget = runtime.isTouchDevice ? 1 / 24 : 1 / 30;
         if (canSubmitFrame && framePacer.canAnimate() && runtime.atmosphereDelta >= frameBudget) {
           const step = Math.min(runtime.atmosphereDelta, 0.08);
           runtime.atmosphereDelta = 0;
-          runtime.elapsed += step;
+          if(latestPropsRef.current.motion) runtime.elapsed += step;
           const skyChanged = runtime.atmosphere.update(step);
           const waterChanged = runtime.water?.update(step);
           const detailsChanged = runtime.details?.update(step);
+          const rainChanged = runtime.rainSurfaces?.update(step);
+          const estateChanged = runtime.estate?.update(step);
+          const residenceChanged = runtime.residence?.update(step);
           runtime.shadowElapsed += step;
-          if (detailsChanged && runtime.shadowElapsed >= 0.25) {
+          if ((detailsChanged || estateChanged || residenceChanged) && runtime.shadowElapsed >= 0.25) {
             renderer.shadowMap.needsUpdate = true;
             runtime.shadowElapsed = 0;
           }
-          if (skyChanged || waterChanged || detailsChanged) requestRender();
+          if (skyChanged || waterChanged || detailsChanged || rainChanged || estateChanged || residenceChanged) requestRender();
         }
       } else {
         runtime.atmosphereDelta = 0;
@@ -833,6 +934,11 @@ export default function VillaViewer({
         container.dataset.renderedWeather = latestPropsRef.current.weather;
         container.dataset.renderedLighting = latestPropsRef.current.lightingMode?.name ?? '';
         container.dataset.renderedMotion = latestPropsRef.current.motion ? 'running' : 'paused';
+        container.dataset.renderedDestination = latestPropsRef.current.estateDestinationId ?? '';
+        container.dataset.rainSurfacesReport = JSON.stringify(runtime.rainSurfaces?.report ?? {});
+        container.dataset.estateReport = JSON.stringify(runtime.estate?.report ?? {});
+        container.dataset.residenceReport = JSON.stringify(runtime.residence?.report ?? {});
+        container.dataset.surfaceReport = JSON.stringify(runtime.surfaces?.report ?? {});
         runtime.needsRender = false;
       }
     };
@@ -858,6 +964,10 @@ export default function VillaViewer({
       runtime.orbitControls?.removeEventListener('change', requestRender);
       runtime.orbitControls?.dispose();
       mobileMotionRef.current = { forward: 0, right: 0 };
+      runtime.rainSurfaces?.dispose();
+      runtime.surfaces?.dispose();
+      runtime.residence?.dispose();
+      runtime.estate?.dispose();
       runtime.details?.dispose();
       runtime.water?.dispose();
       runtime.atmosphere?.dispose();
@@ -883,9 +993,11 @@ export default function VillaViewer({
     syncMaterial();
   }, [material]);
 
+  useEffect(() => { syncFinishes(); }, [finishes]);
+
   useEffect(() => {
     syncView();
-  }, [selectedRoom, tourMode, activeTourStopId, interactionMode, droneMode, viewRequestId]);
+  }, [selectedRoom, tourMode, activeTourStopId, interactionMode, droneMode, viewRequestId, estateDestinationId]);
 
   useEffect(() => {
     setInteractionMode('guided');
@@ -894,7 +1006,7 @@ export default function VillaViewer({
   }, [tourMode, activeTourStopId, viewRequestId]);
 
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
-  const isFirstPerson = !droneMode && tourMode && activeTourStopId !== 'overview';
+  const isFirstPerson = !estateDestinationId && !droneMode && tourMode && activeTourStopId !== 'overview';
   const isExplore = isFirstPerson && interactionMode === 'explore';
   const runtimeLightingProfile = resolveRuntimeLighting(
     lightingMode,
@@ -916,6 +1028,7 @@ export default function VillaViewer({
 
   /** Leave Drone mode and request the exterior stop through the parent's shared navigation state. */
   const returnToOverview = () => {
+    setEstateSelection(null);
     setDroneMode(false);
     onSelectTourStop?.(TOUR_STOPS[0]);
   };
@@ -963,10 +1076,10 @@ export default function VillaViewer({
       <div className="viewer-heading">
         <div>
           <p className="eyebrow">Your own perspective</p>
-          <h2>{droneMode ? 'Fly through the residence' : isFirstPerson ? activeStop.title : 'The residence, in 3D'}</h2>
+          <h2>{estateDestination ? estateDestination.label : droneMode ? 'Fly through the residence' : isFirstPerson ? activeStop.title : 'The residence, in 3D'}</h2>
         </div>
         <p>
-          {droneMode ? 'Drag to look · move freely, inside and outside' : isFirstPerson
+          {estateDestination ? 'Drag to look around · click doors, glazing and screens' : droneMode ? 'Drag to look · move freely, inside and outside' : isFirstPerson
             ? isExplore
               ? 'Drag to look around. Walk through the connected spaces.'
               : 'Follow the arrows, or explore at your own pace.'
@@ -976,7 +1089,7 @@ export default function VillaViewer({
 
       <div className="scene-navigation" role="group" aria-label="Scene navigation">
         <button type="button" aria-pressed={!droneMode && !isFirstPerson} onClick={returnToOverview} disabled={modelState !== 'loaded'}>Orbit overview</button>
-        <button type="button" aria-pressed={droneMode} onClick={() => setDroneMode(true)} disabled={modelState !== 'loaded'}>Drone flight</button>
+        <button type="button" aria-pressed={droneMode} onClick={() => {setEstateSelection(null);setDroneMode(true);}} disabled={modelState !== 'loaded'}>Drone flight</button>
         <button type="button" onClick={() => { setDroneMode(false); onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'entry')); }} disabled={modelState !== 'loaded'}>Go inside <span aria-hidden="true">↗</span></button>
       </div>
       <AtmosphereControls weather={weather} setWeather={setWeather} wind={wind} setWind={setWind} motion={motion} setMotion={setMotion} />
@@ -993,6 +1106,7 @@ export default function VillaViewer({
           data-viewer-runtime={VIEWER_RUNTIME_PROFILE}
           data-view-mode={droneMode ? 'drone' : isFirstPerson ? 'first-person' : 'orbit'}
           data-interaction-mode={droneMode ? 'drone' : isFirstPerson ? interactionMode : 'orbit'}
+          data-estate-destination={estateDestinationId ?? ''}
           data-tour-stop={activeTourStopId}
           data-walk-graph={walkGraphReady ? 'ready' : 'fallback'}
           data-interior-light-count={interiorLightCount}
@@ -1023,6 +1137,7 @@ export default function VillaViewer({
           </div>
         )}
 
+        {estateDestination && <div className="estate-view-caption"><strong>{estateDestination.label}</strong><span>{estateDestination.description ?? 'Walk-in shower, WC and basin. Section view reveals the private bathroom.'}</span></div>}
         {droneMode && <>
           <div className="drone-help"><strong>Free flight</strong><span>{isTouchUi ? 'Drag to look. Hold a control to move.' : 'Drag to look · WASD to move · E up / Q down'}</span><small>Fly freely through the concept model.</small></div>
           <button className="drone-inside" type="button" onClick={flyInside}>Fly inside ↗</button>
@@ -1152,8 +1267,9 @@ export default function VillaViewer({
         )}
       </div>
 
+      <EstateControls destinations={destinations} destination={estateDestinationId} onVisit={id=>{setDroneMode(false);setEstateSelection({id,key:viewRequestId});}} actions={actions} onAction={activateAction} finishes={finishes} onFinish={(key,value)=>setFinishes(previous=>({...previous,[key]:value}))} disabled={modelState!=='loaded'} />
       <p className="viewer-note" id={viewerNoteId}>
-        Explore the villa, change the weather, or pause to study the light. Drone flight moves freely; Go inside starts the room-by-room tour.
+        Drag to orbit. Drone flight: drag to look, use WASD to move, E to ascend and Q to descend. Go inside starts the guided room tour. Click doors, sliding glazing and screens; rain gradually wets exposed surfaces and gathers in puddles. Bathroom view opens a section through the private core. This interactive residence is a design concept.
       </p>
     </section>
   );

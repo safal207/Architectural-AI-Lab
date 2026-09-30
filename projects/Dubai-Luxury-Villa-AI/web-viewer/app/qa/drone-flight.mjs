@@ -17,11 +17,14 @@ const direction = async page => (await page.locator('.three-canvas').getAttribut
 const distance = (a,b) => Math.hypot(...a.map((v,i)=>v-b[i]));
 /** Activate the uniquely named accessible button for a flight scenario. */
 const click = (page, name) => page.getByRole('button', { name, exact: true }).click();
-/** Wait until both requested and rendered interaction modes match before sampling the camera. */
-const mode = (page, expected) => page.waitForFunction(value => {
-  const view = document.querySelector('.three-canvas');
-  return view?.dataset.interactionMode === value && view?.dataset.renderedInteractionMode === value;
-}, expected);
+/** Reveal the paused offscreen scene, then wait for its requested and rendered camera modes. */
+const mode = async (page, expected) => {
+  await page.locator('.three-canvas').scrollIntoViewIfNeeded();
+  await page.waitForFunction(value => {
+    const view = document.querySelector('.three-canvas');
+    return view?.dataset.interactionMode === value && view?.dataset.renderedInteractionMode === value;
+  }, expected);
+};
 /** Wait up to 15 seconds for rendered displacement to exceed the specified model-unit threshold. */
 async function waitMovement(page, before, min=.08) {
   await page.waitForFunction(({before,min}) => {

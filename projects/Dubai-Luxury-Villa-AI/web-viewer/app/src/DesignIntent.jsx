@@ -28,7 +28,7 @@ const GESTURES = [
     number: '03',
     title: 'A timber thread',
     detail: 'One material, different scales.',
-    description: 'Vertical timber elements on the façade find an echo in the kitchen island and interior joinery. Warm wood brings a shared character to the two levels.',
+    description: 'Vertical timber elements on the façade find an echo in the kitchen island and interior joinery. Warm wood brings a shared character through the main residence.',
     stop: 'dining',
     action: 'See the kitchen in 3D',
     diagram: 'The timber fins and soffit are highlighted at their actual positions on the upper façade. Interior joinery can be viewed in the kitchen tour.'
@@ -98,14 +98,14 @@ export default function DesignIntent({ onEnterSpace }) {
     <section className="design-intent section-wrap" id="design" aria-labelledby={`${id}-title`}>
       <header className="design-intent__intro">
         <div><p className="eyebrow">01 / The architectural idea</p><h2 id={`${id}-title`}>A house in<br /><em>three gestures.</em></h2></div>
-        <p>Two levels, held together by a small set of decisions: a deep horizontal edge, a view towards water, and the rhythm of timber.</p>
+        <p>A residence and rooftop retreat, held together by a small set of decisions: a deep horizontal edge, a view towards water, and the rhythm of timber.</p>
       </header>
 
       <dl className="design-intent__facts">
         <div><dt>Location</dt><dd>Dubai, UAE</dd></div>
         <div><dt>Stage</dt><dd>Concept study</dd></div>
         <div><dt>Scope</dt><dd>Architecture & interiors</dd></div>
-        <div><dt>Organisation</dt><dd>Two levels</dd></div>
+        <div><dt>Organisation</dt><dd>Two floors + sky lounge</dd></div>
       </dl>
 
       <div className="design-intent__study">
