@@ -67,15 +67,30 @@ jobs:
           QA_OUTPUT: qa-estate-output
         run: |
           mkdir -p "$QA_OUTPUT"
-          npm run preview -- --host 127.0.0.1 --port 4173 > "$QA_OUTPUT/preview.log" 2>&1 &
+          # Own the Vite PID directly so cleanup also waits for the server.
+          node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 4173 --strictPort > "$QA_OUTPUT/preview.log" 2>&1 &
           PID=$!
-          trap 'kill $PID || true' EXIT
+          cleanup() {
+            status=$?
+            trap - EXIT
+            kill "$PID" 2>/dev/null || true
+            wait "$PID" 2>/dev/null || true
+            exit "$status"
+          }
+          trap cleanup EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
           for i in {1..60}; do
-            if curl -fsS "$VILLA_URL" >/dev/null; then
+            if ! kill -0 "$PID" 2>/dev/null; then
+              cat "$QA_OUTPUT/preview.log"
+              exit 1
+            fi
+            if curl -fsS --max-time 2 "$VILLA_URL" >/dev/null; then
               break
             fi
             sleep 1
           done
+          kill -0 "$PID"
           curl --fail --silent --show-error http://127.0.0.1:4173/ > /tmp/viewer-index.html
           curl --fail --silent --show-error http://127.0.0.1:4173/villa.asset.json > /tmp/viewer-villa.asset.json
           curl --fail --silent --show-error http://127.0.0.1:4173/villa.glb > /tmp/viewer-villa.glb
