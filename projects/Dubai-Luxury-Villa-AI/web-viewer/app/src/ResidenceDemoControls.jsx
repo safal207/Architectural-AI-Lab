@@ -10,7 +10,7 @@ export default function ResidenceDemoControls({ demo, ready }) {
       </div>
       <div className="residence-demo__actions">
         <button type="button" className="residence-demo__play" disabled={!ready} onClick={() => demo.start('house')}>{demo.reduced ? 'View demo scenes' : 'Play house + drone demo'} <span aria-hidden="true">↗</span></button>
-        <button type="button" disabled={!ready} onClick={() => demo.start('orbit')}>Drone orbit only</button>
+        <button type="button" disabled={!ready} onClick={() => demo.start('orbit')}>{demo.reduced ? 'View aerial scenes' : 'Drone orbit only'}</button>
       </div>
       {demo.active && <>
         <div className="residence-demo__progress"><progress max={demo.duration || 1} value={demo.seconds} aria-label="Demo progress" /><span>{time(demo.seconds)} / {time(demo.duration)}</span></div>
