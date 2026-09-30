@@ -1,0 +1,69 @@
+import assert from 'node:assert/strict';
+import {mkdir,writeFile} from 'node:fs/promises';
+import {chromium} from 'playwright';
+const target=new URL(process.env.VILLA_URL??'http://127.0.0.1:4179/');
+target.searchParams.set('qaCapture','1');target.searchParams.set('lighting','day');
+const url=target.href;
+const out=process.env.QA_OUTPUT??'qa-estate-output';await mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:true});
+const report={errors:[],views:[],checks:[]};
+try{
+ const page=await browser.newPage({viewport:{width:1440,height:1050},reducedMotion:'reduce'});
+ page.setDefaultTimeout(90000);
+ page.on('pageerror',e=>{report.errors.push(String(e));console.error(e);});
+ page.on('console',m=>{if(m.type()==='error'){report.errors.push(m.text());console.error(m.text());}});
+ await page.goto(url,{waitUntil:'domcontentloaded'});
+ await page.locator('#viewer .viewer-panel').evaluate(e=>e.scrollIntoView({block:'center',behavior:'instant'}));
+ console.log('Viewer revealed');
+ await page.locator('.three-canvas').evaluate(e=>e.scrollIntoView({block:'center',behavior:'instant'}));
+ await page.waitForFunction(()=>document.querySelector('.three-canvas')?.dataset.modelState==='loaded');
+ await page.waitForFunction(()=>JSON.parse(document.querySelector('.three-canvas')?.dataset.surfaceReport??'{}').loaded===6);
+ console.log('Model and six PBR maps loaded');
+ async function click(l){await l.evaluate(e=>e.click());}
+ async function shot(name){const data=await page.locator('.three-canvas canvas').evaluate(c=>c.toDataURL('image/png'));await writeFile(`${out}/${name}.png`,Buffer.from(data.split(',')[1],'base64'));}
+ async function visit(id,label){await click(page.getByRole('button',{name:label,exact:true}));await page.locator('.three-canvas').evaluate(e=>e.scrollIntoView({block:'center',behavior:'instant'}));await page.waitForFunction(id=>document.querySelector('.three-canvas')?.dataset.renderedDestination===id,id);await shot(id);report.views.push(id);console.log('View',id);}
+ await visit('estate','Whole estate');
+ await page.locator('.estate-panels details').first().evaluate(e=>{e.open=true;});
+ await click(page.getByRole('button',{name:/Open garage/}));
+ await page.waitForFunction(()=>JSON.parse(document.querySelector('.three-canvas').dataset.estateReport).garageProgress===1);
+ report.checks.push('Garage animates with weather paused');
+ await visit('garage','Garage & sports car');
+ await visit('water-garden','Water-play garden');
+ await visit('roof-lounge','Sky lounge Level 3');
+ await visit('bathroom','Bathroom + shower');
+ assert.equal(await page.locator('.three-canvas').evaluate(e=>JSON.parse(e.dataset.residenceReport).bathroom.cutaway),true);
+ await click(page.getByRole('button',{name:'Drone flight',exact:true}));
+ await page.waitForFunction(()=>document.querySelector('.three-canvas').dataset.renderedInteractionMode==='drone');
+ assert.equal(await page.locator('.three-canvas').evaluate(e=>JSON.parse(e.dataset.residenceReport).bathroom.cutaway),false);
+ await visit('bathroom','Bathroom + shower');
+ await click(page.getByRole('button',{name:/Entrance door/}));
+ await page.waitForFunction(()=>JSON.parse(document.querySelector('.three-canvas').dataset.residenceReport).actions.some(a=>a.id==='entry-door'&&a.state==='open'));
+ await page.locator('.estate-panels details').nth(1).evaluate(e=>{e.open=true;});
+ await page.getByLabel('Terrace finish',{exact:true}).selectOption('timber');
+ await page.getByLabel('Kitchen',{exact:true}).selectOption('graphite');
+ await page.getByLabel('Furniture',{exact:true}).selectOption('sage');
+ await page.getByLabel('Sports car',{exact:true}).selectOption('red');
+ await visit('pool-club','Pool lounge');
+ await page.waitForFunction(()=>JSON.parse(document.querySelector('.three-canvas').dataset.surfaceReport).terrace==='timber');
+ assert.equal(await page.locator('.three-canvas').evaluate(e=>JSON.parse(e.dataset.residenceReport).bathroom.cutaway),false);
+ report.checks.push('Bathroom restores on leaving; doors and finish choices work');
+ await click(page.getByRole('button',{name:'Rain',exact:true}));
+ await click(page.getByRole('button',{name:'Pause motion',exact:true}));
+ await page.waitForFunction(()=>JSON.parse(document.querySelector('.three-canvas').dataset.rainSurfacesReport).accumulatedWetness>.04,undefined,{timeout:120000});
+ await click(page.getByRole('button',{name:'Pause motion',exact:true}));
+ await page.waitForFunction(()=>document.querySelector('.three-canvas').dataset.renderedMotion==='paused');
+ await shot('pool-rain');
+ report.desktop=await page.locator('.three-canvas').evaluate(e=>({...e.dataset}));
+ assert.equal(Number(report.desktop.modelLoadCount),1);
+ assert.equal(report.errors.length,0);
+ await click(page.getByRole('button',{name:'Night',exact:true}));
+ await page.waitForFunction(()=>document.querySelector('.three-canvas').dataset.renderedLighting==='Night');
+ await shot('pool-night-rain');
+ await page.setViewportSize({width:390,height:844});
+ await visit('estate','Whole estate');
+ await shot('mobile-estate');
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+ report.checks.push('Single model load; six textures; real wetness growth; no console errors; mobile fits');
+ report.status='PASS';console.log('PASS living estate');
+}catch(e){report.status='FAIL';report.failure=String(e);console.error(e);process.exitCode=1;}
+finally{await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));await browser.close();}

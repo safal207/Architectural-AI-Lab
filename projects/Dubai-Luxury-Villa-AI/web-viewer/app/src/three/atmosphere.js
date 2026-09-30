@@ -168,10 +168,10 @@ function randomGenerator() {
   };
 }
 
-function createRain(THREE, root, mobile) {
+function createRain(THREE, root, mobile, extraOccluders = []) {
   const count = mobile ? 240 : 600;
   const structuralMeshes = [];
-  const overheadBounds = [];
+  const overheadBounds = [...extraOccluders];
   const siteBounds = new THREE.Box3();
   const meshBounds = new THREE.Box3();
   root?.updateWorldMatrix(true, true);
@@ -185,7 +185,7 @@ function createRain(THREE, root, mobile) {
       && !/light|glow/.test(object.name)) {
       overheadBounds.push(new THREE.Box3().setFromObject(object));
     }
-    if (/^(roof_plane|ground_floor_slab|pool_water|terrace_deck|site_plinth)$/.test(object.name)) {
+    if (object.userData.rainExtent || /^(roof_plane|ground_floor_slab|pool_water|terrace_deck|site_plinth)$/.test(object.name)) {
       siteBounds.union(meshBounds.setFromObject(object));
     }
   });
@@ -277,7 +277,7 @@ function createRain(THREE, root, mobile) {
  * `update(deltaSeconds)` reports whether animated atmosphere needs another frame.
  * Pass quality = 'mobile' / 'low' (or {mobile:true}) to reduce rain to 240 lines.
  */
-export function createAtmosphere(THREE, { scene, renderer, camera, root, quality = 'desktop' }) {
+export function createAtmosphere(THREE, { scene, renderer, camera, root, quality = 'desktop', extraOccluders = [] }) {
   const mobile = quality === 'mobile' || quality === 'low' || quality?.mobile === true;
   const sunPosition = new THREE.Vector3();
   const horizonColor = new THREE.Color();
@@ -305,7 +305,7 @@ export function createAtmosphere(THREE, { scene, renderer, camera, root, quality
     sky.updateMatrixWorld();
   };
   scene.add(sky);
-  const rain = createRain(THREE, root, mobile);
+  const rain = createRain(THREE, root, mobile, extraOccluders);
   scene.add(rain.mesh);
   const state = { mode: 'day', weather: 'clear', wind: 0.35, motion: true };
   const report = {

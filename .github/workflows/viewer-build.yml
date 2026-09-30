@@ -51,6 +51,11 @@ jobs:
       - name: Build viewer
         run: npm run build
 
+      - name: Verify rain surfaces and residence interactions
+        run: |
+          node qa/rain-surfaces.mjs
+          node qa/residence-interactions.mjs
+
       - name: Smoke test built viewer, manifest and exact GLB delivery
         run: |
           npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-viewer-vite.log 2>&1 &
