@@ -78,7 +78,10 @@ try {
     await page.locator('.three-canvas-shell').screenshot({ path: `qa-output/${name}-house.png`, timeout: 120000 });
     await overlay.getByRole('button', { name: 'Exit demo view', exact: true }).click();
     await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.renderedInteractionMode === 'orbit', null, { timeout: 120000 });
-    await panel.getByRole('button', { name: 'Drone orbit only', exact: true }).click();
+    const orbitLabel = name === 'desktop' ? 'Drone orbit only' : 'View aerial scenes';
+    const orbitButton = panel.getByRole('button', { name: orbitLabel, exact: true });
+    assert.equal(await orbitButton.textContent(), orbitLabel, 'Aerial CTA must describe motion accurately for the active motion preference');
+    await orbitButton.click();
     await renderedDemo(page);
     if (name === 'desktop') {
       const orbitStarted = await snapshot(page);
