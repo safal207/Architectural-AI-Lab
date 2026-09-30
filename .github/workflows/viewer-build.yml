@@ -56,12 +56,26 @@ jobs:
           node qa/rain-surfaces.mjs
           node qa/residence-interactions.mjs
 
-      - name: Smoke test built viewer, manifest and exact GLB delivery
+      - name: Install Playwright Chromium
         run: |
-          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-viewer-vite.log 2>&1 &
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Smoke test built viewer, GLB delivery and estate interactions
+        env:
+          VILLA_URL: http://127.0.0.1:4173/
+          QA_OUTPUT: qa-estate-output
+        run: |
+          mkdir -p "$QA_OUTPUT"
+          npm run preview -- --host 127.0.0.1 --port 4173 > "$QA_OUTPUT/preview.log" 2>&1 &
           PID=$!
           trap 'kill $PID || true' EXIT
-          sleep 2
+          for i in {1..60}; do
+            if curl -fsS "$VILLA_URL" >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
           curl --fail --silent --show-error http://127.0.0.1:4173/ > /tmp/viewer-index.html
           curl --fail --silent --show-error http://127.0.0.1:4173/villa.asset.json > /tmp/viewer-villa.asset.json
           curl --fail --silent --show-error http://127.0.0.1:4173/villa.glb > /tmp/viewer-villa.glb
@@ -71,6 +85,16 @@ jobs:
           cmp public/villa.asset.json /tmp/viewer-villa.asset.json
           cmp public/villa.glb /tmp/viewer-villa.glb
           echo 'Viewer HTML, provenance manifest and exact gated GLB served successfully'
+          node qa/living-estate.mjs
+
+      - name: Upload estate browser QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dubai-villa-estate-qa
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-estate-output
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Upload verified viewer build
         uses: actions/upload-artifact@v4
