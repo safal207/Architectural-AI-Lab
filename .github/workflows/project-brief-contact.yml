@@ -1,0 +1,64 @@
+name: Project Brief Contact QA
+
+on:
+  pull_request:
+    paths:
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - '.github/workflows/project-brief-contact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contact-qa:
+    name: Project brief / ${{ matrix.viewport }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: [desktop, mobile]
+    defaults:
+      run:
+        working-directory: projects/Dubai-Luxury-Villa-AI/web-viewer/app
+        shell: bash
+    env:
+      VILLA_URL: http://127.0.0.1:4173/
+      QA_VIEWPORT: ${{ matrix.viewport }}
+      QA_OUTPUT: qa-project-brief-output
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Install locked app dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Build production viewer
+        run: npm run build
+      - name: Install pinned browser test dependency
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start local production preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/villa-preview.log 2>&1 &
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/villa-preview.log
+          exit 1
+      - name: Verify enquiry handoff and clipboard failure recovery
+        run: |
+          mkdir -p "$QA_OUTPUT"
+          node qa/project-brief-contact.mjs 2>&1 | tee "$QA_OUTPUT/run.log"
+      - name: Upload contact QA evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: villa-project-brief-${{ matrix.viewport }}
+          path: projects/Dubai-Luxury-Villa-AI/web-viewer/app/qa-project-brief-output
+          if-no-files-found: warn
+          retention-days: 14

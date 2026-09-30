@@ -28,18 +28,25 @@ const OPTIONAL_IDEAS = [
   { id: 'material-lighting', label: 'Materials and lighting exploration', description: 'Compare possible moods and finishes.' },
   { id: 'walkthrough', label: 'Interactive 3D walkthrough', description: 'Discuss a navigable concept model.' }
 ];
+const TIMELINE_OPTIONS = ['Exploring options', 'Within 3 months', '3–6 months', '6–12 months', 'Flexible / later'];
 const CONTACT_EMAIL = 'safal0645@gmail.com';
 const CONTACT_TELEGRAM = 'https://t.me/Alexfox14';
 
-function formatArea(area) {
+function hasValidArea(area) {
   const value = Number(area);
-  return area !== '' && Number.isFinite(value) && value > 0 && value <= 100000
-    ? `${value} m²`
-    : 'To be measured.';
+  return area !== '' && Number.isFinite(value) && value > 0 && value <= 100000;
+}
+
+function formatArea(area) {
+  return hasValidArea(area) ? `${Number(area)} m²` : 'To be measured.';
+}
+
+function hasTargetTimeline(timeline) {
+  return Boolean(timeline) && timeline !== 'Exploring options';
 }
 
 /** Use one text source for the download, email draft and copy action. */
-function createBrief({ projectType, location, area, scope, priorities, optionalIdeas, notes, category, material, lighting, inspirationSpace }) {
+function createBrief({ projectType, location, area, scope, budget, timeline, priorities, optionalIdeas, notes, category, material, lighting, inspirationSpace }) {
   const selectedPriorities = PRIORITIES.filter((priority) => priorities.includes(priority));
   const selectedIdeas = OPTIONAL_IDEAS.filter((idea) => optionalIdeas.includes(idea.id)).map((idea) => idea.label);
   return [
@@ -49,6 +56,8 @@ function createBrief({ projectType, location, area, scope, priorities, optionalI
     `Scope: ${scope || 'To be defined.'}`,
     `Approximate area: ${formatArea(area)}`,
     `Area reference: ${category.areaHint}`,
+    `Budget range: ${budget.trim() || 'To be discussed.'}`,
+    `Target timing: ${timeline || 'To be discussed.'}`,
     `Priorities: ${selectedPriorities.length ? selectedPriorities.join('; ') : 'To be discussed.'}`,
     `Optional ideas to discuss: ${selectedIdeas.length ? selectedIdeas.join('; ') : 'None selected.'}`,
     'We can confirm scope and pricing together after reviewing this brief.', '',
@@ -62,8 +71,9 @@ function createBrief({ projectType, location, area, scope, priorities, optionalI
     ...(!location.trim() ? ['Project location'] : []),
     category.nextDetail,
     ...(!scope ? ['Project scope and required spaces'] : []),
+    ...(!budget.trim() ? ['Budget range'] : []),
+    ...(!hasTargetTimeline(timeline) ? ['Target timing'] : []),
     'Household needs and daily routines',
-    'Budget range and target date',
     'Reference images and preferred materials', '',
     'Concept planning brief. Not construction documentation.',
   ].join('\n');
@@ -81,6 +91,8 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
   ));
   const [priorities, setPriorities] = useState([]);
   const [optionalIdeas, setOptionalIdeas] = useState([]);
+  const [budget, setBudget] = useState('');
+  const [timeline, setTimeline] = useState('');
   const [notes, setNotes] = useState('');
   const [prepared, setPrepared] = useState(false);
   const [contactNotice, setContactNotice] = useState('');
@@ -88,14 +100,26 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
   const notesRef = useRef(null);
   const category = PROJECT_TYPES[projectType];
   const { area, scope } = detailsByType[projectType];
-  const briefContent = createBrief({ projectType, location, area, scope, priorities, optionalIdeas, notes, category, material, lighting, inspirationSpace });
+  const briefContent = createBrief({ projectType, location, area, scope, budget, timeline, priorities, optionalIdeas, notes, category, material, lighting, inspirationSpace });
   const selectedIdeas = OPTIONAL_IDEAS.filter((idea) => optionalIdeas.includes(idea.id));
   const emailSubjectHref = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Project enquiry — ${projectType}`)}`;
   const emailHref = `${emailSubjectHref}&body=${encodeURIComponent(briefContent.replace(/\n/g, '\r\n'))}`;
   const emailNeedsCopy = emailHref.length > 1800;
+  const readinessCount = [
+    Boolean(location.trim()),
+    hasValidArea(area),
+    Boolean(scope),
+    Boolean(budget.trim()),
+    hasTargetTimeline(timeline),
+  ].filter(Boolean).length;
+  const readinessMessage = readinessCount === 5
+    ? 'Ready for a focused first conversation.'
+    : readinessCount >= 3
+      ? 'Strong start — the remaining details can be refined together.'
+      : 'Add a few practical details to make the first reply more useful.';
 
   useEffect(() => { setPrepared(false); setContactNotice(''); }, [
-    projectType, location, area, scope, priorities, optionalIdeas, notes, material?.id, material?.name, lighting, inspirationSpace
+    projectType, location, area, scope, budget, timeline, priorities, optionalIdeas, notes, material?.id, material?.name, lighting, inspirationSpace
   ]);
 
   /** Update one detail in the active project category while retaining the other categories' drafts. */
@@ -125,7 +149,7 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
       event.preventDefault();
       return false;
     }
-    if (!location.trim() && !area && !scope && priorities.length === 0 && optionalIdeas.length === 0 && !notes.trim()) {
+    if (!location.trim() && !area && !scope && !budget.trim() && !timeline && priorities.length === 0 && optionalIdeas.length === 0 && !notes.trim()) {
       event.preventDefault();
       setContactNotice('Add one detail about your project before opening a message.');
       notesRef.current?.focus();
@@ -200,6 +224,17 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
               {category.scopes.map((option) => <option key={option} value={option}>{option}</option>)}
             </select>
           </div>
+          <div className="brief-field">
+            <label className="brief-label" htmlFor="project-budget">Budget range <span>Optional</span></label>
+            <input id="project-budget" type="text" maxLength={80} value={budget} onChange={(event) => setBudget(event.target.value)} placeholder="e.g. €20k–30k" />
+          </div>
+          <div className="brief-field">
+            <label className="brief-label" htmlFor="project-timeline">Target timing <span>Optional</span></label>
+            <select id="project-timeline" value={timeline} onChange={(event) => setTimeline(event.target.value)}>
+              <option value="">Not decided yet</option>
+              {TIMELINE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+          </div>
         </div>
         <fieldset className="brief-priorities">
           <legend>What matters most? <span>Choose any</span></legend>
@@ -228,6 +263,11 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
         <textarea id="project-notes" ref={notesRef} rows="3" maxLength={3000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="A place, a mood, the way you want to live…" />
         <div className="brief-selected"><span>Selected palette · Concept</span><strong>{material?.name ?? 'Original villa materials'}</strong></div>
         {inspirationSpace && <p className="brief-inspiration">Space explored in 3D: <strong>{inspirationSpace}</strong></p>}
+        <div className="brief-readiness" role="status" aria-live="polite" aria-atomic="true" aria-label={`Brief readiness ${readinessCount} of 5 practical details`}>
+          <div><span>Brief readiness</span><strong>{readinessCount}/5 practical details</strong></div>
+          <span className="brief-readiness__bar" aria-hidden="true"><span style={{ width: `${readinessCount * 20}%` }} /></span>
+          <p>{readinessMessage}</p>
+        </div>
         <div className="brief-summary" aria-labelledby="brief-summary-title">
           <div className="brief-summary__header"><h3 id="brief-summary-title">Your enquiry at a glance</h3><button type="button" onClick={() => firstProjectTypeRef.current?.focus()}>Edit choices</button></div>
           <dl>
@@ -235,6 +275,8 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
             {location.trim() && <div><dt>Location</dt><dd>{location.trim()}</dd></div>}
             <div><dt>Starting point</dt><dd>{scope || 'To be discussed'}</dd></div>
             <div><dt>Area</dt><dd>{formatArea(area)}</dd></div>
+            <div><dt>Budget</dt><dd>{budget.trim() || 'To be discussed'}</dd></div>
+            <div><dt>Timing</dt><dd>{timeline || 'To be discussed'}</dd></div>
             <div><dt>Priorities</dt><dd>{priorities.length ? PRIORITIES.filter((priority) => priorities.includes(priority)).join(', ') : 'To be discussed'}</dd></div>
             <div><dt>Ideas to discuss</dt><dd>{selectedIdeas.length ? selectedIdeas.map((idea) => idea.label).join(', ') : 'None selected'}</dd></div>
           </dl>
@@ -263,7 +305,7 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
           </div>
           <button className="brief-download" type="submit">Download my brief <span aria-hidden="true">↓</span></button>
         </div>
-        <p className="brief-result" role="status">{contactNotice || (prepared ? 'Your brief is ready. Check your downloads.' : 'Includes your selected materials and atmosphere.')}</p>
+        <p className="brief-result" role="status">{contactNotice || (prepared ? 'Your brief is ready. Check your downloads.' : 'Includes scope, budget, timing, materials and atmosphere when provided.')}</p>
       </form>
     </section>
   );

@@ -60,12 +60,12 @@ At the reviewed `main` baseline `3dac25f`, build and deployment succeeded. [Live
 - Day, evening and night lighting; architectural material variants.
 - An editorial gallery of native exterior and interior concept renders.
 - Material palettes beside the desktop viewer and compactly above it on mobile.
-- A local brief for villa, kitchen or interior work with location, approximate area, category-specific scope, priorities, notes, palette and atmosphere.
+- A local brief for villa, kitchen or interior work with location, approximate area, category-specific scope, budget range, target timing, priorities, notes, palette and atmosphere, plus readiness feedback before contact.
 - Desktop/mobile browser checks with screenshot evidence.
 
 ## Project direction
 
-The editorial preview presents the villa as an architecture and interiors portfolio. Visitors can explore the kitchen and terrace studies, open images, walk the 3D residence, compare finishes and download a project brief containing their chosen palette and atmosphere. The brief stays on their device; no inquiry is submitted. This preview is being developed in draft PR #9 and is separate from the currently published site.
+The published presentation treats the villa as an architecture and interiors portfolio. Visitors can explore the kitchen and terrace studies, open images, walk the 3D residence, compare finishes and prepare a project brief containing scope, budget/timing context, priorities, palette and atmosphere. The brief stays on their device until they explicitly choose email, Telegram copy or download; the site does not submit an inquiry automatically.
 
 The [architecture benchmark and development notes, in Russian](validation/global-architecture-benchmark-2026-09-21.md) compare the presentation with primary-source projects by John Pawson, Norm Architects and Studio MK27. The resulting additions clarify our existing concept and its controls; they do not change the GLB geometry or establish construction, climate or engineering performance.
 
