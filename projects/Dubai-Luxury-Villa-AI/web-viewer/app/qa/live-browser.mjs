@@ -407,6 +407,17 @@ try {
   console.log('Desktop interactions verified');
   await desktop.close();
 
+  const lightingDeepLink = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+  await lightingDeepLink.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });
+  const deepLinkLightingNav = lightingDeepLink.locator('nav[aria-label="Lighting mode"]');
+  await fastClick(deepLinkLightingNav.getByRole('button', { name: 'Night', exact: true }));
+  check(new URL(lightingDeepLink.url()).searchParams.get('lighting') === 'night', 'Night selection must update the shareable URL before reload');
+  await lightingDeepLink.reload({ waitUntil: 'networkidle', timeout: 120_000 });
+  await lightingDeepLink.getByText('Lighting: Night', { exact: true }).waitFor();
+  check(await deepLinkLightingNav.getByRole('button', { name: 'Night', exact: true }).getAttribute('aria-pressed') === 'true', 'Night deep link must survive reload');
+  report.desktop.lightingDeepLinkReload = 'PASS';
+  await lightingDeepLink.close();
+
   const mobile = await browser.newPage({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 1,
