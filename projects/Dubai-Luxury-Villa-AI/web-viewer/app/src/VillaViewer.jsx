@@ -1269,7 +1269,7 @@ export default function VillaViewer({
 
       <EstateControls destinations={destinations} destination={estateDestinationId} onVisit={id=>{setDroneMode(false);setEstateSelection({id,key:viewRequestId});}} actions={actions} onAction={activateAction} finishes={finishes} onFinish={(key,value)=>setFinishes(previous=>({...previous,[key]:value}))} disabled={modelState!=='loaded'} />
       <p className="viewer-note" id={viewerNoteId}>
-        Explore the rooms and gardens. Click doors, sliding glazing and screens; rain gradually wets exposed surfaces and gathers in puddles. Bathroom view opens a section through the private core. This interactive residence is a design concept.
+        Drag to orbit. Drone flight: drag to look, use WASD to move, E to ascend and Q to descend. Go inside starts the guided room tour. Click doors, sliding glazing and screens; rain gradually wets exposed surfaces and gathers in puddles. Bathroom view opens a section through the private core. This interactive residence is a design concept.
       </p>
     </section>
   );
