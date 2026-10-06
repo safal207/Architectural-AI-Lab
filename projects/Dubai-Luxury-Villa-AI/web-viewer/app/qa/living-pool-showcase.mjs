@@ -22,9 +22,11 @@ async function settledFrame(page) {
 }
 
 async function waitForView(page, stop) {
+  await page.locator('.three-canvas canvas').scrollIntoViewIfNeeded();
   await page.waitForFunction((id) => {
     const state = document.querySelector('.three-canvas')?.dataset;
     return state?.modelState === 'loaded' && state?.tourStop === id
+      && state?.renderedTourStop === id
       && state?.renderedInteractionMode === 'guided' && state?.walkGraph === 'ready';
   }, stop, { timeout: 120_000 });
   await settledFrame(page);
@@ -63,6 +65,13 @@ async function downloadBrief(page, profile, name, space) {
 }
 
 async function captureFrame(page, filename) {
+  await page.locator('.three-canvas canvas').scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => {
+    const state = document.querySelector('.three-canvas')?.dataset;
+    return state?.renderedMaterial === state?.materialMode
+      && state?.renderedTourStop === state?.tourStop
+      && state?.renderedInteractionMode === 'guided';
+  });
   await settledFrame(page);
   const data = await page.locator('.three-canvas canvas').evaluate((canvas) => canvas.toDataURL('image/png'));
   const bytes = Buffer.from(data.split(',')[1], 'base64');
@@ -128,6 +137,11 @@ try {
     check(warm.camera !== overviewCamera, 'Living view did not move the rendered camera');
     result.frames.push(warm);
     await finishes.getByRole('button', { name: 'Graphite Mineral', exact: true }).click();
+    if (profile.isMobile) {
+      const bounds = await page.locator('.three-canvas canvas').boundingBox();
+      check(bounds && bounds.y < profile.viewport.height && bounds.y + bounds.height > 0, 'Mobile finish selection did not reveal the scene');
+      result.mobileSelectionRevealsScene = 'PASS';
+    }
     await paletteState(page, 'graphite-mineral', 'Graphite Mineral');
     const graphite = await captureFrame(page, `${profile.id}-living-graphite.png`);
     check(graphite.camera === warm.camera, 'Palette change moved the selected camera');

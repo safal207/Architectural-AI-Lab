@@ -76,15 +76,24 @@ export default function Dashboard() {
     setTourMode(stop.id !== 'overview');
     setSelectedRoom(rooms.find((item) => item.id === stop.roomId) ?? null);
   };
-  /** Reveal the selected view for a narrow-screen tap while retaining keyboard focus on its control. */
-  const selectShowcaseStop = (stop, event) => {
-    selectTourStop(stop);
+  /** Reveal the scene for a narrow-screen tap while retaining keyboard focus on its control. */
+  const revealShowcaseView = (event) => {
     if (event.detail > 0 && window.matchMedia('(max-width: 850px)').matches) {
-      document.querySelector('#viewer .viewer-panel')?.scrollIntoView({
+      const scene = document.querySelector('#viewer .three-canvas-shell')
+        ?? document.querySelector('#viewer .viewer-panel');
+      scene?.scrollIntoView({
         block: 'start',
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
       });
     }
+  };
+  const selectShowcaseStop = (stop, event) => {
+    selectTourStop(stop);
+    revealShowcaseView(event);
+  };
+  const selectShowcaseMaterial = (palette, event) => {
+    setMaterial(palette);
+    revealShowcaseView(event);
   };
   /** Keep the selected ambience in the shareable URL without navigating or adding history entries. */
   const selectLightingMode = (key) => {
@@ -137,7 +146,7 @@ export default function Dashboard() {
             {Object.entries(lightingModes).map(([key, mode]) => <button key={key} type="button" className={lightingMode === key ? 'is-active' : ''} aria-pressed={lightingMode === key} onClick={() => selectLightingMode(key)}><span className={`light-symbol light-symbol--${key}`} aria-hidden="true" />{mode.name}</button>)}
           </nav></div>
         </header>
-        <LivingPoolShowcase activeStopId={activeTourStopId} tourActive={tourMode && !droneMode && guidedViewActive} material={material} onSelectStop={selectShowcaseStop} onSelectMaterial={setMaterial} />
+        <LivingPoolShowcase activeStopId={activeTourStopId} tourActive={tourMode && !droneMode && guidedViewActive} material={material} onSelectStop={selectShowcaseStop} onSelectMaterial={selectShowcaseMaterial} />
         <section className="app-grid">
           <aside className="rooms-panel">
             <span className="control-label">Go directly to</span>

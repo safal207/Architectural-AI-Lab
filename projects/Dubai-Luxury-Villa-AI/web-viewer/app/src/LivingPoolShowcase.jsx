@@ -28,7 +28,7 @@ export default function LivingPoolShowcase({ activeStopId, tourActive, material,
         <p className="living-pool-showcase__label" id="showcase-finishes-title">Compare two finish directions</p>
         <div className="living-pool-showcase__options">
           {COMPARISON_PALETTES.map((palette) => (
-            <button key={palette.id} type="button" aria-pressed={material.id === palette.id} onClick={() => onSelectMaterial(palette)}>
+            <button key={palette.id} type="button" aria-pressed={material.id === palette.id} onClick={(event) => onSelectMaterial(palette, event)}>
               <span className="living-pool-showcase__swatch" style={{ backgroundColor: palette.swatch }} aria-hidden="true" />
               <span>{palette.name}</span>
             </button>

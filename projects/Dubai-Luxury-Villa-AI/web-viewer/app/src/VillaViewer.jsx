@@ -417,7 +417,9 @@ export default function VillaViewer({
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
     runtime.needsRender = true;
-    const report = applyMaterialConcept(runtime.villaRoot, latestPropsRef.current.material);
+    const selectedMaterial = latestPropsRef.current.material;
+    const report = applyMaterialConcept(runtime.villaRoot, selectedMaterial);
+    runtime.appliedMaterialId = selectedMaterial?.id ?? 'default';
     setMaterialResponse(report);
     syncFinishes();
     syncLighting();
@@ -436,6 +438,7 @@ export default function VillaViewer({
     const isFirstPerson = !current.estateDestinationId && !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
     const isExplore = isFirstPerson && current.interactionMode === 'explore';
     const wasFirstPerson = runtime.isFirstPerson;
+    runtime.appliedTourStopId = '';
 
     runtime.isFirstPerson = isFirstPerson;
     runtime.isExplore = isExplore;
@@ -484,6 +487,7 @@ export default function VillaViewer({
         { presentation: !isExplore }
       );
       runtime.firstPersonAvailable = tourPlaced;
+      if (tourPlaced && !isExplore) runtime.appliedTourStopId = current.activeTourStopId;
       setFirstPersonReady(tourPlaced);
       if (tourPlaced && isExplore) {
         runtime.camera.rotation.reorder('YXZ');
@@ -929,6 +933,8 @@ export default function VillaViewer({
         // Mark the mode of this rendered frame, not only React's requested mode.
         // Browser QA must not sample the previous camera while a new frame is pending.
         container.dataset.renderedInteractionMode = runtime.isDrone ? 'drone' : runtime.isFirstPerson ? (runtime.isExplore ? 'explore' : 'guided') : 'orbit';
+        container.dataset.renderedMaterial = runtime.appliedMaterialId ?? 'default';
+        container.dataset.renderedTourStop = runtime.appliedTourStopId ?? '';
         container.dataset.cameraPosition = camera.position.toArray().map((value) => value.toFixed(3)).join(',');
         container.dataset.cameraDirection = camera.getWorldDirection(new THREE.Vector3()).toArray().map((value) => value.toFixed(3)).join(',');
         container.dataset.atmosphereTime = runtime.elapsed.toFixed(3);
