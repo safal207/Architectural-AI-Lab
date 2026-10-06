@@ -1,72 +1,22 @@
-import { useEffect, useState } from "react";
+import { MATERIAL_PALETTES } from './materialPalettes';
 import './MaterialSwitcher.css';
 
-const MATERIALS = [
-  {
-    id: "warm-limestone",
-    name: "Warm Limestone",
-    description: "Soft ivory, natural stone and warm walnut.",
-    swatch: "#b29b80",
-    familyColors: {
-      stone: "#9f896f",
-      plaster: "#c6bdaf",
-      timber: "#d7bda6",
-      deck: "#7f7061"
-    }
-  },
-  {
-    id: "sandstone",
-    name: "Sandstone Warmth",
-    description: "Sun-warmed mineral tones with honeyed timber.",
-    swatch: "#a98461",
-    familyColors: {
-      stone: "#9f7958",
-      plaster: "#b8a68f",
-      timber: "#cfae90",
-      deck: "#745f50"
-    }
-  },
-  {
-    id: "graphite-mineral",
-    name: "Graphite Mineral",
-    description: "Deeper stone, soft grey and rich walnut.",
-    swatch: "#5c5751",
-    familyColors: {
-      stone: "#4d4944",
-      plaster: "#8f8a83",
-      timber: "#b69c8c",
-      deck: "#55504b"
-    }
-  }
-];
-
 /**
- * Present mutually exclusive concept palettes and notify the parent of the initial and selected palette.
+ * Present the parent's selected concept palette and notify it of a new selection.
  * The swatches describe material direction, not construction specifications.
  */
-export default function MaterialSwitcher({ onChange }) {
-  const [activeId, setActiveId] = useState(MATERIALS[0].id);
-
-  useEffect(() => {
-    onChange?.(MATERIALS[0]);
-  }, [onChange]);
-
-  function select(material) {
-    setActiveId(material.id);
-    onChange?.(material);
-  }
-
-  const active = MATERIALS.find((item) => item.id === activeId);
+export default function MaterialSwitcher({ material: active, onChange }) {
+  const activeId = active.id;
 
   return (
     <section className="material-switcher" id="materials" aria-label="Material finish moods">
       <div className="material-switcher__options">
-        {MATERIALS.map((material, index) => (
+        {MATERIAL_PALETTES.map((material, index) => (
           <button
             key={material.id}
             type="button"
             aria-pressed={activeId === material.id}
-            onClick={() => select(material)}
+            onClick={() => onChange?.(material)}
             className={activeId === material.id ? "is-active" : ""}
           >
             <span className="material-switcher__samples" aria-hidden="true">

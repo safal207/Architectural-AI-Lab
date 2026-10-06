@@ -7,6 +7,8 @@ import TourExperience from './TourExperience';
 import SceneBoundary from './SceneBoundary';
 import RoomSelector from './RoomSelector';
 import MaterialSwitcher from './MaterialSwitcher';
+import LivingPoolShowcase from './LivingPoolShowcase';
+import { DEFAULT_MATERIAL_PALETTE } from './materialPalettes';
 import SpaceStories from './SpaceStories';
 import ResidenceFilm from './ResidenceFilm';
 import ProjectBrief from './ProjectBrief';
@@ -33,10 +35,11 @@ const roomStories = {
 export default function Dashboard() {
   const rooms = roomsData.rooms ?? [];
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [material, setMaterial] = useState(null);
+  const [material, setMaterial] = useState(DEFAULT_MATERIAL_PALETTE);
   const [lightingMode, setLightingMode] = useState(initialLightingMode);
   const [tourMode, setTourMode] = useState(false);
   const [droneMode, setDroneMode] = useState(false);
+  const [guidedViewActive, setGuidedViewActive] = useState(false);
   const [activeTourStopId, setActiveTourStopId] = useState('overview');
   const [viewRequestId, setViewRequestId] = useState(0);
   const [viewerActivated, setViewerActivated] = useState(false);
@@ -72,6 +75,16 @@ export default function Dashboard() {
     setActiveTourStopId(stop.id);
     setTourMode(stop.id !== 'overview');
     setSelectedRoom(rooms.find((item) => item.id === stop.roomId) ?? null);
+  };
+  /** Reveal the selected view for a narrow-screen tap while retaining keyboard focus on its control. */
+  const selectShowcaseStop = (stop, event) => {
+    selectTourStop(stop);
+    if (event.detail > 0 && window.matchMedia('(max-width: 850px)').matches) {
+      document.querySelector('#viewer .viewer-panel')?.scrollIntoView({
+        block: 'start',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+      });
+    }
   };
   /** Keep the selected ambience in the shareable URL without navigating or adding history entries. */
   const selectLightingMode = (key) => {
@@ -124,6 +137,7 @@ export default function Dashboard() {
             {Object.entries(lightingModes).map(([key, mode]) => <button key={key} type="button" className={lightingMode === key ? 'is-active' : ''} aria-pressed={lightingMode === key} onClick={() => selectLightingMode(key)}><span className={`light-symbol light-symbol--${key}`} aria-hidden="true" />{mode.name}</button>)}
           </nav></div>
         </header>
+        <LivingPoolShowcase activeStopId={activeTourStopId} tourActive={guidedViewActive} material={material} onSelectStop={selectShowcaseStop} onSelectMaterial={setMaterial} />
         <section className="app-grid">
           <aside className="rooms-panel">
             <span className="control-label">Go directly to</span>
@@ -135,7 +149,7 @@ export default function Dashboard() {
             <article className="viewer-panel">
               {viewerActivated ? (
                 <SceneBoundary><Suspense fallback={<div className="scene-placeholder" role="status"><span className="eyebrow">Preparing your visit</span><p>Opening the residence…</p></div>}>
-                  <VillaViewer droneMode={droneMode} setDroneMode={setDroneMode} viewRequestId={viewRequestId} selectedRoom={selectedRoom} lightingMode={activeLighting} material={material} tourMode={tourMode} activeTourStopId={activeTourStopId} onSelectTourStop={selectTourStop} onExitTour={() => toggleTourMode(false)} />
+                  <VillaViewer droneMode={droneMode} setDroneMode={setDroneMode} viewRequestId={viewRequestId} selectedRoom={selectedRoom} lightingMode={activeLighting} material={material} tourMode={tourMode} activeTourStopId={activeTourStopId} onSelectTourStop={selectTourStop} onExitTour={() => toggleTourMode(false)} onGuidedViewActiveChange={setGuidedViewActive} />
                 </Suspense></SceneBoundary>
               ) : (
                 <div className="viewer-preview">
@@ -155,7 +169,7 @@ export default function Dashboard() {
             <aside className="material-story material-study" aria-labelledby="material-title">
               <div className="material-study__intro"><p className="eyebrow">Finish study</p><h3 id="material-title">One house.<br /><em>Three expressions.</em></h3><p>Choose a palette to see stone, plaster, timber and decking change together.</p></div>
               <p className="material-study__mobile-title"><span>Finish palette</span><span>Changes the 3D view</span></p>
-              <MaterialSwitcher onChange={setMaterial} />
+              <MaterialSwitcher material={material} onChange={setMaterial} />
               <a href="#brief" className="material-study__brief">Take this direction into your brief <span aria-hidden="true">↗</span></a>
             </aside>
           </div>

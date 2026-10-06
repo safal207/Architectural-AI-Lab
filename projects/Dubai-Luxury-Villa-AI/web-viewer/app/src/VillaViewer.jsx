@@ -277,7 +277,8 @@ export default function VillaViewer({
   droneMode = false,
   setDroneMode,
   onSelectTourStop,
-  onExitTour
+  onExitTour,
+  onGuidedViewActiveChange
 }) {
   const viewerNoteId = useId();
   const mountRef = useRef(null);
@@ -1008,6 +1009,11 @@ export default function VillaViewer({
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
   const isFirstPerson = !estateDestinationId && !droneMode && tourMode && activeTourStopId !== 'overview';
   const isExplore = isFirstPerson && interactionMode === 'explore';
+  const guidedViewActive = isFirstPerson && !isExplore && modelState === 'loaded';
+  useEffect(() => {
+    onGuidedViewActiveChange?.(guidedViewActive);
+    return () => onGuidedViewActiveChange?.(false);
+  }, [guidedViewActive, onGuidedViewActiveChange]);
   const runtimeLightingProfile = resolveRuntimeLighting(
     lightingMode,
     isExplore ? (walkStatus.stopId ?? activeTourStopId) : activeTourStopId,

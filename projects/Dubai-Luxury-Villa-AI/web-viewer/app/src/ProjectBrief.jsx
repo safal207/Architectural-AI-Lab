@@ -53,7 +53,7 @@ function createBrief({ projectType, location, area, scope, priorities, optionalI
     `Optional ideas to discuss: ${selectedIdeas.length ? selectedIdeas.join('; ') : 'None selected.'}`,
     'We can confirm scope and pricing together after reviewing this brief.', '',
     'Reference: Dubai residence — Desert, distilled.',
-    ...(inspirationSpace ? [`Space explored in 3D: ${inspirationSpace}`] : []),
+    ...(inspirationSpace ? [`Selected reference space: ${inspirationSpace}`] : []),
     `Material direction: ${material?.name ?? 'Original villa materials'}`,
     'Palette status: Concept reference only; not a material specification.',
     `Preferred atmosphere: ${lighting}`, '',
@@ -227,7 +227,7 @@ export default function ProjectBrief({ material, lighting, inspirationSpace = nu
         <label className="brief-label" htmlFor="project-notes">What do you have in mind? <span>Optional</span></label>
         <textarea id="project-notes" ref={notesRef} rows="3" maxLength={3000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="A place, a mood, the way you want to live…" />
         <div className="brief-selected"><span>Selected palette · Concept</span><strong>{material?.name ?? 'Original villa materials'}</strong></div>
-        {inspirationSpace && <p className="brief-inspiration">Space explored in 3D: <strong>{inspirationSpace}</strong></p>}
+        {inspirationSpace && <p className="brief-inspiration">Selected reference space: <strong>{inspirationSpace}</strong></p>}
         <div className="brief-summary" aria-labelledby="brief-summary-title">
           <div className="brief-summary__header"><h3 id="brief-summary-title">Your enquiry at a glance</h3><button type="button" onClick={() => firstProjectTypeRef.current?.focus()}>Edit choices</button></div>
           <dl>

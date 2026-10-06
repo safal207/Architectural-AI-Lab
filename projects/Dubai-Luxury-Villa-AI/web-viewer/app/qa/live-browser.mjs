@@ -198,7 +198,7 @@ async function verifyProjectBrief(page, label) {
     'Project: Kitchen design',
     `Material direction: ${expectedMaterial}`,
     `Preferred atmosphere: ${expectedLighting}`,
-    `Space explored in 3D: ${exploredSpace}`,
+    `Selected reference space: ${exploredSpace}`,
     notes,
     'Concept planning brief. Not construction documentation.'
   ]) {
