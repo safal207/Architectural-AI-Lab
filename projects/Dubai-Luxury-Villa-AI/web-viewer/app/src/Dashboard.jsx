@@ -137,7 +137,7 @@ export default function Dashboard() {
             {Object.entries(lightingModes).map(([key, mode]) => <button key={key} type="button" className={lightingMode === key ? 'is-active' : ''} aria-pressed={lightingMode === key} onClick={() => selectLightingMode(key)}><span className={`light-symbol light-symbol--${key}`} aria-hidden="true" />{mode.name}</button>)}
           </nav></div>
         </header>
-        <LivingPoolShowcase activeStopId={activeTourStopId} tourActive={guidedViewActive} material={material} onSelectStop={selectShowcaseStop} onSelectMaterial={setMaterial} />
+        <LivingPoolShowcase activeStopId={activeTourStopId} tourActive={tourMode && !droneMode && guidedViewActive} material={material} onSelectStop={selectShowcaseStop} onSelectMaterial={setMaterial} />
         <section className="app-grid">
           <aside className="rooms-panel">
             <span className="control-label">Go directly to</span>

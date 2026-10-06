@@ -30,6 +30,13 @@ async function waitForView(page, stop) {
   await settledFrame(page);
 }
 
+async function waitForClearedViewSelection(page) {
+  await page.waitForFunction(() => {
+    const group = document.querySelector('#showcase-views-title')?.parentElement;
+    return group && group.querySelectorAll('button[aria-pressed="true"]').length === 0;
+  });
+}
+
 async function paletteState(page, id, name) {
   await page.waitForFunction((expected) => document.querySelector('.three-canvas')?.dataset.materialMode === expected, id);
   const main = page.locator('.material-switcher');
@@ -140,26 +147,35 @@ try {
     result.frames.push(pool);
     const modes = page.locator('.viewer-mode-switch');
     await modes.getByRole('button', { name: 'Explore', exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'explore');
+    await waitForClearedViewSelection(page);
     check(await views.locator('button[aria-pressed="true"]').count() === 0, 'Explore keeps an authored-view highlight');
     await views.getByRole('button', { name: '2. Pool terrace', exact: true }).click();
     await waitForView(page, 'pool');
     await page.getByRole('group', { name: 'Estate destinations', exact: true }).getByRole('button').first().click();
+    await page.waitForFunction(() => !!document.querySelector('.three-canvas')?.dataset.estateDestination);
+    await waitForClearedViewSelection(page);
     check(await views.locator('button[aria-pressed="true"]').count() === 0, 'Estate destination keeps an authored-view highlight');
     await living.click();
     await waitForView(page, 'living');
     await page.getByRole('group', { name: 'Scene navigation', exact: true }).getByRole('button', { name: 'Drone flight', exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.interactionMode === 'drone');
+    await waitForClearedViewSelection(page);
     check(await views.locator('button[aria-pressed="true"]').count() === 0, 'Drone keeps an authored-view highlight');
     await living.click();
     await waitForView(page, 'living');
     await page.getByRole('button', { name: 'Exit walkthrough', exact: true }).click();
+    await waitForClearedViewSelection(page);
     check(await views.locator('button[aria-pressed="true"]').count() === 0, 'Exit keeps an authored-view highlight');
     result.otherModesClearSelection = 'PASS';
     await compact.scrollIntoViewIfNeeded();
     result.layout = await containment(page);
     await compact.screenshot({ path: `${outputDir}/${profile.id}-controls.png` });
     await page.locator('.rooms-panel').getByRole('button', { name: /Master Bedroom/ }).click();
+    await waitForClearedViewSelection(page);
     check(await views.locator('button[aria-pressed="true"]').count() === 0, 'Showcase highlights a different room');
     await page.locator('.rooms-panel').getByRole('button', { name: /Exterior overview/ }).click();
+    await waitForClearedViewSelection(page);
     check(await views.locator('button[aria-pressed="true"]').count() === 0, 'Overview retains a selected showcase view');
     check(modelRequests === 1, `Model requested ${modelRequests} times instead of once`);
     result.modelRequests = modelRequests;

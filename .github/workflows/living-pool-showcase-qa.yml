@@ -5,6 +5,7 @@ on:
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/Dashboard.jsx'
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/MaterialSwitcher.jsx'
+      - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/ProjectBrief.jsx'
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/materialPalettes.js'
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/LivingPoolShowcase.*'
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/src/VillaViewer.jsx'
