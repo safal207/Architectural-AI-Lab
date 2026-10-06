@@ -140,7 +140,16 @@ try {
     if (profile.isMobile) {
       const bounds = await page.locator('.three-canvas canvas').boundingBox();
       check(bounds && bounds.y < profile.viewport.height && bounds.y + bounds.height > 0, 'Mobile finish selection did not reveal the scene');
+      const controls = await page.locator('.viewer-exit-tour').evaluate((button) => {
+        const rect = button.getBoundingClientRect();
+        const navigation = document.querySelector('.project-chapters').getBoundingClientRect();
+        const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        return { top: rect.top, bottom: rect.bottom, navigationBottom: navigation.bottom, unobstructed: button === hit || button.contains(hit) };
+      });
+      check(controls.top >= controls.navigationBottom && controls.bottom <= profile.viewport.height && controls.unobstructed, 'Mobile scene controls are obstructed after finish selection');
+      result.mobileSceneControls = controls;
       result.mobileSelectionRevealsScene = 'PASS';
+      await page.screenshot({ path: `${outputDir}/${profile.id}-finish-selection-viewport.png` });
     }
     await paletteState(page, 'graphite-mineral', 'Graphite Mineral');
     const graphite = await captureFrame(page, `${profile.id}-living-graphite.png`);

@@ -41,6 +41,12 @@
 .living-pool-showcase__options button[aria-pressed="true"] { background: #eeeadf; border-color: #eeeadf; color: #33362c; }
 .living-pool-showcase__swatch { width: 12px; height: 12px; flex-shrink: 0; border: 1px solid #ffffff36; }
 .living-pool-showcase__current { color: #bcc1b1; font-size: 10px; margin-top: 10px; }
+@media (max-width: 850px) {
+  #viewer .three-canvas-shell { scroll-margin-top: 72px; }
+}
+@media (max-width: 700px) {
+  #viewer .three-canvas-shell { scroll-margin-top: 60px; }
+}
 @media (max-width: 1100px) {
   .living-pool-showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
   .living-pool-showcase__intro { grid-column: 1 / -1; }
