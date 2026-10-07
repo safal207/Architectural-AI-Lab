@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { revealDetails } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-mobile-hero-layout-output';
@@ -27,12 +28,14 @@ async function measure(page, label) {
 
     const box = (node) => {
       const rect = node.getBoundingClientRect();
+      const closedDisclosure = node.closest('details:not([open])');
       return {
         left: rect.left,
         right: rect.right,
         width: rect.width,
         clientWidth: node.clientWidth,
-        scrollWidth: node.scrollWidth
+        scrollWidth: node.scrollWidth,
+        hiddenByDisclosure: Boolean(closedDisclosure && closedDisclosure !== node)
       };
     };
 
@@ -57,7 +60,7 @@ async function measure(page, label) {
       '.site-header',
       '.sales-hero',
       '.hero-image',
-      '.hero-enter',
+      '.sales-hero__primary',
       '.spaces-section',
       '.space-stories',
       '.experience-section',
@@ -67,10 +70,11 @@ async function measure(page, label) {
       '.viewer-toolbar',
       '.app-grid',
       '.viewer-panel',
-      '.viewer-preview',
-      '.material-story',
+      ...(document.querySelector('.viewer-preview') ? ['.viewer-preview'] : document.querySelector('.three-canvas') ? ['.three-canvas'] : ['.scene-placeholder']),
+      '#finish-details',
       '.material-switcher',
       '.project-brief',
+      '.brief-project-fields',
       '.contact-section',
       '.site-footer'
     ];
@@ -121,6 +125,10 @@ function assertPageContained(metrics, label) {
   check(metrics.heroImage.complete && metrics.heroImage.naturalWidth > 0, `${label}: residence hero image failed to load`);
   for (const [selector, section] of Object.entries(metrics.sections)) {
     check(section, `${label}: missing section ${selector}`);
+    // Collapsed content is intentionally absent from layout. The expanded phase
+    // below measures every retained section after real disclosure activation.
+    if (section.hiddenByDisclosure) continue;
+    check(section.width > 0, `${label}: visible section ${selector} has no width`);
     check(
       section.left >= -1 && section.right <= contentWidth + 1,
       `${label}: ${selector} extends outside the viewport (${section.left}px–${section.right}px)`
@@ -134,10 +142,20 @@ function assertPageContained(metrics, label) {
   }
 }
 
+/** Keep the retained plan, finishes and brief in the responsive gate when expanded by a visitor. */
+async function assertExpandedLayout(page, label) {
+  for (const target of ['#journey', '#design', '.material-switcher', '#brief .brief-optional-details']) await revealDetails(page, target);
+  const metrics = await measure(page, label);
+  assertPageContained(metrics, label);
+  check(!Object.values(metrics.sections).some(section => section?.hiddenByDisclosure), `${label}: expanded content remained hidden`);
+  return metrics;
+}
+
 const browser = await chromium.launch({ headless: true });
 const report = {
   status: 'RUNNING',
   widths: {},
+  expandedWidths: {},
   reservedScrollbar: {},
   consoleErrors: [],
   pageErrors: []
@@ -182,6 +200,12 @@ try {
     check(metrics.windowMaxScrollX <= 1, `${label}: page can scroll horizontally by ${metrics.windowMaxScrollX}px`);
   }
 
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 800 });
+    report.expandedWidths[width] = await assertExpandedLayout(page, `expanded-${width}`);
+  }
+  await page.close();
+
   // Reserve a real layout gutter even in headless browsers with overlay scrollbars.
   // A 320px viewport then has less space for content, as on Windows with classic scrollbars.
   const desktop = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -209,6 +233,16 @@ try {
       `${label}: body exceeds reserved-scrollbar content width (${metrics.document.bodyWidth}px > ${availableWidth}px)`);
     assertPageContained(metrics, `reserved-scrollbar-${label}`);
     await desktop.screenshot({ path: `${outputDir}/reserved-scrollbar-${label}.png`, fullPage: false, animations: 'disabled' });
+  }
+
+  for (const width of [390, 320]) {
+    await desktop.setViewportSize({ width, height: width === 390 ? 844 : 800 });
+    const metrics = await assertExpandedLayout(desktop, `reserved-scrollbar-expanded-${width}`);
+    metrics.availableWidth = await desktop.evaluate(() => document.documentElement.getBoundingClientRect().width);
+    check(metrics.availableWidth < width, `${width}: expanded scrollbar gutter was not reserved`);
+    check(metrics.document.bodyWidth <= metrics.availableWidth + 1, `${width}: expanded body exceeds reserved-scrollbar content width`);
+    assertPageContained(metrics, `reserved-scrollbar-expanded-${width}`);
+    report.expandedWidths[`reserved-scrollbar-${width}`] = metrics;
   }
 
   check(report.consoleErrors.length === 0, `Console errors: ${report.consoleErrors.join(' | ')}`);

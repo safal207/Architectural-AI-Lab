@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { revealViewer } from './reveal-viewer.mjs';
+import { revealDetails, revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-visual-gates-output';
@@ -101,6 +101,7 @@ try {
 
   const tour = page.locator('.tour-experience');
   const enter = tour.getByRole('button', { name: 'Enter the house', exact: true });
+  await revealDetails(page, '.tour-experience');
   await fastClick(enter);
   await waitForStop(page, 'entry');
   await captureViewer(page, '02-entry');

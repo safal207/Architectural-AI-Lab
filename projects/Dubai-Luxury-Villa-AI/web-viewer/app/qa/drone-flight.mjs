@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { revealViewer } from './reveal-viewer.mjs';
+import { revealViewer, revealDetails } from './reveal-viewer.mjs';
 const url = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const out = process.env.QA_OUTPUT ?? 'qa-drone-flight-output';
 await mkdir(out, { recursive: true });
@@ -16,7 +16,10 @@ const direction = async page => (await page.locator('.three-canvas').getAttribut
 /** Measure Euclidean separation between two numeric camera samples. */
 const distance = (a,b) => Math.hypot(...a.map((v,i)=>v-b[i]));
 /** Activate the uniquely named accessible button for a flight scenario. */
-const click = (page, name) => page.getByRole('button', { name, exact: true }).click();
+const click = async (page, name) => {
+  await page.getByRole('button', { name, exact: true }).click();
+  await page.locator('.three-canvas').scrollIntoViewIfNeeded();
+};
 /** Reveal the paused offscreen scene, then wait for its requested and rendered camera modes. */
 const mode = async (page, expected) => {
   await page.locator('.three-canvas').scrollIntoViewIfNeeded();
@@ -42,6 +45,8 @@ async function start(page) {
   await page.goto(url+'?lighting=day', { waitUntil:'domcontentloaded' });
   await revealViewer(page);
   await page.waitForFunction(()=>document.querySelector('.three-canvas')?.dataset.modelState==='loaded',null,{timeout:120000});
+  await revealDetails(page, '.scene-navigation');
+  await revealDetails(page, '.client-graph');
   await page.locator('.three-canvas').scrollIntoViewIfNeeded();
   await page.waitForFunction(()=>Boolean(document.querySelector('.three-canvas')?.dataset.cameraPosition));
   const repairs=await page.locator('.three-canvas').evaluate(el=>({stairs:JSON.parse(el.dataset.stairRepair),pool:JSON.parse(el.dataset.poolRepair)}));

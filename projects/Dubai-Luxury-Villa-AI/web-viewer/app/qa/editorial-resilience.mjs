@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { revealViewer } from './reveal-viewer.mjs';
+import { revealDetails, revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-editorial-resilience-output';
@@ -23,6 +23,7 @@ async function waitForTour(page, stop) {
 
 /** Save and validate an actual brief download, wait for its prepared status and return the text. */
 async function downloadBrief(page, filename) {
+  await revealDetails(page, '#brief .brief-optional-details');
   const section = page.locator('#brief');
   const downloadPromise = page.waitForEvent('download');
   await section.getByRole('button', { name: 'Download my brief', exact: true }).click();
@@ -90,7 +91,7 @@ try {
   observe(page, report.normal);
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 120_000 });
 
-  await page.getByRole('button', { name: /Enter the residence/ }).click();
+  await page.locator('.sales-hero').getByRole('button', { name: 'Explore in 3D', exact: true }).click();
   await page.waitForFunction(() => document.activeElement?.id === 'experience-title');
   await waitForTour(page, 'pool');
   report.normal.heroEntryFocusAndStop = 'PASS';
@@ -100,14 +101,16 @@ try {
   await waitForTour(page, 'dining');
   report.normal.kitchenEntryFocusAndStop = 'PASS';
 
-  const master = page.locator('.rooms-panel').getByRole('button', { name: 'Master Bedroom — 52 sqm', exact: true });
+  const master = page.locator('.rooms-panel').getByRole('button', { name: 'Master Bedroom', exact: true });
   await master.click();
   await waitForTour(page, 'master');
+  await revealDetails(page, '.room-details');
   const details = page.locator('.room-details');
   await details.getByRole('heading', { name: 'Master Bedroom', exact: true }).waitFor();
   check(await master.getAttribute('aria-pressed') === 'true', 'Master button did not become selected');
   check(/52\s*m²/.test(await details.innerText()), 'Master room area is missing before the transition');
 
+  await revealDetails(page, '#journey');
   await page.locator('.client-graph li').filter({ hasText: 'Stair hall' }).getByRole('button').click();
   await waitForTour(page, 'stair-ground');
   await details.getByRole('heading', { name: 'Stair hall', exact: true }).waitFor();
@@ -116,8 +119,16 @@ try {
   check(await page.locator('.room-selector button[aria-pressed="true"]').count() === 0, 'A room shortcut stayed selected at Stair hall');
   report.normal.stairClearsRoomDetailsAndSelection = 'PASS';
 
+  await revealDetails(page, '#brief');
   await page.locator('#brief').getByRole('textbox', { name: /What do you have in mind/ }).fill('A calm home with warm timber.');
   await downloadBrief(page, 'initial-brief');
+  await page.locator('#brief-disclosure > summary').click();
+  check(!await page.locator('#brief-disclosure').evaluate((element) => element.open), 'Brief disclosure did not collapse after download');
+  await revealDetails(page, '#brief');
+  check(await page.locator('#brief').getByRole('textbox', { name: /What do you have in mind/ }).inputValue() === 'A calm home with warm timber.', 'Collapsing a prepared brief discarded its notes');
+  await page.locator('#brief').getByRole('status').filter({ hasText: 'Your brief is ready.' }).waitFor();
+  report.normal.disclosurePreservesBrief = 'PASS';
+  await revealDetails(page, '.material-switcher');
   await page.locator('.material-switcher').getByRole('button', { name: /Graphite Mineral/ }).click();
   await assertBriefNeedsDownload(page);
   const paletteBrief = await downloadBrief(page, 'palette-updated-brief');
@@ -151,7 +162,7 @@ try {
   const fallback = unavailable.locator('.scene-unavailable');
   await fallback.getByRole('heading', { name: "The 3D view couldn't open.", exact: true }).waitFor({ timeout: 120_000 });
   await fallback.getByRole('button', { name: 'Try the 3D view again', exact: true }).waitFor();
-  await unavailable.getByRole('heading', { level: 1, name: 'See your space come to life.', exact: true }).waitFor();
+  await unavailable.getByRole('heading', { level: 1, name: 'Dubai residence.', exact: true }).waitFor();
   await unavailable.waitForFunction(() => {
     const image = document.querySelector('.scene-unavailable img');
     return image?.complete && image.naturalWidth >= 800;
@@ -161,8 +172,10 @@ try {
 
   await assertGalleryWorks(unavailable);
   report.webglUnavailable.galleryStillWorks = 'PASS';
+  await revealDetails(unavailable, '.material-switcher');
   await unavailable.locator('.material-switcher').getByRole('button', { name: /Sandstone Warmth/ }).click();
   const fallbackNotes = 'Plan a kitchen around the garden view.';
+  await revealDetails(unavailable, '#brief');
   await unavailable.locator('#brief').getByRole('radio', { name: 'Kitchen design', exact: true }).check();
   await unavailable.locator('#brief').getByRole('textbox', { name: /What do you have in mind/ }).fill(fallbackNotes);
   const fallbackBrief = await downloadBrief(unavailable, 'webgl-unavailable-brief');

@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { revealViewer } from './reveal-viewer.mjs';
+import { revealDetails, revealViewer } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-pool-terrace-bead-output';
@@ -87,6 +87,7 @@ try {
   await waitForModel(page);
 
   const tour = page.locator('.tour-experience');
+  await revealDetails(page, '.tour-experience');
   await fastClick(tour.getByRole('button', { name: 'Enter the house', exact: true }));
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.tourStop === 'entry');
   await waitForModel(page);

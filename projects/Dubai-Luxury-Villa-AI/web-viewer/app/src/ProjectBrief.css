@@ -1,4 +1,23 @@
 .project-brief form { min-width: 0; }
+.project-brief h2 { font-size: clamp(32px, 3vw, 44px); }
+.project-brief textarea { margin-bottom: 20px; }
+
+.project-brief .brief-optional-details {
+  margin-top: 20px;
+  border-top: 1px solid #c4bfaf;
+}
+.project-brief .brief-optional-details > summary {
+  min-height: 44px;
+  padding: 14px 0;
+  color: var(--ink, #292923);
+  font-size: 12px;
+  cursor: pointer;
+}
+.project-brief .brief-optional-details > summary:focus-visible {
+  outline: 2px solid #936349;
+  outline-offset: 3px;
+}
+.project-brief .brief-optional-details__content { padding: 14px 0 0; }
 
 .project-brief .brief-project-fields {
   display: grid;
@@ -116,6 +135,7 @@
 .project-brief .brief-email:hover { background: #292f23; }
 .project-brief .brief-action-note { margin: -5px 0 4px; color: var(--muted, #756e62); font-size: 10px; line-height: 1.6; overflow-wrap: anywhere; }
 .project-brief .brief-other-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.project-brief .brief-other-actions--single { grid-template-columns: minmax(0, 1fr); }
 .project-brief .brief-other-actions button,
 .project-brief .brief-other-actions a,
 .project-brief .brief-download {
@@ -139,7 +159,7 @@
 .project-brief .brief-other-actions button:hover,
 .project-brief .brief-other-actions a:hover,
 .project-brief .brief-download:hover { background: #e8e4d9; }
-.project-brief .brief-actions :is(button, a):focus-visible { outline: 2px solid #936349; outline-offset: 3px; }
+.project-brief :is(.brief-actions, .brief-other-actions) :is(button, a):focus-visible { outline: 2px solid #936349; outline-offset: 3px; }
 
 @media (max-width: 500px) {
   .project-brief .brief-project-fields { grid-template-columns: minmax(0, 1fr); gap: 17px; }

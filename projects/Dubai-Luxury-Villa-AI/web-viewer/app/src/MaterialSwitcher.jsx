@@ -16,7 +16,7 @@ export default function MaterialSwitcher({ material: active, onChange }) {
             key={material.id}
             type="button"
             aria-pressed={activeId === material.id}
-            onClick={() => onChange?.(material)}
+            onClick={(event) => onChange?.(material, event)}
             className={activeId === material.id ? "is-active" : ""}
           >
             <span className="material-switcher__samples" aria-hidden="true">

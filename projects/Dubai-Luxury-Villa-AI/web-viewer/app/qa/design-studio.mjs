@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { revealViewer } from './reveal-viewer.mjs';
+import { revealDetails, revealViewer } from './reveal-viewer.mjs';
 
 const output = process.env.QA_OUTPUT ?? 'qa-design-studio-output';
 await mkdir(output, { recursive: true });
@@ -20,6 +20,7 @@ const waitStop = async id => page.waitForFunction(stop => document.querySelector
  * Wait for the rendered prepared status before later edits test its invalidation.
  */
 async function download(name) {
+  await revealDetails(page, '#brief .brief-optional-details');
   const promise = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Download my brief', exact: true }).click();
   const file = await promise;
@@ -32,6 +33,7 @@ try {
   await page.goto(process.env.VILLA_URL ?? 'http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
   await revealViewer(page);
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.modelState === 'loaded', undefined, { timeout: 120_000 });
+  await revealDetails(page, '#design');
   const tabs = page.getByRole('tablist', { name: 'Architectural gestures' });
   check(await page.locator('.design-intent__diagram').getAttribute('data-projection') === 'orthographic', 'Study must use the current model projection');
   for (const [title, asset] of [['Deep edges', 'edges'], ['Open thresholds', 'thresholds'], ['A timber thread', 'timber']]) {
@@ -51,13 +53,15 @@ try {
   await waitStop('dining');
   check(await page.evaluate(() => document.activeElement.id) === 'experience-title', 'Design-to-studio focus not moved');
   report.checks.push('Design tabs support arrow/end keys and enter the corresponding 3D space');
+  await revealDetails(page, '.material-switcher');
   await page.locator('.material-switcher').getByRole('button', { name: /Graphite Mineral/ }).click();
   await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.materialMode === 'graphite-mineral');
   check(await page.locator('.material-switcher button[aria-pressed="true"]').count() === 1, 'Palette selection not exclusive');
-  const side = await page.locator('.material-study').boundingBox();
-  const canvas = await page.locator('.three-canvas').boundingBox();
-  check(side.x >= canvas.x + canvas.width - 2, 'Desktop palette is not alongside model');
-  report.checks.push('Selected finish applies to the existing model, with chooser alongside it');
+  const palette = await page.locator('.material-switcher').boundingBox();
+  check(palette && palette.width > 0 && palette.x >= 0 && palette.x + palette.width <= 1441, 'Expanded desktop palette is outside the viewport');
+  check(await page.locator('#finish-details').evaluate(element => element.open), 'Finish chooser is inaccessible through its disclosure');
+  report.checks.push('The single finish chooser applies its selection to the existing model and stays contained when expanded');
+  await revealDetails(page, '#journey');
   await page.locator('.client-graph li').filter({ hasText: 'Master bedroom' }).getByRole('button').click();
   await waitStop('master');
   await page.getByRole('button', { name: 'Open master bedroom in 3D' }).click();
@@ -65,8 +69,10 @@ try {
   await waitStop('master');
   report.checks.push('Floor plan opens the selected room in the studio');
 
+  await revealDetails(page, '#brief');
   check(await page.getByRole('radio', { name: 'Kitchen design', exact: true }).isChecked(), 'Kitchen should be the starting project type');
   await page.getByRole('radio', { name: 'Villa architecture', exact: true }).check();
+  await revealDetails(page, '#project-location');
   await page.getByLabel('Location', { exact: false }).fill('Lisbon');
   await page.getByLabel('Approximate area', { exact: false }).fill('320');
   await page.getByLabel('Where shall we begin?', { exact: false }).selectOption('New villa concept');
@@ -92,6 +98,7 @@ try {
   await page.locator('#project-area').fill('320');
   report.checks.push('Brief exports actual fields, isolates category areas/scopes, preserves shared fields, invalidates stale status and rejects negative area');
 
+  await revealDetails(page, '#design');
   await page.locator('#design').scrollIntoViewIfNeeded();
   await page.locator('#design').screenshot({ path: `${output}/design-desktop.png` });
   await page.locator('.overview-button').click();
@@ -103,16 +110,22 @@ try {
   report.widths = [];
   for (const width of [1024, 796, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
+    await revealDetails(page, '.material-switcher');
     await page.locator('.material-switcher').scrollIntoViewIfNeeded();
-    const layout = await page.evaluate(() => ({ width: document.documentElement.clientWidth, content: document.documentElement.scrollWidth, links: [...document.querySelectorAll('.project-chapters > div a')].map(a => { const b = a.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, height: b.height }; }) }));
+    const layout = await page.evaluate(() => ({ width: document.documentElement.clientWidth, content: document.documentElement.scrollWidth, links: [...document.querySelectorAll('nav[aria-label="Main navigation"] a')].map(a => { const b = a.getBoundingClientRect(); return { href: a.getAttribute('href'), left: b.left, right: b.right, top: b.top, height: b.height }; }) }));
     check(layout.content <= layout.width + 1, `Page overflow at ${width}`);
-    check(layout.links.every(link => link.left >= 0 && link.right <= width && link.height >= 44), `Chapter navigation clips or small targets at ${width}`);
-    await page.getByRole('navigation', { name: 'Project chapters' }).getByRole('link', { name: 'Plan', exact: true }).click();
-    await page.waitForFunction(() => document.querySelector('.project-chapters a[href="#journey"]')?.getAttribute('aria-current') === 'location');
+    check(layout.links.length === 3 && layout.links.map(link => link.href).join(',') === '#spaces,#viewer,#contact', `Main navigation lost a destination at ${width}`);
+    check(layout.links.every(link => link.left >= 0 && link.right <= width && link.height >= 44), `Main navigation clips or has small targets at ${width}`);
+    const selectedFloor = await page.locator('.floor-switch button[aria-pressed="true"]').innerText();
+    if (await page.locator('#plan-disclosure').evaluate(element => element.open)) await page.locator('#plan-disclosure > summary').click();
+    await page.locator('.experience-status a[href="#journey"]').click();
+    await page.waitForFunction(() => location.hash === '#journey' && document.querySelector('#plan-disclosure')?.open);
+    check(await page.locator('.floor-switch button[aria-pressed="true"]').innerText() === selectedFloor, `Opening the plan hash reset the selected floor at ${width}`);
     report.widths.push({ width, overflow: layout.content - layout.width });
     if (width === 796) {
       await tabs.getByRole('tab', { name: 'Open thresholds' }).click();
-      await page.locator('#design').screenshot({ style: '.project-chapters { visibility: hidden !important; }', path: `${output}/design-796.png` });
+      await revealDetails(page, '#design');
+      await page.locator('#design').screenshot({ path: `${output}/design-796.png` });
     }
     if (width === 390) {
       await page.locator('.kitchen-shortcut').click();
@@ -120,14 +133,23 @@ try {
       await page.locator('.material-switcher').getByRole('button', { name: /Sandstone Warmth/ }).click();
       await page.waitForFunction(() => document.querySelector('.three-canvas')?.dataset.materialMode === 'sandstone');
       await page.locator('.residence-workbench').screenshot({ path: `${output}/studio-mobile.png` });
-      await page.locator('#design').screenshot({ style: ".project-chapters { visibility: hidden !important; }", path: `${output}/design-mobile.png` });
-      await page.locator('#brief').screenshot({ style: ".project-chapters { visibility: hidden !important; }", path: `${output}/brief-mobile.png` });
+      await revealDetails(page, '#design');
+      await page.locator('#design').screenshot({ path: `${output}/design-mobile.png` });
+      await revealDetails(page, '#brief');
+      await page.locator('#brief').screenshot({ path: `${output}/brief-mobile.png` });
     }
   }
   await page.setViewportSize({ width: 1440, height: 1600 });
-  await page.getByRole('navigation', { name: 'Project chapters' }).getByRole('link', { name: 'Brief', exact: true }).click();
-  await page.waitForFunction(() => document.querySelector('.project-chapters a[href="#brief"]')?.getAttribute('aria-current') === 'location');
-  report.checks.push('Final chapter stays active at the page bottom in tall viewports');
+  await page.locator('#brief-disclosure > summary').click();
+  check(!await page.locator('#brief-disclosure').evaluate(element => element.open), 'Brief did not collapse before bookmark navigation');
+  const briefUrl = new URL(page.url());
+  briefUrl.hash = 'brief';
+  await page.goto(briefUrl.href, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => location.hash === '#brief' && document.querySelector('#brief-disclosure')?.open);
+  await page.locator('#brief').getByRole('radio', { name: 'Villa architecture', exact: true }).waitFor({ state: 'visible' });
+  check(await page.locator('#project-area').inputValue() === '320' && await page.locator('#project-scope').inputValue() === 'New villa concept', 'Brief bookmark discarded the saved category fields');
+  check(await page.locator('#project-location').inputValue() === 'Porto', 'Brief bookmark discarded the saved location');
+  report.checks.push('Plan links reopen the disclosure at all widths without resetting its floor; the brief bookmark opens with saved fields intact');
   check(report.glbRequests === 1, `Model reloaded ${report.glbRequests} times`);
   check(report.errors.length === 0, `Browser errors: ${report.errors.join('; ')}`);
   report.status = 'PASS';

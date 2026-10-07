@@ -1095,16 +1095,10 @@ export default function VillaViewer({
             ? isExplore
               ? 'Drag to look around. Walk through the connected spaces.'
               : 'Follow the arrows, or explore at your own pace.'
-            : 'Drag to orbit · choose Drone flight to move freely'}
+            : 'Drag to orbit · choose a room above'}
         </p>
       </div>
 
-      <div className="scene-navigation" role="group" aria-label="Scene navigation">
-        <button type="button" aria-pressed={!droneMode && !isFirstPerson} onClick={returnToOverview} disabled={modelState !== 'loaded'}>Orbit overview</button>
-        <button type="button" aria-pressed={droneMode} onClick={() => {setEstateSelection(null);setDroneMode(true);}} disabled={modelState !== 'loaded'}>Drone flight</button>
-        <button type="button" onClick={() => { setDroneMode(false); onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'entry')); }} disabled={modelState !== 'loaded'}>Go inside <span aria-hidden="true">↗</span></button>
-      </div>
-      <AtmosphereControls weather={weather} setWeather={setWeather} wind={wind} setWind={setWind} motion={motion} setMotion={setMotion} />
       <div className="three-canvas-shell">
         <div
           ref={mountRef}
@@ -1279,9 +1273,16 @@ export default function VillaViewer({
         )}
       </div>
 
-      <EstateControls destinations={destinations} destination={estateDestinationId} onVisit={id=>{setDroneMode(false);setEstateSelection({id,key:viewRequestId});}} actions={actions} onAction={activateAction} finishes={finishes} onFinish={(key,value)=>setFinishes(previous=>({...previous,[key]:value}))} disabled={modelState!=='loaded'} />
+      <EstateControls sceneControls={<>
+<div className="scene-navigation" role="group" aria-label="Scene navigation">
+        <button type="button" aria-pressed={!droneMode && !isFirstPerson} onClick={returnToOverview} disabled={modelState !== 'loaded'}>Orbit overview</button>
+        <button type="button" aria-pressed={droneMode} onClick={() => {setEstateSelection(null);setDroneMode(true);}} disabled={modelState !== 'loaded'}>Drone flight</button>
+        <button type="button" onClick={() => { setDroneMode(false); onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'entry')); }} disabled={modelState !== 'loaded'}>Go inside <span aria-hidden="true">↗</span></button>
+      </div>
+      <AtmosphereControls weather={weather} setWeather={setWeather} wind={wind} setWind={setWind} motion={motion} setMotion={setMotion} />
+      </>} destinations={destinations} destination={estateDestinationId} onVisit={id=>{setDroneMode(false);setEstateSelection({id,key:viewRequestId});}} actions={actions} onAction={activateAction} finishes={finishes} onFinish={(key,value)=>setFinishes(previous=>({...previous,[key]:value}))} disabled={modelState!=='loaded'} />
       <p className="viewer-note" id={viewerNoteId}>
-        Drag to orbit. Drone flight: drag to look, use WASD to move, E to ascend and Q to descend. Go inside starts the guided room tour. Click doors, sliding glazing and screens; rain gradually wets exposed surfaces and gathers in puddles. Bathroom view opens a section through the private core. This interactive residence is a design concept.
+        Interactive concept study. Bathroom opens a section view.
       </p>
     </section>
   );
