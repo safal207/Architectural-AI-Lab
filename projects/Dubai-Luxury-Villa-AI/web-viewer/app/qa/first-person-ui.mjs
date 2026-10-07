@@ -23,7 +23,7 @@ function boxesOverlap(a, b) {
 async function fastClick(locator) {
   await locator.waitFor({ state: 'visible' });
   await locator.evaluate((element) => element.click());
-  await locator.page().locator('.three-canvas').scrollIntoViewIfNeeded();
+  await locator.page().locator('.three-canvas').evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
 }
 
 async function waitForModel(page) {

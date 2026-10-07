@@ -18,7 +18,7 @@ const distance = (a,b) => Math.hypot(...a.map((v,i)=>v-b[i]));
 /** Activate the uniquely named accessible button for a flight scenario. */
 const click = async (page, name) => {
   await page.getByRole('button', { name, exact: true }).click();
-  await page.locator('.three-canvas').scrollIntoViewIfNeeded();
+  await page.locator('.three-canvas').evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
 };
 /** Reveal the paused offscreen scene, then wait for its requested and rendered camera modes. */
 const mode = async (page, expected) => {
