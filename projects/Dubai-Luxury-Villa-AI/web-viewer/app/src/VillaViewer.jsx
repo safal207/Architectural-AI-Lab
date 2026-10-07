@@ -1283,6 +1283,7 @@ export default function VillaViewer({
       </>} destinations={destinations} destination={estateDestinationId} onVisit={id=>{setDroneMode(false);setEstateSelection({id,key:viewRequestId});}} actions={actions} onAction={activateAction} finishes={finishes} onFinish={(key,value)=>setFinishes(previous=>({...previous,[key]:value}))} disabled={modelState!=='loaded'} />
       <p className="viewer-note" id={viewerNoteId}>
         Interactive concept study. Bathroom opens a section view.
+        <span className="viewer-navigation-instructions"> Drag to orbit. Drone flight: drag to look, use WASD to move, E to ascend and Q to descend. Go inside starts the guided room tour. Click doors, sliding glazing and screens.</span>
       </p>
     </section>
   );
