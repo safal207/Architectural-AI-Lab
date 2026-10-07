@@ -89,6 +89,7 @@ try {
   await desktop.screenshot({ path: `${outputDir}/upper-landing-walk.png`, fullPage: true, timeout: 120_000 });
   report.desktop.upperLandingWalk = 'PASS';
 
+  await desktop.close();
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   observe(mobile);
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });

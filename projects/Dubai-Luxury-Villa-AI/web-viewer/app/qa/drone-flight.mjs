@@ -23,10 +23,50 @@ const click = async (page, name) => {
 /** Reveal the paused offscreen scene, then wait for its requested and rendered camera modes. */
 const mode = async (page, expected) => {
   await page.locator('.three-canvas').scrollIntoViewIfNeeded();
-  await page.waitForFunction(value => {
-    const view = document.querySelector('.three-canvas');
-    return view?.dataset.interactionMode === value && view?.dataset.renderedInteractionMode === value;
-  }, expected);
+  try {
+    await page.waitForFunction(value => {
+      const view = document.querySelector('.three-canvas');
+      return view?.dataset.interactionMode === value && view?.dataset.renderedInteractionMode === value;
+    }, expected);
+  } catch (error) {
+    const diagnostic = await page.evaluate((expectedMode) => {
+      const view = document.querySelector('.three-canvas');
+      const canvas = view?.querySelector('canvas');
+      const rect = view?.getBoundingClientRect();
+      const gl = canvas?.getContext('webgl2');
+      const active = document.activeElement;
+      const style = view && getComputedStyle(view);
+      return {
+        expectedMode,
+        requested: view?.dataset.interactionMode,
+        rendered: view?.dataset.renderedInteractionMode,
+        viewMode: view?.dataset.viewMode,
+        tourStop: view?.dataset.tourStop,
+        renderedTourStop: view?.dataset.renderedTourStop,
+        camera: view?.dataset.cameraPosition,
+        modelState: view?.dataset.modelState,
+        documentVisibility: document.visibilityState,
+        documentHidden: document.hidden,
+        scrollY,
+        viewport: { width: innerWidth, height: innerHeight },
+        sceneRect: rect && { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+        sceneVisible: view?.checkVisibility(),
+        sceneStyle: style && { display: style.display, visibility: style.visibility },
+        contextLost: gl?.isContextLost(),
+        activeElement: active && { tag: active.tagName, label: active.getAttribute('aria-label') ?? active.textContent?.trim().slice(0, 100) },
+        sceneButtons: [...document.querySelectorAll('.scene-navigation button')].map((button) => {
+          const bounds = button.getBoundingClientRect();
+          return { label: button.textContent.trim(), pressed: button.getAttribute('aria-pressed'), disabled: button.disabled, x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+        }),
+        observerDeliveries: (window.__sceneObserverDeliveries ?? []).slice(-20),
+        closedAncestorDetails: [...document.querySelectorAll('details:not([open])')].filter((details) => details.contains(view)).map((details) => details.id)
+      };
+    }, expected);
+    report.modeFailures ??= [];
+    report.modeFailures.push(diagnostic);
+    console.log('Mode failure diagnostic', JSON.stringify(diagnostic));
+    throw error;
+  }
 };
 /** Wait up to 15 seconds for rendered displacement to exceed the specified model-unit threshold. */
 async function waitMovement(page, before, min=.08) {
@@ -42,6 +82,22 @@ async function waitMovement(page, before, min=.08) {
 async function start(page) {
   page.on('pageerror', error=>report.errors.push(String(error)));
   page.on('console', msg=>{if(msg.type()==='error')report.errors.push(msg.text());});
+  await page.addInitScript(() => {
+    window.__sceneObserverDeliveries = [];
+    const NativeObserver = window.IntersectionObserver;
+    window.IntersectionObserver = class extends NativeObserver {
+      constructor(callback, options) {
+        super((entries, observer) => {
+          const sceneEntries = entries.filter((entry) => entry.target.matches('.three-canvas'));
+          if (sceneEntries.length) window.__sceneObserverDeliveries.push(sceneEntries.map((entry) => ({
+            time: entry.time, intersecting: entry.isIntersecting, ratio: entry.intersectionRatio,
+            top: entry.boundingClientRect.top, bottom: entry.boundingClientRect.bottom, scrollY
+          })));
+          callback(entries, observer);
+        }, options);
+      }
+    };
+  });
   await page.goto(url+'?lighting=day', { waitUntil:'domcontentloaded' });
   await revealViewer(page);
   await page.waitForFunction(()=>document.querySelector('.three-canvas')?.dataset.modelState==='loaded',null,{timeout:120000});
