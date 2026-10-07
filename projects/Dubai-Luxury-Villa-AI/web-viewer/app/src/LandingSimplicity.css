@@ -1,0 +1,79 @@
+/* The landing prioritises images, one room selector and the scene. */
+.simple-landing .site-header { min-height: 82px; }
+.simple-landing .site-header nav a { display: flex; align-items: center; min-height: 44px; }
+.simple-landing .experience-section { padding-block: 42px 28px; }
+.simple-landing .viewer-toolbar { margin-bottom: 22px; }
+.simple-landing .viewer-toolbar h2 { font-size: clamp(32px, 3.3vw, 48px); }
+.simple-landing .rooms-panel { flex-wrap: wrap; gap: 8px; }
+.simple-landing .rooms-panel > .control-label { display: none; }
+.simple-landing .rooms-panel button { min-height: 44px; }
+.simple-landing .room-selector button { font-size: 12px; }
+.simple-landing .residence-workbench { display: block; }
+.simple-landing .viewer-heading { padding: 12px 16px; }
+.simple-landing .viewer-heading .eyebrow { display: none; }
+.simple-landing .viewer-navigation-instructions { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.simple-landing .room-details { border-bottom: 0; padding: 20px 0; }
+.simple-landing .experience-status { padding-top: 14px; }
+.studio-disclosure { min-width: 0; border-top: 1px solid #ffffff26; }
+.studio-disclosure > summary { cursor: pointer; min-height: 48px; padding: 14px 0; font-size: 13px; }
+.studio-disclosure > summary > span { margin-left: 12px; color: #bcc1b1; font-size: 11px; }
+.studio-disclosure .lighting-control nav { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0 18px; }
+.studio-disclosure .lighting-control button { min-height: 44px; color: inherit; border-color: #626858; font-size: 12px; }
+.studio-disclosure .lighting-control button.is-active { background: #eeeadf; color: #33362c; }
+.simple-landing .material-switcher { margin: 0; padding: 0 0 16px; }
+.simple-landing .material-switcher__options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.simple-landing .material-switcher__options > button { min-height: 64px; background: #ffffff07; color: #eeeadf; border-color: #626858; padding: 12px; }
+.simple-landing .material-switcher__options > button.is-active { background: #eeeadf; color: #33362c; border-color: #eeeadf; }
+.simple-landing .material-switcher__samples { width: 48px; min-width: 48px; height: 38px; }
+.simple-landing .material-switcher__sample-label,
+.simple-landing .material-switcher__copy > small,
+.simple-landing .material-switcher__selection,
+.simple-landing .material-switcher__current,
+.simple-landing .material-switcher__note { display: none; }
+.simple-landing .material-switcher__copy strong { color: inherit; font-size: 12px; }
+.simple-landing .estate-controls { margin: 0; padding: 0 16px; }
+.estate-primary { display: flex; padding: 14px 0; }
+.estate-primary:empty { display: none; }
+.estate-primary button { min-height: 44px; border-color: #626858; color: #e6e9e4; font-size: 12px; }
+.estate-primary button[aria-pressed="true"] { background: #eeeadf; color: #33362c; }
+.simple-landing .scene-navigation { flex-wrap: wrap; padding-inline: 0; }
+.simple-landing .estate-wayfinding { grid-template-columns: 1fr; gap: 12px; padding-top: 18px; }
+.simple-landing .estate-wayfinding > div:first-child { display: none; }
+.simple-landing .estate-panels { margin-bottom: 18px; }
+.landing-extras { padding-block: 16px 20px; }
+.landing-disclosure { border-bottom: 1px solid var(--line); }
+.landing-disclosure > summary { min-height: 56px; padding: 18px 0; cursor: pointer; font-size: 14px; }
+.landing-disclosure .section-wrap { margin-inline: 0; }
+.simple-landing .journey-section { padding-block: 24px 40px; border-bottom: 0; }
+.simple-landing .contact-section { padding-block: 44px 40px; border-top: 0; }
+.simple-landing .contact-section h2 { font-size: clamp(34px, 4vw, 52px); }
+.simple-landing .contact-intro { margin-top: 18px; }
+.brief-disclosure { margin-bottom: 40px; }
+.simple-landing .site-footer { padding-block: 28px; }
+.simple-landing .footer-wordmark { font-size: 28px; }
+.simple-landing .site-footer > div { display: none; }
+@media (max-width: 850px) {
+  .simple-landing .rooms-panel { display: flex; }
+  .simple-landing .overview-button { margin-left: 0; }
+  .simple-landing .material-switcher__options { grid-template-columns: 1fr; }
+  .simple-landing .material-switcher__options > button { min-height: 56px; }
+  .simple-landing .viewer-heading > p { display: none; }
+  #viewer .three-canvas-shell { scroll-margin-top: 16px; }
+}
+@media (max-width: 700px) {
+  .simple-landing .site-header { min-height: 76px; flex-wrap: wrap; padding-block: 12px; gap: 8px; }
+  .simple-landing .site-header nav { display: flex; gap: 12px; font-size: 11px; }
+  .simple-landing .brand { gap: 10px; }
+  .simple-landing .brand > span:last-child { font-size: 7px; }
+  .simple-landing .brand-mark { font-size: 31px; }
+  .simple-landing .experience-section { padding-top: 32px; }
+  .simple-landing .room-selector { display: flex; }
+  .simple-landing .rooms-panel { gap: 7px; }
+  .simple-landing .rooms-panel button { font-size: 11px; padding: 10px; }
+  .simple-landing .room-details { display: block; }
+  .simple-landing .room-details > p { margin-block: 12px; }
+  .simple-landing .room-details dl { justify-content: flex-start; }
+  .studio-disclosure > summary > span { display: block; margin: 6px 0 0 16px; }
+  .simple-landing .experience-status { gap: 8px 16px; }
+  .simple-landing .experience-status a { margin-left: 0; }
+}

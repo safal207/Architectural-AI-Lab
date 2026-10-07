@@ -1,5 +1,6 @@
 import { chromium } from 'playwright';
 import { readFile } from 'node:fs/promises';
+import { revealDetails } from './reveal-viewer.mjs';
 
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext({ acceptDownloads: true, permissions: ['clipboard-read', 'clipboard-write'] });
@@ -14,13 +15,19 @@ function check(condition, message) {
 
 try {
   await page.goto(process.argv[2] ?? process.env.VILLA_URL ?? 'http://127.0.0.1:4173/', { waitUntil: 'domcontentloaded' });
+  await revealDetails(page, '#brief');
   const brief = page.locator('#brief');
+  check(await brief.getByRole('radio', { name: 'Kitchen design' }).isVisible(), 'Project type is hidden in the short brief');
+  check(await brief.getByLabel('What do you have in mind?', { exact: false }).isVisible(), 'Project notes are hidden in the short brief');
+  check(await brief.locator('#project-location').isHidden(), 'Optional location should start collapsed');
+  check(await brief.locator('.brief-summary').isHidden(), 'Verbose brief summary should start collapsed');
   const email = brief.getByRole('link', { name: 'Email my project brief' });
   await email.click();
   await brief.getByRole('status').filter({ hasText: 'Add one detail about your project' }).waitFor();
   check(await page.evaluate(() => document.activeElement?.id === 'project-notes'), 'Empty request did not focus the notes field');
 
   await brief.getByRole('radio', { name: 'Kitchen design' }).check();
+  await revealDetails(page, '#project-location');
   await brief.getByLabel('Location', { exact: false }).fill('Porto');
   await brief.getByLabel('Approximate area', { exact: false }).fill('24.5');
   await brief.getByLabel('Where shall we begin?', { exact: false }).selectOption('Layout and storage');
@@ -80,7 +87,10 @@ try {
     check((await summary.locator('dd').allTextContents()).includes('To be measured.'), `Summary shows invalid area ${invalidArea}`);
     check((await summary.locator('pre').textContent()).includes('Approximate area: To be measured.'), `Full preview shows invalid area ${invalidArea}`);
   }
+  await brief.locator('.brief-optional-details > summary').click();
+  check(await brief.locator('#project-area').isHidden(), 'Optional fields did not collapse before validation');
   await email.click();
+  check(await brief.locator('#project-area').isVisible(), 'Invalid optional field was not revealed by validation');
   check(!await brief.getByRole('status').innerText().then((text) => text.includes('Review it and press Send')), 'Invalid area opened an email draft');
 
   await brief.getByLabel('Approximate area', { exact: false }).fill('24.5');

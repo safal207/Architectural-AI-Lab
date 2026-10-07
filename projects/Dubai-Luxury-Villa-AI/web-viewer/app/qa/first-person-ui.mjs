@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { revealViewer } from './reveal-viewer.mjs';
+import { revealViewer, revealDetails } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-first-person-output';
@@ -23,6 +23,7 @@ function boxesOverlap(a, b) {
 async function fastClick(locator) {
   await locator.waitFor({ state: 'visible' });
   await locator.evaluate((element) => element.click());
+  await locator.page().locator('.three-canvas').evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
 }
 
 async function waitForModel(page) {
@@ -59,6 +60,7 @@ async function assertPersistentRuntime(page, label) {
 }
 
 async function enterHouse(page) {
+  await revealDetails(page, '.tour-experience');
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
   await fastClick(tour.getByRole('button', { name: 'Enter the house', exact: true }));
@@ -184,6 +186,7 @@ try {
   await desktop.keyboard.up('ArrowUp');
   check(await canvasElement.evaluate((element) => element !== document.activeElement), 'Escape did not release canvas focus');
   await desktop.locator('.walkthrough-onboarding').waitFor({ state: 'visible' });
+  await revealDetails(desktop, '#project-notes');
   await canvasElement.click({ position: { x: canvasBox.width * 0.5, y: canvasBox.height * 0.4 } });
   await desktop.keyboard.down('w');
   const notes = desktop.getByRole('textbox', { name: 'What do you have in mind? Optional', exact: true });

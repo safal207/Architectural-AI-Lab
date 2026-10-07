@@ -277,7 +277,8 @@ export default function VillaViewer({
   droneMode = false,
   setDroneMode,
   onSelectTourStop,
-  onExitTour
+  onExitTour,
+  onGuidedViewActiveChange
 }) {
   const viewerNoteId = useId();
   const mountRef = useRef(null);
@@ -416,7 +417,9 @@ export default function VillaViewer({
     const runtime = runtimeRef.current;
     if (!runtime?.villaRoot) return;
     runtime.needsRender = true;
-    const report = applyMaterialConcept(runtime.villaRoot, latestPropsRef.current.material);
+    const selectedMaterial = latestPropsRef.current.material;
+    const report = applyMaterialConcept(runtime.villaRoot, selectedMaterial);
+    runtime.appliedMaterialId = selectedMaterial?.id ?? 'default';
     setMaterialResponse(report);
     syncFinishes();
     syncLighting();
@@ -435,6 +438,7 @@ export default function VillaViewer({
     const isFirstPerson = !current.estateDestinationId && !current.droneMode && current.tourMode && current.activeTourStopId !== 'overview';
     const isExplore = isFirstPerson && current.interactionMode === 'explore';
     const wasFirstPerson = runtime.isFirstPerson;
+    runtime.appliedTourStopId = '';
 
     runtime.isFirstPerson = isFirstPerson;
     runtime.isExplore = isExplore;
@@ -483,6 +487,7 @@ export default function VillaViewer({
         { presentation: !isExplore }
       );
       runtime.firstPersonAvailable = tourPlaced;
+      if (tourPlaced && !isExplore) runtime.appliedTourStopId = current.activeTourStopId;
       setFirstPersonReady(tourPlaced);
       if (tourPlaced && isExplore) {
         runtime.camera.rotation.reorder('YXZ');
@@ -928,6 +933,8 @@ export default function VillaViewer({
         // Mark the mode of this rendered frame, not only React's requested mode.
         // Browser QA must not sample the previous camera while a new frame is pending.
         container.dataset.renderedInteractionMode = runtime.isDrone ? 'drone' : runtime.isFirstPerson ? (runtime.isExplore ? 'explore' : 'guided') : 'orbit';
+        container.dataset.renderedMaterial = runtime.appliedMaterialId ?? 'default';
+        container.dataset.renderedTourStop = runtime.appliedTourStopId ?? '';
         container.dataset.cameraPosition = camera.position.toArray().map((value) => value.toFixed(3)).join(',');
         container.dataset.cameraDirection = camera.getWorldDirection(new THREE.Vector3()).toArray().map((value) => value.toFixed(3)).join(',');
         container.dataset.atmosphereTime = runtime.elapsed.toFixed(3);
@@ -1008,6 +1015,11 @@ export default function VillaViewer({
   const activeStop = TOUR_STOPS.find((stop) => stop.id === activeTourStopId) ?? TOUR_STOPS[0];
   const isFirstPerson = !estateDestinationId && !droneMode && tourMode && activeTourStopId !== 'overview';
   const isExplore = isFirstPerson && interactionMode === 'explore';
+  const guidedViewActive = isFirstPerson && !isExplore && modelState === 'loaded';
+  useEffect(() => {
+    onGuidedViewActiveChange?.(guidedViewActive);
+    return () => onGuidedViewActiveChange?.(false);
+  }, [guidedViewActive, onGuidedViewActiveChange]);
   const runtimeLightingProfile = resolveRuntimeLighting(
     lightingMode,
     isExplore ? (walkStatus.stopId ?? activeTourStopId) : activeTourStopId,
@@ -1083,16 +1095,10 @@ export default function VillaViewer({
             ? isExplore
               ? 'Drag to look around. Walk through the connected spaces.'
               : 'Follow the arrows, or explore at your own pace.'
-            : 'Drag to orbit · choose Drone flight to move freely'}
+            : 'Drag to orbit · choose a room above'}
         </p>
       </div>
 
-      <div className="scene-navigation" role="group" aria-label="Scene navigation">
-        <button type="button" aria-pressed={!droneMode && !isFirstPerson} onClick={returnToOverview} disabled={modelState !== 'loaded'}>Orbit overview</button>
-        <button type="button" aria-pressed={droneMode} onClick={() => {setEstateSelection(null);setDroneMode(true);}} disabled={modelState !== 'loaded'}>Drone flight</button>
-        <button type="button" onClick={() => { setDroneMode(false); onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'entry')); }} disabled={modelState !== 'loaded'}>Go inside <span aria-hidden="true">↗</span></button>
-      </div>
-      <AtmosphereControls weather={weather} setWeather={setWeather} wind={wind} setWind={setWind} motion={motion} setMotion={setMotion} />
       <div className="three-canvas-shell">
         <div
           ref={mountRef}
@@ -1267,9 +1273,17 @@ export default function VillaViewer({
         )}
       </div>
 
-      <EstateControls destinations={destinations} destination={estateDestinationId} onVisit={id=>{setDroneMode(false);setEstateSelection({id,key:viewRequestId});}} actions={actions} onAction={activateAction} finishes={finishes} onFinish={(key,value)=>setFinishes(previous=>({...previous,[key]:value}))} disabled={modelState!=='loaded'} />
+      <EstateControls sceneControls={<>
+<div className="scene-navigation" role="group" aria-label="Scene navigation">
+        <button type="button" aria-pressed={!droneMode && !isFirstPerson} onClick={returnToOverview} disabled={modelState !== 'loaded'}>Orbit overview</button>
+        <button type="button" aria-pressed={droneMode} onClick={() => {setEstateSelection(null);setDroneMode(true);}} disabled={modelState !== 'loaded'}>Drone flight</button>
+        <button type="button" onClick={() => { setDroneMode(false); onSelectTourStop?.(TOUR_STOPS.find((stop) => stop.id === 'entry')); }} disabled={modelState !== 'loaded'}>Go inside <span aria-hidden="true">↗</span></button>
+      </div>
+      <AtmosphereControls weather={weather} setWeather={setWeather} wind={wind} setWind={setWind} motion={motion} setMotion={setMotion} />
+      </>} destinations={destinations} destination={estateDestinationId} onVisit={id=>{setDroneMode(false);setEstateSelection({id,key:viewRequestId});}} actions={actions} onAction={activateAction} finishes={finishes} onFinish={(key,value)=>setFinishes(previous=>({...previous,[key]:value}))} disabled={modelState!=='loaded'} />
       <p className="viewer-note" id={viewerNoteId}>
-        Drag to orbit. Drone flight: drag to look, use WASD to move, E to ascend and Q to descend. Go inside starts the guided room tour. Click doors, sliding glazing and screens; rain gradually wets exposed surfaces and gathers in puddles. Bathroom view opens a section through the private core. This interactive residence is a design concept.
+        Interactive concept study. Bathroom opens a section view.
+        <span className="viewer-navigation-instructions"> Drag to orbit. Drone flight: drag to look, use WASD to move, E to ascend and Q to descend. Go inside starts the guided room tour. Click doors, sliding glazing and screens.</span>
       </p>
     </section>
   );

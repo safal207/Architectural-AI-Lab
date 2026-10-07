@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { revealViewer } from './reveal-viewer.mjs';
+import { revealViewer, revealDetails } from './reveal-viewer.mjs';
 
 const baseUrl = process.env.VILLA_URL ?? 'http://127.0.0.1:4173/';
 const outputDir = process.env.QA_OUTPUT ?? 'qa-floor-plan-output';
@@ -13,6 +13,7 @@ function check(condition, message) {
 async function fastClick(locator) {
   await locator.waitFor({ state: 'visible' });
   await locator.evaluate((element) => element.click());
+  await locator.page().locator('.three-canvas').evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
 }
 
 async function waitForModel(page) {
@@ -25,6 +26,7 @@ async function waitForModel(page) {
 }
 
 async function openFloorTwo(page) {
+  await revealDetails(page, '.floor-switch');
   const tour = page.locator('.tour-experience');
   await tour.waitFor();
   const floorTwo = tour.locator('.floor-switch').getByRole('button', { name: 'Floor 2', exact: true });
@@ -87,6 +89,7 @@ try {
   await desktop.screenshot({ path: `${outputDir}/upper-landing-walk.png`, fullPage: true, timeout: 120_000 });
   report.desktop.upperLandingWalk = 'PASS';
 
+  await desktop.close();
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   observe(mobile);
   await mobile.goto(baseUrl, { waitUntil: 'networkidle', timeout: 120_000 });

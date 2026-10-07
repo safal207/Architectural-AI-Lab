@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
+import { revealViewer, revealDetails } from './reveal-viewer.mjs';
 
 const baseUrl = new URL(process.env.VILLA_URL ?? 'http://127.0.0.1:4173/');
 baseUrl.searchParams.set('qaCapture', '1');
@@ -30,13 +31,16 @@ function observe(page, diagnostics) {
 /** Read diagnostics only after the model and all new runtime modules have initialized. */
 async function start(page) {
   await page.goto(baseUrl.href, { waitUntil: 'domcontentloaded' });
-  await reveal(page.locator('#viewer .viewer-panel'));
+  await revealViewer(page);
   await page.waitForFunction(() => {
     const view = document.querySelector('.three-canvas');
     return view?.dataset.modelState === 'loaded' && view.dataset.atmosphereReport
       && view.dataset.waterReport && view.dataset.detailsReport
       && view.dataset.atmosphereTime !== undefined;
   }, undefined, { timeout: 120_000 });
+  await revealDetails(page, '.atmosphere-controls');
+  await revealDetails(page, '.lighting-control');
+  await revealDetails(page, '.client-graph');
   await reveal(page.locator('.three-canvas'));
   const modules = await page.locator('.three-canvas').evaluate(view => ({
     atmosphere: JSON.parse(view.dataset.atmosphereReport),
@@ -74,6 +78,8 @@ async function click(locator) {
   console.log(`Activating ${locator}`);
   await locator.waitFor({ state: 'visible' });
   await locator.evaluate(button => button.click());
+  // Opening advanced controls may scroll the viewport away from the paused scene.
+  await reveal(locator.page().locator('.three-canvas'));
   console.log('Control activated');
 }
 

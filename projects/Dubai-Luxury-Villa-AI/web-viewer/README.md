@@ -12,6 +12,9 @@ PR #9 was merged and published on 2026-09-22 at `ba69cc7d0e0da02f9c93ff55912571b
 
 ## Experience
 
+- A compact living-room → pool introduction with two manually selected views and
+  Warm Limestone / Graphite Mineral comparison, sharing the studio's palette
+  state and local brief. [Implementation order and Genex fit](../docs/living-pool-showcase-plan.md).
 - Architectural intent, project facts and an axonometric study exported from the current repaired model, with three explanations linked to 3D views.
 - Sticky navigation through Concept, Spaces, 3D studio, Plan and Brief on desktop and mobile.
 - A residence introduction and image stories for the kitchen/living area and pool terrace.
@@ -79,6 +82,7 @@ In a separate terminal, from `app`, set `VILLA_URL` to `http://127.0.0.1:4173/`.
 | [`qa/live-browser.mjs`](app/qa/live-browser.mjs) | Model digest and delivery, desktop/mobile tour state, rooms, lighting, palettes, gallery controls, downloaded brief contents and narrow layout. |
 | [`qa/mobile-hero-layout.mjs`](app/qa/mobile-hero-layout.mjs) | Loaded hero image, text/control containment, page sections and horizontal scrolling at 390 → 320 → 390 px. |
 | [`qa/editorial-resilience.mjs`](app/qa/editorial-resilience.mjs) | Story-to-viewer focus and tour stops, clearing stale room details, invalidating a prepared brief after preference changes, and gallery/brief operation when WebGL is unavailable. |
+| [`qa/living-pool-showcase.mjs`](app/qa/living-pool-showcase.mjs) | Two authored views, actual rendered palette changes, shared three-palette state, downloaded briefs, keyboard focus, desktop/mobile containment and the 320 px WebGL fallback. Static frames do not establish native-motion performance. |
 | [`qa/first-person-ui.mjs`](app/qa/first-person-ui.mjs) | Guided/Explore controls and desktop/touch movement behavior. |
 | [`qa/walkthrough-input.mjs`](app/qa/walkthrough-input.mjs) and [`qa/walkthrough-graph.mjs`](app/qa/walkthrough-graph.mjs) | Input lifecycle, authored navigation and route behavior. |
 | [`qa/stair-presentation.mjs`](app/qa/stair-presentation.mjs) and [`qa/pool-presentation.mjs`](app/qa/pool-presentation.mjs) | Renderer-free checks against actual GLB geometry for stair openings, pool separation and coping alignment; preserved materials and route anchors. |

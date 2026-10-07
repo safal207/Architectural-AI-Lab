@@ -1,0 +1,59 @@
+.living-pool-showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 28px;
+  align-items: center;
+  min-width: 0;
+  margin-bottom: 24px;
+  padding: 22px;
+  border: 1px solid #53584c;
+  background: #2d322a;
+}
+.living-pool-showcase__intro, .living-pool-showcase__group { min-width: 0; }
+.living-pool-showcase__eyebrow, .living-pool-showcase__label {
+  color: #c4bea9;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+.living-pool-showcase__intro h3 { font-family: Georgia, serif; font-size: 26px; letter-spacing: -.025em; }
+.living-pool-showcase__intro h3 em { color: #c4bea9; }
+.living-pool-showcase__intro > p:last-child { margin-top: 9px; color: #bcc1b1; font-size: 11px; max-width: 310px; }
+.living-pool-showcase__options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.living-pool-showcase__options button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px;
+  border-color: #626858;
+  color: #e5e5db;
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.living-pool-showcase__options button:hover { border-color: #c4bea9; }
+.living-pool-showcase__options button[aria-pressed="true"] { background: #eeeadf; border-color: #eeeadf; color: #33362c; }
+.living-pool-showcase__swatch { width: 12px; height: 12px; flex-shrink: 0; border: 1px solid #ffffff36; }
+.living-pool-showcase__current { color: #bcc1b1; font-size: 10px; margin-top: 10px; }
+@media (max-width: 850px) {
+  #viewer .three-canvas-shell { scroll-margin-top: 72px; }
+}
+@media (max-width: 700px) {
+  #viewer .three-canvas-shell { scroll-margin-top: 60px; }
+}
+@media (max-width: 1100px) {
+  .living-pool-showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .living-pool-showcase__intro { grid-column: 1 / -1; }
+  .living-pool-showcase__intro > p:last-child { max-width: none; }
+}
+@media (max-width: 600px) {
+  .living-pool-showcase { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 18px; }
+  .living-pool-showcase__intro h3 { font-size: 25px; }
+  .living-pool-showcase__options button { padding-inline: 8px; }
+}
