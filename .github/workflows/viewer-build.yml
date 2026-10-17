@@ -53,6 +53,8 @@ jobs:
 
       - name: Verify rain surfaces and residence interactions
         run: |
+          node qa/surface-materials.mjs
+          node qa/atmosphere-startup.mjs
           node qa/rain-surfaces.mjs
           node qa/residence-interactions.mjs
 
@@ -86,6 +88,7 @@ jobs:
           cmp public/villa.glb /tmp/viewer-villa.glb
           echo 'Viewer HTML, provenance manifest and exact gated GLB served successfully'
           node qa/living-estate.mjs
+          QA_OUTPUT="$QA_OUTPUT/performance" node qa/performance-baseline.mjs
 
       - name: Upload estate browser QA evidence
         if: always()

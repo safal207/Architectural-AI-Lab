@@ -666,7 +666,16 @@ export default function VillaViewer({
         runtime.residence = createResidenceInteractions(THREE, {scene,root:runtime.villaRoot,renderer,quality,onChange:refreshActions});
         runtime.surfaces = createSurfaceMaterials(THREE, {root:runtime.villaRoot,surfaces:runtime.estate.wetSurfaces,renderer,onChange:requestRender});
         const atmosphereRoot = {updateWorldMatrix:()=>scene.updateMatrixWorld(true),traverse:fn=>{runtime.villaRoot.traverse(fn);runtime.estate.group.traverse(fn);}};
-        runtime.atmosphere = createAtmosphere(THREE, {scene,renderer,camera,root:atmosphereRoot,quality,extraOccluders:runtime.estate.rainOccluders});
+        runtime.atmosphere = createAtmosphere(THREE, {
+          scene, renderer, camera, root: atmosphereRoot, quality,
+          extraOccluders: runtime.estate.rainOccluders,
+          initialState: {
+            mode: latestPropsRef.current.lightingMode?.name?.toLowerCase() ?? 'evening',
+            weather: latestPropsRef.current.weather,
+            wind: latestPropsRef.current.wind,
+            motion: latestPropsRef.current.motion
+          }
+        });
         runtime.rainSurfaces = createRainSurfaces(THREE, {scene,root:runtime.villaRoot,quality,renderer});
         for(const {mesh,kind} of runtime.estate.wetSurfaces) {
           const rainKind=['paving','roof'].includes(kind)?'deck':kind;

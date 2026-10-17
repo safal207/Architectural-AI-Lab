@@ -12,13 +12,16 @@ try{
  page.setDefaultTimeout(90000);
  page.on('pageerror',e=>{report.errors.push(String(e));console.error(e);});
  page.on('console',m=>{if(m.type()==='error'){report.errors.push(m.text());console.error(m.text());}});
+ const timberRequests=[];
+ page.on('request',request=>{if(new URL(request.url()).pathname.includes('/materials/wood_floor_deck-'))timberRequests.push(request.url());});
  await page.goto(url,{waitUntil:'domcontentloaded'});
  await page.locator('#viewer .viewer-panel').evaluate(e=>e.scrollIntoView({block:'center',behavior:'instant'}));
  console.log('Viewer revealed');
  await page.locator('.three-canvas').evaluate(e=>e.scrollIntoView({block:'center',behavior:'instant'}));
  await page.waitForFunction(()=>document.querySelector('.three-canvas')?.dataset.modelState==='loaded');
- await page.waitForFunction(()=>JSON.parse(document.querySelector('.three-canvas')?.dataset.surfaceReport??'{}').loaded===6);
- console.log('Model and six PBR maps loaded');
+ await page.waitForFunction(()=>{const surface=JSON.parse(document.querySelector('.three-canvas')?.dataset.surfaceReport??'{}');return surface.loaded===3&&surface.requestedTextureCount===3;});
+ assert.equal(timberRequests.length,0,'Default stone must not request unused timber textures');
+ console.log('Model and three default PBR maps loaded; timber remains deferred');
  async function click(l){await l.evaluate(e=>e.click());}
  async function shot(name){const data=await page.locator('.three-canvas canvas').evaluate(c=>c.toDataURL('image/png'));await writeFile(`${out}/${name}.png`,Buffer.from(data.split(',')[1],'base64'));}
  async function visit(id,label){await click(page.getByRole('button',{name:label,exact:true}));await page.locator('.three-canvas').evaluate(e=>e.scrollIntoView({block:'center',behavior:'instant'}));await page.waitForFunction(id=>document.querySelector('.three-canvas')?.dataset.renderedDestination===id,id);await shot(id);report.views.push(id);console.log('View',id);}
@@ -40,6 +43,13 @@ try{
  await page.waitForFunction(()=>JSON.parse(document.querySelector('.three-canvas').dataset.residenceReport).actions.some(a=>a.id==='entry-door'&&a.state==='open'));
  await page.locator('.estate-panels details').nth(1).evaluate(e=>{e.open=true;});
  await page.getByLabel('Terrace finish',{exact:true}).selectOption('timber');
+ await page.waitForFunction(()=>{const surface=JSON.parse(document.querySelector('.three-canvas')?.dataset.surfaceReport??'{}');return surface.loaded===6&&surface.requestedTextureCount===6;});
+ assert.equal(timberRequests.length,3,'First timber selection must request exactly three maps');
+ await page.getByLabel('Terrace finish',{exact:true}).selectOption('stone');
+ await page.waitForFunction(()=>JSON.parse(document.querySelector('.three-canvas')?.dataset.surfaceReport??'{}').terrace==='stone');
+ await page.getByLabel('Terrace finish',{exact:true}).selectOption('timber');
+ await page.waitForFunction(()=>JSON.parse(document.querySelector('.three-canvas')?.dataset.surfaceReport??'{}').terrace==='timber');
+ assert.equal(timberRequests.length,3,'Repeated timber selection must reuse its maps');
  await page.getByLabel('Kitchen',{exact:true}).selectOption('graphite');
  await page.getByLabel('Furniture',{exact:true}).selectOption('sage');
  await page.getByLabel('Sports car',{exact:true}).selectOption('red');
@@ -63,7 +73,7 @@ try{
  await visit('estate','Whole estate');
  await shot('mobile-estate');
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
- report.checks.push('Single model load; six textures; real wetness growth; no console errors; mobile fits');
+ report.checks.push('Single model load; three initial textures, three timber maps loaded once on selection; real wetness growth; no console errors; mobile fits');
  report.status='PASS';console.log('PASS living estate');
 }catch(e){report.status='FAIL';report.failure=String(e);console.error(e);process.exitCode=1;}
 finally{await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));await browser.close();}

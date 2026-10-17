@@ -2,20 +2,24 @@
 export function createSurfaceMaterials(THREE, {root, surfaces = [], renderer, onChange = () => {}}) {
   const textures = [], restores = [], decks = [], geometries = [];
   const uniforms = {uJointSize:{value:1.2}, uTimber:{value:0}};
-  const report = {profile:'meter-scaled-cc0-pbr-v1',textureCount:6,loaded:0,failed:0,terrace:'stone',joints:'large'};
+  const report = {profile:'meter-scaled-cc0-pbr-v1',textureCount:6,requestedTextureCount:0,loaded:0,failed:0,terrace:'stone',joints:'large'};
   let disposed = false;
   const loader = new THREE.TextureLoader();
   function load(asset, map, color = false) {
-    const texture = loader.load(`${import.meta.env.BASE_URL}materials/${asset}-${map}.jpg`, () => {
+    report.requestedTextureCount++;
+    const texture = loader.load(`${import.meta.env?.BASE_URL ?? './'}materials/${asset}-${map}.jpg`, () => {
       if(disposed) { texture.dispose(); return; }
       report.loaded++; onChange();
-    }, undefined, () => { report.failed++; onChange(); });
+    }, undefined, () => { if(disposed) return; report.failed++; onChange(); });
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.colorSpace = color ? THREE.SRGBColorSpace : THREE.NoColorSpace;
     texture.anisotropy = Math.min(4,renderer.capabilities.getMaxAnisotropy());
     textures.push(texture); return texture;
   }
-  const wood = {map:load('wood_floor_deck','Diffuse',true),normalMap:load('wood_floor_deck','nor_gl'),roughnessMap:load('wood_floor_deck','Rough')};
+  // The default stone finish never samples timber maps. Request and retain
+  // their original-resolution textures only when timber is first selected.
+  let wood = null;
+  const ensureWood = () => wood ??= {map:load('wood_floor_deck','Diffuse',true),normalMap:load('wood_floor_deck','nor_gl'),roughnessMap:load('wood_floor_deck','Rough')};
   const asphalt = {map:load('asphalt_02','Diffuse',true),normalMap:load('asphalt_02','nor_gl'),roughnessMap:load('asphalt_02','Rough')};
   // These selected surfaces are horizontal; world-space projection keeps boards
   // and aggregate consistent across meshes of different dimensions.
@@ -61,10 +65,12 @@ export function createSurfaceMaterials(THREE, {root, surfaces = [], renderer, on
     restores.push(()=>{mat.onBeforeCompile=compile;mat.customProgramCacheKey=cache;Object.assign(mat,old);mat.needsUpdate=true;});
   }
   return {report,setState({terrace='stone',joints='large',stoneColor}={}) {
+    if(disposed) return;
+    const timberMaps = terrace==='timber' ? ensureWood() : null;
     uniforms.uJointSize.value=joints==='fine'?.6:1.2;
     uniforms.uTimber.value=terrace==='timber'?1:0;
     for(const {mat,old} of decks) {
-      const maps=terrace==='timber'?wood:old;
+      const maps=timberMaps ?? old;
       const changed=mat.map!==maps.map;
       mat.map=maps.map;mat.normalMap=maps.normalMap;mat.roughnessMap=maps.roughnessMap;
       mat.normalScale.copy(terrace==='timber'?new THREE.Vector2(.35,.35):old.normalScale);
@@ -74,5 +80,5 @@ export function createSurfaceMaterials(THREE, {root, surfaces = [], renderer, on
       if(changed)mat.needsUpdate=true;
     }
     report.terrace=terrace;report.joints=joints;
-  },dispose(){disposed=true;for(const restore of restores.reverse())restore();textures.forEach(t=>t.dispose());geometries.forEach(g=>g.dispose());}};
+  },dispose(){if(disposed)return;disposed=true;for(const restore of restores.reverse())restore();textures.forEach(t=>t.dispose());geometries.forEach(g=>g.dispose());}};
 }

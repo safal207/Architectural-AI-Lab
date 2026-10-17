@@ -277,7 +277,7 @@ function createRain(THREE, root, mobile, extraOccluders = []) {
  * `update(deltaSeconds)` reports whether animated atmosphere needs another frame.
  * Pass quality = 'mobile' / 'low' (or {mobile:true}) to reduce rain to 240 lines.
  */
-export function createAtmosphere(THREE, { scene, renderer, camera, root, quality = 'desktop', extraOccluders = [] }) {
+export function createAtmosphere(THREE, { scene, renderer, camera, root, quality = 'desktop', extraOccluders = [], initialState = {} }) {
   const mobile = quality === 'mobile' || quality === 'low' || quality?.mobile === true;
   const sunPosition = new THREE.Vector3();
   const horizonColor = new THREE.Color();
@@ -428,6 +428,8 @@ export function createAtmosphere(THREE, { scene, renderer, camera, root, quality
     rain.mesh.material.dispose();
   }
 
-  setState();
+  // Build only the selected sky: the default evening visit must not first
+  // compile and render a discarded daytime reflection environment.
+  setState(initialState);
   return { setState, update, dispose, report, sunPosition, horizonColor };
 }

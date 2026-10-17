@@ -60,6 +60,17 @@ try {
     { timeout: 120_000 }
   );
   report.modelReadyMs = Date.now() - start;
+  await page.waitForFunction(() => {
+    const view = document.querySelector('.three-canvas');
+    const maps = JSON.parse(view?.dataset.surfaceReport ?? '{}');
+    return maps.loaded === 3 && maps.requestedTextureCount === 3 && maps.failed === 0;
+  }, undefined, { timeout: 60_000 });
+  report.initialSurfaceMaps = await page.locator('.three-canvas').evaluate(view => JSON.parse(view.dataset.surfaceReport));
+  report.initialReflections = await page.locator('.three-canvas').evaluate(view => JSON.parse(view.dataset.atmosphereReport));
+  check(report.initialReflections.reflectionCacheCount === 1, 'Startup generated an unused reflection environment');
+  const requestedLighting = new URL(baseUrl).searchParams.get('lighting');
+  const expectedLighting = ['day', 'evening', 'night'].includes(requestedLighting) ? requestedLighting : 'evening';
+  check(report.initialReflections.reflectionCacheKey === `${expectedLighting}:clear`, 'Startup reflections must match the selected lighting');
 
   const resources = await page.evaluate(() => performance.getEntriesByType('resource').map((entry) => ({
     name: entry.name,
@@ -73,12 +84,13 @@ try {
   const classify = (item) => {
     const path = new URL(item.name).pathname;
     if (path.endsWith('/villa.glb')) return 'glb';
+    if (path.includes('/materials/')) return 'surfaceMaps';
     if (path.endsWith('.js')) return 'js';
     if (path.endsWith('.css')) return 'css';
     return null;
   };
 
-  for (const kind of ['glb', 'js', 'css']) {
+  for (const kind of ['glb', 'js', 'css', 'surfaceMaps']) {
     const items = resources.filter((item) => classify(item) === kind);
     report.resourceSummary[kind] = {
       count: items.length,
@@ -88,6 +100,9 @@ try {
       maxDurationMs: Math.max(0, ...items.map((item) => item.duration || 0))
     };
   }
+
+  check(report.resourceSummary.surfaceMaps.count === 3, 'Only the three applied asphalt maps may load at startup');
+  check(!resources.some(item => item.name.includes('/materials/wood_floor_deck-')), 'Unused wood textures requested at startup');
 
   const canvas = page.locator('.three-canvas');
   check(await canvas.getAttribute('data-viewer-runtime') === 'persistent-scene-v2', 'Persistent viewer runtime missing');
