@@ -2,6 +2,15 @@
 
 AI-assisted architectural visualization for villas, kitchens and home interiors: native Blender studies, material exploration and interactive 3D tours.
 
+## Projects
+
+| Project | Experience | Origin |
+| --- | --- | --- |
+| [Dubai residence](projects/Dubai-Luxury-Villa-AI) | Native Blender studies and an interactive architectural tour | Architectural AI Lab |
+| [Athenaion](projects/Athenaion) | Nine-view gallery, RU/EN interface and optional procedural 3D world | MIT adaptation of [Leon Lin’s Athenaion](https://github.com/Leonxlnx/athenaion); our gallery, controls and resilience improvements are documented separately |
+
+Athenaion is included at `/athenaion/` by the Pages build. Its public availability depends on deployment of the revision containing this integration.
+
 ## Featured project — Dubai residence
 
 **Desert, distilled.** A contemporary home explored through warm stone, timber, sheltered interiors and a pool-side landscape.

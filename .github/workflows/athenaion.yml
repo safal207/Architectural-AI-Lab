@@ -1,0 +1,43 @@
+name: Athenaion Studio
+
+on:
+  push:
+    paths:
+      - 'projects/Athenaion/**'
+      - '.github/workflows/athenaion.yml'
+  pull_request:
+    paths:
+      - 'projects/Athenaion/**'
+      - '.github/workflows/athenaion.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/Athenaion
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test configuration, worker failures and asset integrity
+        run: npm test
+      - name: Build the static project
+        run: npm run build
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Check the gallery, languages, subpath delivery and recovery without WebGL
+        run: npm run test:browser
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: athenaion-browser-evidence
+          path: projects/Athenaion/qa-output
+          if-no-files-found: warn

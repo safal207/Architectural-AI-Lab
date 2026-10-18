@@ -10,6 +10,7 @@ import MaterialSwitcher from './MaterialSwitcher';
 import SpaceStories from './SpaceStories';
 import ResidenceFilm from './ResidenceFilm';
 import ProjectBrief from './ProjectBrief';
+import ProjectIndex from './ProjectIndex';
 import { lightingModes } from './DayNightMode';
 import { TOUR_STOPS } from './tourData';
 import './ResidenceStudio.css';
@@ -169,6 +170,7 @@ export default function Dashboard() {
       </section>
       <section className="journey-section section-wrap" aria-label="Floor plan and route"><TourExperience activeStopId={activeTourStopId} onSelectStop={selectTourStop} tourMode={tourMode && !droneMode} onToggleTourMode={toggleTourMode} onViewStop={enterSpace} /></section>
       <ProjectBrief material={material} lighting={activeLighting.name} inspirationSpace={inspirationStop?.title ?? null} />
+      <ProjectIndex />
       <section className="contact-section section-wrap" id="contact" aria-labelledby="contact-title">
         <div>
           <p className="eyebrow">06 / Start a conversation</p>

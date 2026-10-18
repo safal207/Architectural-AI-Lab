@@ -1,0 +1,23 @@
+{
+  "name": "architectural-ai-lab-athenaion",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "serve": "node tools/prepare-assets.mjs && node tools/serve.mjs",
+    "render": "node tools/render.mjs",
+    "dev": "npm run serve",
+    "build": "node tools/build.mjs",
+    "test": "node --test qa/*.test.mjs",
+    "test:browser": "node qa/browser.mjs",
+    "test:world": "node qa/full-world.mjs"
+  },
+  "dependencies": {
+    "pngjs": "^7.0.0",
+    "puppeteer-core": "^25.14.0",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "playwright": "1.55.0"
+  }
+}

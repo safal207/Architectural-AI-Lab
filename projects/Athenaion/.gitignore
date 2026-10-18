@@ -1,0 +1,14 @@
+node_modules/
+out/
+snapshots/
+audio/
+*.log
+.DS_Store
+Thumbs.db
+
+# Geometry is regenerable; the pinned mountain grid is prepared before serving/building.
+generated/*
+
+
+dist/
+qa-output/
