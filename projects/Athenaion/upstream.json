@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/Leonxlnx/athenaion",
+  "revision": "9b8bd23b39c458a50fb1201037360047781c45b5",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2026 Leon Lin",
+  "adaptation": "Architectural AI Lab — gallery, UI, quality, resilience and static publishing",
+  "farGrid": {
+    "path": "generated/terrain-far-v11.bin",
+    "bytes": 23809636,
+    "sha256": "c1fcf89c20fe7ed3a2ef62b476be8296aca3565d45a005bd24c890c85b53eb23"
+  },
+  "gallery": "media/shot1.webp through media/shot9.webp are resized WebP derivatives of the same upstream revision's media/shotN.jpg renders. Original composition and scene: Leon Lin."
+}

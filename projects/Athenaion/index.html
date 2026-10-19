@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111c23">
+  <meta name="description" content="Athenaion — a procedural ancient Greek world. Explore nine views and an optional interactive Three.js scene by Architectural AI Lab, adapted from Leon Lin's MIT project.">
+  <title>Athenaion · Architectural AI Lab</title>
+  <link rel="stylesheet" href="./viewer.css">
+  <script type="importmap">
+    {"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#world" data-i18n="skip">Перейти к миру</a>
+  <header class="site-header">
+    <a class="brand" href="../"><span class="brand-mark" aria-hidden="true">a / a</span><span>ARCHITECTURAL<br>AI LAB</span></a>
+    <div class="header-links">
+      <a href="#about" data-i18n="aboutLink">О проекте</a>
+      <label class="language"><span class="sr-only" data-i18n="language">Язык</span><select id="language" aria-label="Язык / Language"><option value="ru">RU</option><option value="en">EN</option></select></label>
+    </div>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="title">
+      <div><p class="eyebrow" data-i18n="eyebrow">ПРОЦЕДУРНАЯ АРХИТЕКТУРА · ИССЛЕДОВАНИЕ 01</p><h1 id="title">Athenaion<span>.</span></h1></div>
+      <p class="intro-copy" data-i18n="intro">Мрамор над водой. Город среди скал. Девять точек, из которых можно открыть целый мир.</p>
+    </section>
+    <section class="world-section" id="world" aria-labelledby="view-title">
+      <div class="stage" id="stage">
+        <img id="poster" src="./media/shot1.webp" alt="Мраморный храм и статуя Афины над скалистым городом" width="1280" height="720" fetchpriority="high">
+        <div id="viewport" aria-label="Интерактивный 3D-мир" tabindex="0"></div>
+        <span class="stage-label" id="stage-label">01 / 09 · ГАЛЕРЕЯ</span>
+        <div class="stage-caption"><span class="eyebrow" id="view-place">АКРОПОЛЬ</span><h2 id="view-title">Над городом</h2><p id="view-description">Храм, гавань и белый камень над морем.</p></div>
+        <div id="loading" class="loading" hidden role="status" aria-live="polite"><span class="loader" aria-hidden="true"></span><strong id="loading-title">Создаём мир…</strong><p id="loading-detail">Первый запуск может занять несколько минут.</p><progress id="build-progress" max="15" value="0"></progress><a id="cancel-load" href="./" data-i18n="backGallery">Вернуться к галерее</a></div>
+      </div>
+      <div class="viewer-toolbar">
+        <p class="image-credit" id="image-credit">Исходный рендер · Leon Lin</p>
+        <div class="viewer-actions">
+          <label class="quality-label"><span data-i18n="quality">Качество 3D</span><select id="quality"><option value="lite" data-i18n="lite">Лёгкое</option><option value="preview" data-i18n="preview">Сбалансированное</option><option value="high" data-i18n="high">Высокое</option></select></label>
+          <button class="button primary" id="launch" type="button" data-i18n="launch">Открыть 3D ↗</button>
+          <button class="button" id="motion" type="button" aria-pressed="false" hidden data-i18n="motion">Оживить мир</button>
+          <button class="button" id="gallery" type="button" hidden data-i18n="backGallery">Вернуться к галерее</button>
+        </div>
+      </div>
+      <p class="viewer-note" id="viewer-note" data-i18n="note">Галерея открывается сразу. 3D запускается по вашему выбору; для него нужен WebGL 2. На слабом устройстве начните с лёгкого качества.</p>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <nav class="shot-list" id="shots" aria-label="Ракурсы"></nav>
+      <noscript><p>Для галереи и 3D включите JavaScript. <a href="https://github.com/Leonxlnx/athenaion/tree/9b8bd23b39c458a50fb1201037360047781c45b5/media">Посмотреть исходные рендеры</a>.</p></noscript>
+    </section>
+    <section class="about" id="about" aria-labelledby="about-title">
+      <div><p class="eyebrow" data-i18n="aboutEyebrow">МИР, НАПИСАННЫЙ КОДОМ</p><h2 id="about-title" data-i18n="aboutTitle">От функции — к пространству.</h2><p data-i18n="aboutCopy">Колонны, скалы, деревья и вода создаются процедурно. Это исследование архитектуры и визуализации: можно изучить сцену, сменить ракурс и увидеть, как код становится ландшафтом.</p></div>
+      <dl class="facts"><div><dt>09</dt><dd data-i18n="factViews">ракурсов одного мира</dd></div><div><dt>15</dt><dd data-i18n="factModules">модулей генерации</dd></div><div><dt>MIT</dt><dd data-i18n="factLicense">открытый исходный код</dd></div></dl>
+    </section>
+    <section class="credits" aria-labelledby="credits-title"><h2 id="credits-title" data-i18n="creditsTitle">Авторство и наша работа</h2><p data-i18n="credits">Оригинальный мир Athenaion и рендеры созданы Leon Lin с Claude Code. Architectural AI Lab добавляет галерею, управление сценой, русский и английский интерфейс, лёгкий режим, обработку ошибок и воспроизводимую сборку. Это адаптация открытого проекта, а не наша авторская реконструкция античного города.</p><div class="credit-links"><a href="https://github.com/Leonxlnx/athenaion" target="_blank" rel="noopener noreferrer" data-i18n="original">Оригинальный проект ↗</a><a href="https://github.com/safal207/Architectural-AI-Lab/tree/main/projects/Athenaion" data-i18n="ourCode">Наша версия ↗</a><a href="./LICENSE" data-i18n="license">MIT-лицензия</a><button class="text-button" id="share" type="button" data-i18n="share">Поделиться ракурсом ↗</button></div><input id="share-url" class="share-url" readonly hidden aria-label="Ссылка на выбранный ракурс"></section>
+  </main>
+  <footer><span>ARCHITECTURAL AI LAB · ATHENAION</span><a href="../" data-i18n="backLab">Все проекты ↗</a></footer>
+  <script type="module" src="./src/viewer/ui.js"></script>
+</body>
+</html>

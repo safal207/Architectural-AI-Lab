@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'projects/Dubai-Luxury-Villa-AI/web-viewer/app/**'
+      - 'projects/Athenaion/**'
       - 'projects/Dubai-Luxury-Villa-AI/tools/validate_viewer_asset.py'
       - 'projects/Dubai-Luxury-Villa-AI/tools/requirements-validation.txt'
       - 'projects/Dubai-Luxury-Villa-AI/validation/v0.3-viewer-promotion.json'
@@ -45,6 +46,13 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Build Athenaion into the project catalogue
+        working-directory: projects/Athenaion
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test
+          npm run build -- --out "$GITHUB_WORKSPACE/projects/Dubai-Luxury-Villa-AI/web-viewer/app/dist/athenaion"
 
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
