@@ -14,7 +14,8 @@ This record describes the local import candidate. GitHub checks and publication 
 | Subdirectory hosting | PASS | Three.js, workers, license and mountain grid served under `/portfolio/athenaion/` |
 | Villa build and project integration | PASS | Main build; new card image; 320 px card containment; navigation into Athenaion and back |
 | Full-world procedural build | PASS | All 15 modules and shader compilation completed in the local software-renderer probe; final Light candidate build: 105,193 ms |
-| Complete full-world GPU interaction probe | INCOMPLETE | The software-renderer probe did not complete its first-frame / camera / resize / animation / context-loss sequence during collection. Do not interpret module generation or shader compilation as an end-to-end GPU pass. `npm run test:world` retains the separate integration check. |
+| Full-world first frame, camera and resize | PASS in software-renderer probe | First frame rendered; shot 5 selected; camera projection followed the viewport resize to 390 px; animation started |
+| Complete full-world GPU interaction probe | FAILED / partial coverage | Playwright timed out after 30 seconds on the second animation-button click (pause), while waiting to scroll the visible button into view. Pause, context-loss recovery and return-to-gallery assertions were not completed. This software-renderer result does not establish behavior on a hardware GPU. `npm run test:world` retains the separate integration check. |
 | Physical phones and hardware GPUs | NOT_RUN | No device FPS, thermal, battery or universal mobile-compatibility claims |
 | Public deployment | NOT_RUN at local collection | The Pages workflow packages Athenaion at `/athenaion/` when this revision reaches `main` |
 
